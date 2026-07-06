@@ -1,0 +1,18 @@
+# === 阶段一：ETL ===
+python-docx>=0.8.11
+
+# === 阶段二：索引构建 ===
+sentence-transformers>=2.2.0    # BGE Embedding + CrossEncoder（重排）模型加载
+faiss-cpu>=1.7.0               # FAISS 向量检索（替代 ChromaDB，Windows 兼容性更好）
+rank-bm25>=0.2.2               # BM25 关键词检索
+jieba>=0.42.1                  # 中文分词
+numpy>=1.24.0                  # 向量运算
+torch>=2.0.0                   # PyTorch（sentence-transformers 依赖）
+
+# === 阶段四：生成引擎 ===
+openai>=1.0.0                  # OpenAI SDK（用于调用 LongCat 2.0 API，OpenAI 兼容接口）
+
+# === 阶段五：API 服务 ===
+fastapi>=0.100.0               # Web API 框架（异步高性能，自动生成 OpenAPI 文档）
+uvicorn[standard]>=0.20.0      # ASGI 服务器（运行 FastAPI 应用）
+python-multipart>=0.0.5        # FastAPI 表单解析依赖
