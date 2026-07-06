@@ -19,6 +19,7 @@ import io
 import time
 import signal
 import subprocess
+import threading
 from pathlib import Path
 
 # 修复 Windows 控制台编码
@@ -55,18 +56,24 @@ def print_banner():
 
 
 def check_api_key():
-    """检查 API Key 是否设置"""
-    api_key = os.environ.get("LONGCAT_API_KEY", "")
+    """检查 API Key 是否设置（环境变量或 config.py 默认值）"""
+    sys.path.insert(0, str(PROJECT_ROOT / 'src'))
+    try:
+        from config import LONGCAT_API_KEY
+    except ImportError:
+        LONGCAT_API_KEY = ""
+    api_key = os.environ.get("LONGCAT_API_KEY", "") or LONGCAT_API_KEY
     if not api_key:
-        print("[ERROR] 未设置 LONGCAT_API_KEY 环境变量！")
+        print("[ERROR] 未设置 LONGCAT_API_KEY！")
         print()
-        print("请先设置美团 LongCat API Key：")
+        print("请通过以下任一方式设置美团 LongCat API Key：")
         print()
-        print("  PowerShell:")
-        print('    $env:LONGCAT_API_KEY="your_api_key_here"')
+        print("  方式一 — 环境变量:")
+        print("    PowerShell:")
+        print('      $env:LONGCAT_API_KEY="your_api_key_here"')
         print()
-        print("  CMD:")
-        print('    set LONGCAT_API_KEY=your_api_key_here')
+        print("  方式二 — config.py 默认值:")
+        print("    编辑 src/config.py 中的 LONGCAT_API_KEY")
         print()
         print("获取 API Key: https://longcat.chat/platform/api_keys")
         print()
@@ -101,6 +108,17 @@ def check_indexes():
     print(f"[OK] 索引文件就绪 (Chroma + BM25 + SQLite)")
 
 
+def _pipe_output(proc, name):
+    """在后台线程中持续读取子进程输出并打印，防止管道缓冲区死锁"""
+    prefix = f"  [{name}]"
+    try:
+        for line in iter(proc.stdout.readline, ''):
+            if line:
+                print(f"{prefix} {line.rstrip()}")
+    except Exception:
+        pass
+
+
 def start_api():
     """启动 API 后端"""
     print()
@@ -112,35 +130,66 @@ def start_api():
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        text=True,
+        encoding='utf-8',
+        errors='replace',
     )
     processes.append(("API", proc))
     print(f"  PID: {proc.pid}, 端口: {API_PORT}")
 
-    # 等待 API 就绪（最多等 60 秒）
-    print("  等待 API 初始化...", end="", flush=True)
+    # 启动后台线程持续读取 API 输出（防止管道缓冲区死锁）
+    reader = threading.Thread(target=_pipe_output, args=(proc, "API"), daemon=True)
+    reader.start()
+
+    # 等待 API 就绪（最多等 180 秒，首次需要加载 Embedding + Reranker 模型）
+    print("  等待 API 初始化（首次启动需加载模型，约 30-60 秒）...")
     import requests
-    for i in range(30):
-        time.sleep(2)
+    for i in range(60):
+        time.sleep(3)
+        # 检查进程是否已退出
+        if proc.poll() is not None:
+            print(f"\n[ERROR] API 进程已退出 (code={proc.returncode})")
+            return False
         try:
-            r = requests.get(f"http://127.0.0.1:{API_PORT}/api/v1/health", timeout=2)
+            # 健康检查首次会触发模型懒加载，超时设长一些
+            r = requests.get(f"http://127.0.0.1:{API_PORT}/api/v1/health", timeout=30)
             if r.status_code == 200:
-                print(" OK!")
+                print("  [OK] API 就绪!")
                 data = r.json()
                 print(f"  模型: {data.get('model', 'N/A')}")
                 print(f"  索引: {data.get('chunks_count', 0)} chunks")
                 print(f"  药品: {data.get('drug_count', 0)} 种")
                 return True
+        except requests.exceptions.Timeout:
+            print("  ... 模型加载中，请稍候 ...")
         except Exception:
-            print(".", end="", flush=True)
-    print(" FAILED!")
-    print("[ERROR] API 服务启动超时")
+            pass
+    print("\n[ERROR] API 服务启动超时（180 秒）")
     return False
+
+
+def check_streamlit():
+    """检查 streamlit 是否已安装"""
+    try:
+        import streamlit
+        return True
+    except ImportError:
+        print("[ERROR] streamlit 未安装！")
+        print()
+        print("  请安装依赖：pip install streamlit")
+        print("  或安装全部依赖：pip install -r requirements.txt")
+        print()
+        return False
 
 
 def start_webui():
     """启动 Streamlit Web UI"""
     print()
     print("[2/2] 启动 Streamlit Web UI...")
+
+    if not check_streamlit():
+        return False
+
     env = os.environ.copy()
     env["API_BASE_URL"] = f"http://127.0.0.1:{API_PORT}"
     cmd = [
@@ -156,15 +205,26 @@ def start_webui():
         env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        text=True,
+        encoding='utf-8',
+        errors='replace',
     )
     processes.append(("WebUI", proc))
     print(f"  PID: {proc.pid}, 端口: {UI_PORT}")
+
+    # 启动后台线程持续读取 WebUI 输出
+    reader = threading.Thread(target=_pipe_output, args=(proc, "WebUI"), daemon=True)
+    reader.start()
 
     # 等待 Streamlit 就绪
     print("  等待 Streamlit 初始化...", end="", flush=True)
     import requests
     for i in range(15):
         time.sleep(1)
+        if proc.poll() is not None:
+            print(f" FAILED!")
+            print(f"[ERROR] WebUI 进程已退出 (code={proc.returncode})")
+            return False
         try:
             r = requests.get(f"http://127.0.0.1:{UI_PORT}/_stcore/health", timeout=2)
             if r.status_code == 200:
@@ -229,14 +289,14 @@ def main():
             for name, proc in processes:
                 if proc.poll() is not None:
                     print(f"[WARN] {name} 进程已退出 (code={proc.returncode})")
-                    # 输出最后几行日志
-                    if proc.stdout:
-                        output = proc.stdout.read()
-                        if output:
-                            lines = output.decode('utf-8', errors='replace').strip().split('\n')
-                            for line in lines[-10:]:
-                                print(f"  [{name}] {line}")
-                    cleanup()
+                    # 如果是 API 挂了，全部退出；如果是 WebUI 挂了，只移除不杀 API
+                    if name == "API":
+                        print("[ERROR] API 服务异常退出，停止所有服务...")
+                        cleanup()
+                    else:
+                        print(f"[INFO] {name} 已退出，API 服务继续运行")
+                        print(f"  API 文档: http://localhost:{API_PORT}/docs")
+                        processes[:] = [(n, p) for n, p in processes if n != name]
             time.sleep(2)
     except KeyboardInterrupt:
         cleanup()

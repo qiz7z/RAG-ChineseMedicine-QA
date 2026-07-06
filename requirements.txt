@@ -16,3 +16,7 @@ openai>=1.0.0                  # OpenAI SDK（用于调用 LongCat 2.0 API，Ope
 fastapi>=0.100.0               # Web API 框架（异步高性能，自动生成 OpenAPI 文档）
 uvicorn[standard]>=0.20.0      # ASGI 服务器（运行 FastAPI 应用）
 python-multipart>=0.0.5        # FastAPI 表单解析依赖
+
+# === 阶段六：Web UI ===
+streamlit>=1.28.0              # Web UI 框架
+requests>=2.28.0               # HTTP 客户端（API 健康检查、Web UI 客户端）

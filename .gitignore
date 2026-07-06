@@ -31,10 +31,10 @@ data/raw/*.docx
 *.docx
 
 # Processed data (regenerate via: python scripts/run/run_etl.py)
-data/processed/
+# data/processed/
 
 # Vector store indices (regenerate via: python scripts/build/build_index.py)
-data/vectorstore/
+# data/vectorstore/
 
 # Model weights (download from HuggingFace)
 models/bge-large-zh-v1.5/model.safetensors
@@ -53,3 +53,6 @@ build_index.log
 
 # Misc
 1.0.0
+
+
+src/config.py

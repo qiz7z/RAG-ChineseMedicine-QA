@@ -31,17 +31,18 @@ def main():
     parser.add_argument("--reload", action="store_true", help="开发模式（热重载）")
     args = parser.parse_args()
 
-    # 检查 API Key
-    api_key = os.environ.get("LONGCAT_API_KEY", "")
+    # 检查 API Key（环境变量或 config.py 默认值）
+    from config import LONGCAT_API_KEY
+    api_key = os.environ.get("LONGCAT_API_KEY", "") or LONGCAT_API_KEY
     if not api_key:
         print("=" * 60)
-        print("❌ 错误: 未设置 LONGCAT_API_KEY 环境变量！")
+        print("❌ 错误: 未设置 LONGCAT_API_KEY！")
         print("=" * 60)
-        print("\n请设置美团 LongCat API Key 后再运行：")
-        print("\n  PowerShell:")
+        print("\n请通过以下任一方式设置美团 LongCat API Key：")
+        print("\n  方式一 — 环境变量 (PowerShell):")
         print('    $env:LONGCAT_API_KEY="your_api_key_here"')
-        print("\n  CMD:")
-        print('    set LONGCAT_API_KEY=your_api_key_here')
+        print("\n  方式二 — config.py 默认值:")
+        print("    编辑 src/config.py 中的 LONGCAT_API_KEY")
         print("\n获取 API Key: https://longcat.chat/platform/api_keys")
         print()
         sys.exit(1)
