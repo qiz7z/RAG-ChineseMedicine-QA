@@ -251,17 +251,46 @@ def render_chat_page():
                 # 流式获取回答
                 collected_content = ""
                 final_session_id = st.session_state.session_id
+                sources = []
+                citations = []
+                latency_ms = 0
+                consistency_issues = []
+                resolved_query = user_input
+                dialogue_turn = 0
 
                 for event in api.chat_stream(
                     user_input,
                     session_id=st.session_state.session_id,
                 ):
-                    if "content" in event:
+                    if "content" in event and "rejected" not in event:
                         collected_content += event["content"]
                         # 实时更新显示
                         placeholder.markdown(collected_content + "▌")
+                    elif "rejected" in event:
+                        collected_content = event["content"]
+                        placeholder.markdown(collected_content)
+                        # 保存拒绝回答到历史，保持消息一致性
+                        st.session_state.messages.append({
+                            "role": "assistant",
+                            "content": collected_content,
+                            "sources": [],
+                            "citations": [],
+                            "latency_ms": 0,
+                            "dialogue_turn": 0,
+                            "resolved_query": user_input,
+                            "original_query": user_input,
+                            "consistency_issues": [],
+                        })
+                        return
                     elif "done" in event:
                         final_session_id = event.get("session_id", final_session_id)
+                        # 流式结束时获取来源、引用等元数据
+                        sources = event.get("sources", [])
+                        citations = event.get("citations", [])
+                        latency_ms = event.get("latency_ms", 0)
+                        consistency_issues = event.get("consistency_issues", [])
+                        resolved_query = event.get("resolved_query", user_input)
+                        dialogue_turn = event.get("dialogue_turn", 0)
                     elif "error" in event:
                         placeholder.error(f"生成失败: {event['error']}")
                         return
@@ -272,28 +301,32 @@ def render_chat_page():
                 # 更新会话 ID
                 st.session_state.session_id = final_session_id
 
-                # 获取完整回答信息（含来源、引用等）
-                # 流式接口不返回来源，需要额外调用同步接口获取
-                # 但为了避免重复调用 LLM，我们仅展示流式结果
-                # 来源信息通过非流式重试获取代价太大，这里简化处理
-                sources = []
-                citations = []
-                latency_ms = 0
-                consistency_issues = []
+                # 显示引用
+                if citations:
+                    render_citations(citations)
 
-                # 如果用户需要来源，可以在这里调用同步接口
-                # 但会增加延迟，所以我们提供一个开关
-                if st.session_state.get("fetch_sources", True):
-                    try:
-                        # 使用同步接口获取来源（只获取检索来源，不重新生成）
-                        # 实际上这里我们用 search 接口来获取相关来源
-                        # 更好的方式是后端在流式结束后返回来源
-                        pass  # 流式模式下暂不获取来源，避免重复调用
-                    except Exception:
-                        pass
+                # 显示一致性警告
+                if consistency_issues:
+                    render_consistency_warning(consistency_issues)
+
+                # 显示来源（可折叠）
+                if sources:
+                    with st.expander(f"📎 检索来源（{len(sources)} 条）", expanded=False):
+                        for j, src in enumerate(sources, 1):
+                            render_source_card(src, j)
 
                 # 显示安全提醒
                 render_disclaimer()
+
+                # 显示元信息
+                col1, col2, col3 = st.columns([1, 1, 3])
+                with col1:
+                    render_latency_badge(latency_ms)
+                with col2:
+                    st.caption(f"第 {dialogue_turn} 轮" if latency_ms else "")
+                with col3:
+                    if resolved_query != user_input:
+                        st.caption(f"指代消解: {user_input} → {resolved_query}")
 
                 # 保存到历史
                 st.session_state.messages.append({
@@ -302,8 +335,8 @@ def render_chat_page():
                     "sources": sources,
                     "citations": citations,
                     "latency_ms": latency_ms,
-                    "dialogue_turn": len(st.session_state.messages) // 2,
-                    "resolved_query": user_input,
+                    "dialogue_turn": dialogue_turn if latency_ms else len(st.session_state.messages) // 2,
+                    "resolved_query": resolved_query,
                     "original_query": user_input,
                     "consistency_issues": consistency_issues,
                 })

@@ -67,6 +67,7 @@ from generation.llm_client import LLMClient
 from generation.prompts import build_prompt, build_no_result_prompt
 from generation.postprocessor import PostProcessor, PostProcessResult
 from generation.dialogue import DialogueManager
+from generation.guard import GuardChecker, OFF_TOPIC_REJECTION
 
 logger = logging.getLogger(__name__)
 
@@ -185,6 +186,9 @@ class Generator:
             llm_client=self.llm_client if enable_dialogue else None,
         )
 
+        # 5. 初始化问题领域守卫（用同一个 LLM 客户端，避免重复创建）
+        self.guard = GuardChecker(llm_client=self.llm_client)
+
         print("=" * 60)
         print("生成引擎初始化完成!")
         print("=" * 60)
@@ -212,6 +216,30 @@ class Generator:
         """
         total_start = time.time()
         component_latency = {}
+
+        # ============ 0. 问题领域守卫 ============
+        t0 = time.time()
+        is_followup = self.enable_dialogue and self.dialogue_manager.turn_count > 0
+        is_related, guard_reason = self.guard.check(query, is_followup=is_followup)
+        component_latency["guard_check"] = time.time() - t0
+
+        if not is_related:
+            # 非医药相关问题：直接返回拒绝回答，不执行检索和生成
+            logger.info(f"问题被守卫拦截: {query} ({guard_reason})")
+            total_latency = time.time() - total_start
+            return GenerationResponse(
+                query=query,
+                resolved_query=query,
+                answer=OFF_TOPIC_REJECTION,
+                retrieval=None,
+                raw_answer=OFF_TOPIC_REJECTION,
+                citations=[],
+                consistency_issues=[],
+                latency=total_latency,
+                component_latency=component_latency,
+                llm_model=self.llm_client.model,
+                dialogue_turn=self.dialogue_manager.turn_count,
+            )
 
         # ============ 1. 指代消解 ============
         t0 = time.time()
@@ -298,19 +326,23 @@ class Generator:
         max_tokens: Optional[int] = None,
     ):
         """
-        流式问答：逐 token 返回 LLM 生成内容。
-
-        注意：流式模式下不进行后处理和对话历史更新。
-        后处理需要调用方在获取完整回答后手动执行。
-
-        Args:
-            query: 用户查询
-            temperature: LLM 温度参数
-            max_tokens: LLM 最大输出 token 数
+        流式问答：逐 token 返回 LLM 生成内容，结束时返回元数据。
 
         Yields:
-            LLM 生成的文本片段
+            {"content": "..."}        — LLM 生成的文本片段（多次）
+            {"metadata": {...}}       — 结束时一次性返回来源、引用等信息
+            {"rejected": True}        — 非医药问题时返回
         """
+        total_start = time.time()
+
+        # 0. 问题领域守卫
+        is_followup = self.enable_dialogue and self.dialogue_manager.turn_count > 0
+        is_related, guard_reason = self.guard.check(query, is_followup=is_followup)
+        if not is_related:
+            logger.info(f"问题被守卫拦截(流式): {query} ({guard_reason})")
+            yield {"rejected": True, "content": OFF_TOPIC_REJECTION}
+            return
+
         # 1. 指代消解
         resolved_query = query
         if self.enable_dialogue and self.dialogue_manager.turn_count > 0:
@@ -334,12 +366,57 @@ class Generator:
         else:
             messages = build_no_result_prompt(resolved_query)
 
-        # 4. 流式生成
-        yield from self.llm_client.chat_stream(
+        # 4. 流式生成 — 逐 token yield
+        raw_answer = ""
+        for chunk in self.llm_client.chat_stream(
             messages,
             temperature=temperature,
             max_tokens=max_tokens,
-        )
+        ):
+            raw_answer += chunk
+            yield {"content": chunk}
+
+        # 5. 后处理（流式结束后执行）
+        if self.enable_postprocess and retrieval_results:
+            pp_result = self.postprocessor.process(raw_answer, retrieval_results)
+            final_answer = pp_result.answer
+            citations = pp_result.citations
+            consistency_issues = pp_result.consistency_issues
+        else:
+            final_answer = raw_answer
+            citations = []
+            consistency_issues = []
+
+        # 6. 更新对话历史
+        if self.enable_dialogue:
+            self.dialogue_manager.add_user_message(query, resolved_query)
+            self.dialogue_manager.add_assistant_message(final_answer)
+
+        # 7. 返回元数据（来源、引用、一致性检查等）
+        sources = []
+        if retrieval_results:
+            for r in retrieval_response.results:
+                sources.append({
+                    "chunk_id": r.chunk_id,
+                    "drug_name": r.drug_name,
+                    "section": r.section,
+                    "category": r.category,
+                    "content": r.content[:500],
+                    "score": r.score,
+                    "rerank_score": r.rerank_score,
+                    "sources": r.sources,
+                })
+
+        yield {
+            "metadata": {
+                "resolved_query": resolved_query,
+                "sources": sources,
+                "citations": citations,
+                "consistency_issues": consistency_issues,
+                "latency_ms": int((time.time() - total_start) * 1000),
+                "dialogue_turn": self.dialogue_manager.turn_count,
+            }
+        }
 
     # ----------------------------------------------------------
     # 便捷方法

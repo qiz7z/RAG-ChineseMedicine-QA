@@ -50,8 +50,12 @@ RRF_TOP_N = 30                     # RRF 融合后保留的候选数
 # ============================================================
 # BGE-Reranker-v2-m3：跨语言重排模型，支持中英双语
 # 使用 CrossEncoder 架构，对 query-document 对进行打分
-# 请修改为你本地的模型路径，或从 HuggingFace 下载
-RERANKER_MODEL_PATH = r"D:\MODEL\BAAI\bge-reranker-v2-m3"
+# 模型路径优先从环境变量 RERANKER_MODEL_PATH 读取
+# 如果未设置环境变量，则使用下面的默认路径（请修改为你的本地路径）
+RERANKER_MODEL_PATH = os.environ.get(
+    "RERANKER_MODEL_PATH",
+    r"D:\MODEL\BAAI\bge-reranker-v2-m3",  # ← 修改为你本地的模型路径
+)
 RERANKER_TOP_K = 5                 # 重排后返回的最终结果数
 RERANKER_MAX_LENGTH = 512          # 重排模型最大序列长度
 

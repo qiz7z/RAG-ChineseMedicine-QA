@@ -261,6 +261,19 @@ class Retriever:
             if expanded_drugs:
                 chroma_filter = {"drug_name": {"$in": list(expanded_drugs)}}
 
+        # 横向条件查询：按 category 过滤
+        if parsed.get("is_horizontal") and parsed.get("category_filter"):
+            if chroma_filter is None:
+                chroma_filter = {"category": parsed["category_filter"]}
+            else:
+                # 同时有药品名过滤和分类过滤时，合并条件
+                chroma_filter = {
+                    "$and": [
+                        chroma_filter,
+                        {"category": parsed["category_filter"]},
+                    ]
+                }
+
         vector_results = self.vector_index.query(
             query_embedding=query_emb,
             top_k=VECTOR_TOP_K,
@@ -294,6 +307,21 @@ class Retriever:
                             r["metadata"] = meta
                             filtered_bm25.append(r)
                             break
+                bm25_results = filtered_bm25
+
+        # 横向条件查询：对 BM25 结果按 category 过滤
+        if self.enable_filter and parsed.get("is_horizontal") and parsed.get("category_filter"):
+            cat_filter = parsed["category_filter"]
+            if bm25_results:
+                bm25_ids = [r["id"] for r in bm25_results]
+                bm25_metas = self.meta_store.get_by_ids(bm25_ids)
+                bm25_meta_map = {m["chunk_id"]: m for m in bm25_metas}
+                filtered_bm25 = []
+                for r in bm25_results:
+                    meta = bm25_meta_map.get(r["id"], {})
+                    if meta.get("category", "") == cat_filter:
+                        r["metadata"] = meta
+                        filtered_bm25.append(r)
                 bm25_results = filtered_bm25
 
         component_latency["bm25_search"] = time.time() - t0

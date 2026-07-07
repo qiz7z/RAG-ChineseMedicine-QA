@@ -382,3 +382,168 @@ python scripts/build/build_index.py --test
 - [ETL 解析修复](docs/02_ETL解析修复.md) — 样式覆盖扩展 + OCR 字符纠正
 - [检索策略优化](docs/03_检索策略优化.md) — 多药品过滤 + BM25 后过滤 + 过滤器扩展
 - [最终评估报告](docs/04_最终评估报告.md) — 100 题测试集详细评估结果
+
+---
+
+## 更新记录
+
+### 2026-07-07 问题领域守卫：非医药问题拦截
+
+**更新内容：**
+
+新增问题领域守卫模块（`src/generation/guard.py`），在 RAG 流程入口处检测用户问题是否与中医药/药典相关，对无关问题直接礼貌拒绝，不浪费检索和生成资源。
+
+**检测策略（两层过滤）：**
+
+1. **关键词快速通道（0ms）**：命中医药关键词（药、药材、性味、归经、人参、黄芪等 100+ 个）直接通过；命中明显无关关键词（股票、游戏、编程、足球等 60+ 个）直接拒绝
+2. **LLM 语义判断（~0.5s）**：对关键词无法判定的模糊问题，用一次快速 LLM 调用（`temperature=0, max_tokens=10`）进行分类
+
+**集成位置：**
+
+在 `Generator.answer()` 和 `Generator.answer_stream()` 方法中，**检索之前**执行守卫检查。检测到非医药问题时直接返回拒绝回答，不执行检索和 LLM 生成。
+
+**拒绝回答示例：**
+
+> 抱歉，我是《中国药典》智能问答系统，只能回答与中药、药典相关的问题。
+>
+> 我可以帮您解答以下类型的问题：
+> - 药材的性味归经、功能主治、用法用量
+> - 药材的性状、鉴别、含量测定
+> - 药材的炮制方法、贮藏条件
+> - 药材间的功效对比
+> - 药典通则方法（如色谱法、水分测定等）
+>
+> 请尝试提出与中医药相关的问题，例如："人参的性味归经是什么？"
+
+**新增文件：**
+
+| 文件 | 说明 |
+|------|------|
+| `src/generation/guard.py` | 问题领域守卫模块（关键词过滤 + LLM 语义判断） |
+
+**修改文件：**
+
+| 文件 | 改动 |
+|------|------|
+| `src/generation/generator.py` | 在 `answer()` 和 `answer_stream()` 中集成守卫检查 |
+
+### 2026-07-07 系统优化：流式元数据 + 横向查询 + 守卫加速 + API 测试 + 配置外部化
+
+本次更新涵盖五项优化，全面提升系统功能和可维护性。
+
+---
+
+#### 1. 流式问答返回来源与引用
+
+**问题：** 流式接口（`/api/v1/chat/stream`）此前只返回文本片段和结束信号，前端无法获取检索来源、引用标注和一致性检查结果，导致流式模式下用户体验不完整。
+
+**改动：**
+
+- 重写 `Generator.answer_stream()`：从只 yield 文本片段改为 yield 事件字典
+  - `{"content": "..."}` — 文本片段（多次）
+  - `{"metadata": {...}}` — 结束时一次性返回 `sources`、`citations`、`consistency_issues`、`latency_ms` 等
+  - `{"rejected": True, "content": "..."}` — 非医药问题拒绝
+- 流式结束后自动执行后处理（引用标注 + 一致性校验）和对话历史更新，与同步接口行为一致
+- 更新 API 端点 `chat_stream`：SSE 结束事件附带完整元数据
+- 更新前端 `app.py`：流式结束后展示来源、引用、一致性警告
+
+| 文件 | 改动 |
+|------|------|
+| `src/generation/generator.py` | `answer_stream()` 重写为事件生成器，结束后返回元数据 |
+| `src/api/main.py` | `chat_stream` 端点解析事件并附带 sources/citations |
+| `src/webui/app.py` | 流式模式展示来源、引用、一致性警告 |
+
+---
+
+#### 2. 横向条件查询优化
+
+**问题：** 用户问「哪些药材有补气功效」「含挥发油的中药有哪些」时，系统进行全库检索，结果混入大量成方制剂条目，导致召回不精准。
+
+**改动：**
+
+- 在 `QueryParser` 中新增横向条件查询检测：
+  - 识别「哪些药材」「什么中药」「列举」「有X功效」等句式
+  - 检测到横向查询时，自动推断 `category_filter`（`药材` / `成方制剂`）
+- 在 `Retriever` 中应用 category 过滤：
+  - 向量检索：Chroma `where` 条件增加 `category` 字段
+  - BM25 检索：结果后过滤，只保留匹配分类的条目
+
+| 文件 | 改动 |
+|------|------|
+| `src/retrieval/query_parser.py` | 新增 `HORIZONTAL_KEYWORDS`、`_is_horizontal_query()`、`_detect_category_filter()` |
+| `src/retrieval/retriever.py` | 向量检索和 BM25 检索增加 category 过滤逻辑 |
+
+---
+
+#### 3. 守卫模块多轮对话加速
+
+**问题：** 多轮对话中每一轮都调用 LLM 做领域判断，增加 ~0.5s 延迟，但同一会话内用户通常会持续问医药相关问题。
+
+**改动：**
+
+- `GuardChecker` 新增 `_session_trusted` 状态：
+  - 第一轮通过守卫后标记为信任
+  - 后续轮次（`is_followup=True`）跳过 LLM 判断，直接通过关键词快通道
+  - 新会话时调用 `reset_session()` 重置信任状态
+- `Generator` 在调用 `guard.check()` 时传入 `is_followup` 参数
+- API 端点在新会话时自动重置守卫信任状态
+
+| 文件 | 改动 |
+|------|------|
+| `src/generation/guard.py` | `check()` 增加 `is_followup` 参数，新增 `reset_session()` |
+| `src/generation/generator.py` | `answer()` 和 `answer_stream()` 传入 `is_followup` |
+| `src/api/main.py` | 新会话时调用 `guard.reset_session()` |
+
+---
+
+#### 4. API 接口自动化测试
+
+**问题：** 缺少系统化的 API 端点测试，每次修改后需要手动验证。
+
+**改动：**
+
+- 新建 `src/api/tests/test_endpoints.py`，使用 pytest 框架覆盖关键端点：
+  - `TestHealth` — 健康检查 & 统计
+  - `TestSearch` — 检索查询（基本检索、药品过滤、空查询）
+  - `TestChat` — 智能问答（单轮、多轮对话、守卫拦截）
+  - `TestChatStream` — 流式问答（基本流式、守卫拦截）
+  - `TestSessions` — 会话管理（创建、删除、列表）
+  - `TestDrugs` — 药品列表（列表、搜索）
+- 同时支持 `pytest` 运行和 `python` 直接运行
+
+**运行方式：**
+
+```bash
+# 方式一：pytest
+pytest src/api/tests/test_endpoints.py -v
+
+# 方式二：直接运行
+python src/api/tests/test_endpoints.py
+```
+
+| 文件 | 说明 |
+|------|------|
+| `src/api/tests/test_endpoints.py` | API 端点 pytest 测试套件 |
+| `src/api/tests/__init__.py` | 测试包初始化 |
+
+---
+
+#### 5. Reranker 模型路径外部化
+
+**问题：** `RERANKER_MODEL_PATH` 硬编码为绝对路径，换机器部署时需要修改源码。
+
+**改动：**
+
+- `config.py` 和 `config.example.py` 中 `RERANKER_MODEL_PATH` 改为优先从环境变量 `RERANKER_MODEL_PATH` 读取
+
+```python
+RERANKER_MODEL_PATH = os.environ.get(
+    "RERANKER_MODEL_PATH",
+    r"D:\MODEL\BAAI\bge-reranker-v2-m3",  # 默认路径
+)
+```
+
+| 文件 | 改动 |
+|------|------|
+| `src/config.py` | `RERANKER_MODEL_PATH` 改为环境变量优先 |
+| `src/config.example.py` | 同步更新模板 |

@@ -46,6 +46,18 @@ class QueryParser:
         "成分查询": ["成分", "含有", "含", "挥发油", "皂苷", "黄酮"],
     }
 
+    # 横向条件查询触发词
+    HORIZONTAL_KEYWORDS = [
+        "哪些药材", "哪味药材", "哪个药材", "什么药材", "哪些中药",
+        "哪些药物", "什么中药", "哪种药",
+        "哪些方剂", "什么方子", "哪些中成药",
+        "有什么药", "有哪些药",
+        # 倒装句式：XX药材有哪些 / XX中药有哪些 / XX药有哪些
+        "药材有哪些", "中药有哪些", "药有哪些",
+        "药材有什么", "中药有什么", "药有什么",
+        "请列举", "列举", "列出",
+    ]
+
     def __init__(self, drug_names: List[str] = None):
         """
         Args:
@@ -122,6 +134,8 @@ class QueryParser:
             "intent": "通用查询",
             "keywords": [],
             "filter": None,
+            "is_horizontal": False,
+            "category_filter": None,
         }
 
         # 1. 药品名识别
@@ -138,7 +152,13 @@ class QueryParser:
         # 4. 关键词提取（简单版：去停用词后的剩余中文词组）
         result["keywords"] = self._extract_keywords(query, found_drugs, found_sections)
 
-        # 5. 生成 Chroma 过滤条件
+        # 5. 横向条件查询检测
+        is_horizontal = self._is_horizontal_query(query, found_drugs)
+        result["is_horizontal"] = is_horizontal
+        if is_horizontal:
+            result["category_filter"] = self._detect_category_filter(query)
+
+        # 6. 生成 Chroma 过滤条件
         result["filter"] = self._build_filter(found_drugs)
 
         return result
@@ -232,6 +252,69 @@ class QueryParser:
             return {"drug_name": drug_names[0]}
         else:
             return {"drug_name": {"$in": drug_names}}
+
+    # ----------------------------------------------------------
+    # 横向条件查询检测
+    # ----------------------------------------------------------
+
+    def _is_horizontal_query(self, query: str, found_drugs: List[str]) -> bool:
+        """
+        检测是否为横向条件查询。
+
+        横向查询的特征：
+          - 没有指定具体药品名（found_drugs 为空）
+          - 查询中包含“哪些药材/什么中药/列举...”等词
+          - 意图为“查找满足某条件的一批药材/方剂”
+
+        示例：
+          - “哪些药材有补气功效”
+          - “含挥发油的中药有哪些”
+          - “能治糖尿病的中成药”
+        """
+        # 如果指定了具体药品名，则不是横向查询
+        if found_drugs:
+            return False
+
+        # 检查是否包含横向查询触发词
+        for kw in self.HORIZONTAL_KEYWORDS:
+            if kw in query:
+                return True
+
+        # 检查“有X功效/有X作用/有X成分”的句式
+        if re.search(r'有.{0,6}(功效|作用|成分|功能|主治)', query):
+            return True
+
+        # 检查“能治X/用于X”句式（没有指定药材时）
+        # “能治感冒的药” 这种句式也是横向查询
+        if re.search(r'(能治|用于|治疗|主治).{2,}', query):
+            if re.search(r'(的药|的药材|的中药|的方|的成药|有哪些|有什么)', query):
+                return True
+
+        return False
+
+    def _detect_category_filter(self, query: str) -> Optional[str]:
+        """
+        根据查询内容判断应该限制到哪个分类。
+
+        返回值：
+          - "药材" — 查询强调“药材/中药”
+          - "成方制剂" — 查询强调“方剂/中成药/成药”
+          - None — 不限定分类
+        """
+        # 明确提到方剂/中成药/成药
+        fang_keywords = ["方剂", "中成药", "成药", "成方", "方子", "汤剂", "丸", "散", "膏", "丹"]
+        for kw in fang_keywords:
+            if kw in query:
+                return "成方制剂"
+
+        # 明确提到药材/中药/草药
+        yao_keywords = ["药材", "中药", "草药", "饮片", "药草", "中药材"]
+        for kw in yao_keywords:
+            if kw in query:
+                return "药材"
+
+        # 默认不限定
+        return None
 
 
 # ============================================================

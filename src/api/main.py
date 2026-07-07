@@ -180,6 +180,10 @@ async def chat(request: ChatRequest):
     session_id = sm.get_or_create(request.session_id)
     session = sm.get_session(session_id)
 
+    # 新会话时重置守卫信任状态
+    if not request.session_id or not session.dialogue_manager.history:
+        gen.guard.reset_session()
+
     # 将会话的对话历史同步到 Generator 的对话管理器
     # （Generator 内部有自己的 DialogueManager，我们需要把历史注入）
     if session and session.dialogue_manager.history:
@@ -243,22 +247,53 @@ async def chat_stream(request: ChatRequest):
     session_id = sm.get_or_create(request.session_id)
     session = sm.get_session(session_id)
 
+    # 新会话时重置守卫信任状态
+    if not request.session_id or not session.dialogue_manager.history:
+        gen.guard.reset_session()
+
     if session and session.dialogue_manager.history:
         gen.dialogue_manager.history = session.dialogue_manager.history
 
     async def event_stream():
         try:
-            for chunk in gen.answer_stream(
+            for event in gen.answer_stream(
                 request.question,
                 temperature=request.temperature,
                 max_tokens=request.max_tokens,
             ):
-                data = json.dumps({"content": chunk}, ensure_ascii=False)
-                yield f"data: {data}\n\n"
+                # 非医药问题拒绝
+                if "rejected" in event:
+                    data = json.dumps({
+                        "content": event["content"],
+                        "rejected": True,
+                        "session_id": session_id,
+                    }, ensure_ascii=False)
+                    yield f"data: {data}\n\n"
+                    return
 
-            # 发送结束信号
-            end_data = json.dumps({"done": True, "session_id": session_id}, ensure_ascii=False)
-            yield f"data: {end_data}\n\n"
+                # 流式内容片段
+                if "content" in event:
+                    data = json.dumps({"content": event["content"]}, ensure_ascii=False)
+                    yield f"data: {data}\n\n"
+
+                # 元数据（来源、引用等）——流式结束后一次性返回
+                if "metadata" in event:
+                    meta = event["metadata"]
+                    # 同步对话历史到 session
+                    if session:
+                        session.dialogue_manager.history = gen.dialogue_manager.history
+
+                    data = json.dumps({
+                        "done": True,
+                        "session_id": session_id,
+                        "sources": meta["sources"],
+                        "citations": meta["citations"],
+                        "consistency_issues": meta["consistency_issues"],
+                        "latency_ms": meta["latency_ms"],
+                        "dialogue_turn": meta["dialogue_turn"],
+                        "resolved_query": meta["resolved_query"],
+                    }, ensure_ascii=False)
+                    yield f"data: {data}\n\n"
 
         except Exception as e:
             error_data = json.dumps({"error": str(e)}, ensure_ascii=False)
