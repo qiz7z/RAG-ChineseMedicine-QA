@@ -167,6 +167,7 @@ def build_chat_chain(retriever=None, llm=None):
         _get_history,
         input_messages_key="question",
         history_messages_key="chat_history",
+        output_messages_key="answer",  # 链输出为 dict：按 key 自动保存 AI 回复到历史
     )
     # 会话存储随链返回（API 层需要做会话列表/删除）
     chain._histories = _histories  # noqa: SLF001 — 有意暴露给服务层

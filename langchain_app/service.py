@@ -90,13 +90,11 @@ class ChatService:
             config={"configurable": {"session_id": session_id}},
         )
 
-        # 历史已由 RunnableWithMessageHistory 自动写入用户消息；这里补写助手回复
-        history = self._histories.get(session_id)
-        if history:
-            history.add_message(AIMessage(content=out["answer"]))
-
+        # 用户消息与 AI 回复由 RunnableWithMessageHistory 按
+        # input/output_messages_key 自动写入历史，这里不再手动追加
         out["session_id"] = session_id
         out["latency"] = time.time() - t0
+        history = self._histories.get(session_id)
         out["dialogue_turn"] = len(history.messages) // 2 if history else 0
         return out
 

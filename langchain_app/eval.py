@@ -179,7 +179,14 @@ def evaluate_generation(service, test_queries: List[Dict], engine: str = "lc-sta
     for i, tc in enumerate(test_queries, 1):
         keywords = tc.get("expected_answer_keywords", []) or []
         t0 = time.time()
-        out = service.answer(tc["query"])  # 不传 session_id → 每题独立会话
+        try:
+            out = service.answer(tc["query"])  # 不传 session_id → 每题独立会话
+        except Exception as e:
+            # 单题失败（通道超时/限流等）不报废整场评估：记 0 分继续
+            import logging
+            logging.getLogger(__name__).warning(f"题目 {tc.get('id')} 生成失败: {e}")
+            out = {"answer": "", "citations": [], "consistency_issues": [],
+                   "retrieval_latency": 0.0}
         latency = time.time() - t0
 
         answer = out.get("answer", "")
