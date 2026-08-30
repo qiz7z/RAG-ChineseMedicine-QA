@@ -8,7 +8,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from langchain_core.documents import Document
 
 from guard import keyword_guard
-from postprocess import postprocess, format_docs, docs_to_sources
+from postprocess import postprocess, format_docs, docs_to_sources, check_consistency
 from eval import _check_hit, _percentile
 
 
@@ -78,3 +78,33 @@ class TestEvalFormulas:
         assert _percentile(vals, 50) == 0.3
         assert _percentile(vals, 100) == 1.0
         assert _percentile([], 50) == 0.0
+
+
+class TestConsistencyCheck:
+    def _ctx_doc(self, content):
+        return Document(page_content=content, metadata={"drug_name": "人参"})
+
+    def test_fabricated_number_flagged(self):
+        ctx = self._ctx_doc("用法用量：3〜9g，另煎兑服。")
+        issues = check_consistency("人参用量为 5g，一日3次。", [ctx])
+        # "3次" 在上下文中不存在 → 应被标记；"5g" 同理
+        assert len(issues) == 2
+
+    def test_numbers_in_context_pass(self):
+        ctx = self._ctx_doc("用法用量：3〜9g，另煎兑服；一次2g，一日2次。")
+        issues = check_consistency("人参用量 3〜9g，另煎兑服。", [ctx])
+        assert issues == []
+
+    def test_benign_100_percent_ignored(self):
+        ctx = self._ctx_doc("含人参皂苷 Rg1。")
+        issues = check_consistency("纯度可达 100%。", [ctx])
+        assert issues == []
+
+    def test_no_docs_no_issues(self):
+        assert check_consistency("5g 用量", []) == []
+
+    def test_postprocess_returns_issues(self):
+        ctx = self._ctx_doc("用法用量：3〜9g。")
+        out = postprocess("回答：人参用量为 99g。", [ctx])
+        assert len(out["consistency_issues"]) == 1
+        assert "99g" in out["consistency_issues"][0]

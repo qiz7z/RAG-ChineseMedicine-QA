@@ -74,6 +74,7 @@ class ChatService:
             return {
                 "answer": GUARD_REJECTION,
                 "citations": [],
+                "consistency_issues": [],
                 "sources": [],
                 "resolved_query": question,
                 "guard_rejected": True,
@@ -176,7 +177,7 @@ class ChatService:
             "resolved_query": resolved,
             "sources": docs_to_sources(docs),
             "citations": pp["citations"],
-            "consistency_issues": [],
+            "consistency_issues": pp["consistency_issues"],
             "latency_ms": int((time.time() - total_start) * 1000),
             "dialogue_turn": len(history.messages) // 2 if history else 0,
         }}

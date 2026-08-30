@@ -147,6 +147,8 @@ class GenQueryResult:
     answer_keywords_total: int = 0
     keyword_coverage: float = 0.0
     has_citations: bool = False
+    has_consistency_issues: bool = False
+    consistency_issue_count: int = 0
     latency: float = 0.0
     retrieval_latency: float = 0.0
 
@@ -158,6 +160,7 @@ class GenEvalReport:
     timestamp: str
     avg_keyword_coverage: float
     citation_rate: float
+    consistency_issue_rate: float
     latency_p50: float
     latency_p95: float
     latency_p99: float
@@ -181,6 +184,7 @@ def evaluate_generation(service, test_queries: List[Dict], engine: str = "lc-sta
 
         answer = out.get("answer", "")
         hit = sum(1 for kw in keywords if kw and kw in answer)
+        issues = out.get("consistency_issues", []) or []
         qr = GenQueryResult(
             query_id=tc["id"], query=tc["query"], query_type=tc["type"],
             answer=answer[:800],
@@ -188,6 +192,8 @@ def evaluate_generation(service, test_queries: List[Dict], engine: str = "lc-sta
             answer_keywords_total=len(keywords),
             keyword_coverage=hit / len(keywords) if keywords else 0.0,
             has_citations=bool(out.get("citations")),
+            has_consistency_issues=len(issues) > 0,
+            consistency_issue_count=len(issues),
             latency=latency,
             retrieval_latency=out.get("retrieval_latency", 0.0),
         )
@@ -199,14 +205,18 @@ def evaluate_generation(service, test_queries: List[Dict], engine: str = "lc-sta
     lats = [r.latency for r in results]
     by_type: Dict[str, dict] = {}
     for r in results:
-        b = by_type.setdefault(r.query_type, {"count": 0, "cov": 0.0, "cite": 0, "lat": 0.0})
+        b = by_type.setdefault(r.query_type, {
+            "count": 0, "cov": 0.0, "cite": 0, "issue": 0, "lat": 0.0,
+        })
         b["count"] += 1
         b["cov"] += r.keyword_coverage
         b["cite"] += 1 if r.has_citations else 0
+        b["issue"] += 1 if r.has_consistency_issues else 0
         b["lat"] += r.latency
     for t, b in by_type.items():
         b["avg_keyword_coverage"] = b["cov"] / b["count"]
         b["citation_rate"] = b["cite"] / b["count"]
+        b["consistency_issue_rate"] = b["issue"] / b["count"]
         b["avg_latency"] = b["lat"] / b["count"]
 
     return GenEvalReport(
@@ -215,6 +225,7 @@ def evaluate_generation(service, test_queries: List[Dict], engine: str = "lc-sta
         timestamp=time.strftime("%Y-%m-%d %H:%M:%S"),
         avg_keyword_coverage=sum(r.keyword_coverage for r in results) / n,
         citation_rate=sum(1 for r in results if r.has_citations) / n,
+        consistency_issue_rate=sum(1 for r in results if r.has_consistency_issues) / n,
         latency_p50=_percentile(lats, 50),
         latency_p95=_percentile(lats, 95),
         latency_p99=_percentile(lats, 99),

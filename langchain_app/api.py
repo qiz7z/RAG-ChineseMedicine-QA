@@ -124,7 +124,7 @@ def chat(request: ChatRequest):
             latency_ms=int(out.get("latency", 0) * 1000),
             component_latency={"retrieval": out.get("retrieval_latency", 0.0)},
             dialogue_turn=out.get("dialogue_turn", 0),
-            consistency_issues=[],
+            consistency_issues=out.get("consistency_issues", []),
         )
     except HTTPException:
         raise

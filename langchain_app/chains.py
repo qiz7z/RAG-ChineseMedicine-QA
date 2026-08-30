@@ -75,6 +75,7 @@ def _rejection_output(question: str) -> dict:
     return {
         "answer": GUARD_REJECTION,
         "citations": [],
+        "consistency_issues": [],
         "sources": [],
         "resolved_query": question,
         "guard_rejected": True,
@@ -85,6 +86,7 @@ def _no_result_output(resolved: str) -> dict:
     return {
         "answer": NO_RESULT_ANSWER,
         "citations": [],
+        "consistency_issues": [],
         "sources": [],
         "resolved_query": resolved,
         "guard_rejected": False,
@@ -133,6 +135,7 @@ def build_chat_chain(retriever=None, llm=None):
         return {
             "answer": pp["answer"],
             "citations": pp["citations"],
+            "consistency_issues": pp["consistency_issues"],
             "sources": docs_to_sources(docs),
             "resolved_query": resolved,
             "guard_rejected": False,
