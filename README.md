@@ -2,7 +2,7 @@
 
 基于《中国药典》2020 年版一部构建的端到端 RAG（检索增强生成）系统，覆盖从原始文档解析到智能问答的完整流水线。
 
-系统从 54,442 段原始 Word 文档中提取 **2,389 个药品条目**、生成 **11,369 个语义切片**，通过向量检索 + BM25 + RRF 融合 + 重排的混合检索架构，实现 **Hit@5 = 91%** 的检索准确率，并集成美团 LongCat 2.0 大模型提供专业问答服务。
+系统从 54,442 段原始 Word 文档中提取 **2,389 个药品条目**、生成 **11,369 个语义切片**，通过向量检索 + BM25 + RRF 融合 + 重排的混合检索架构，实现 **Hit@5 = 94%** 的检索准确率（[LangChain 标准版](docs/07_LangChain标准版架构.md) Ensemble 融合最优配置），并集成大模型（LongCat / 任意 OpenAI 兼容端点）提供专业问答服务。项目包含**手写实现**与 **LangChain 标准版**两套完全独立引擎，可并行运行、对比评估。
 
 ---
 
@@ -92,6 +92,15 @@ Chinese-Medicine/
 │       ├── api_client.py         # API 客户端
 │       ├── components.py         # UI 组件
 │       └── styles.py             # CSS 主题
+├── langchain_app/                # LangChain 标准版（完全独立实现，零依赖 src/）
+│   ├── build_index.py            # FAISS + BM25Retriever + drug_names 构建
+│   ├── query_understanding.py    # 规则式查询理解（药品名扩展/横向分类）
+│   ├── retrievers.py             # FAISS+BM25 → EnsembleRetriever(RRF) → CrossEncoder 重排
+│   ├── chains.py                 # ★ 主程序：LCEL 声明式会话 RAG 链
+│   ├── guard.py / prompts.py / postprocess.py  # 守卫/提示词/引用标注
+│   ├── service.py / api.py       # 服务层 + FastAPI（8001，Schema 与手撕版一致）
+│   ├── eval.py                   # 独立评估器（判分公式与主项目一致）
+│   └── _archive_custom/          # 旧自定义适配版存档（不参与运行）
 ├── scripts/
 │   ├── run/                      # 启动脚本
 │   │   ├── run_etl.py            # 运行 ETL 流水线
@@ -115,6 +124,7 @@ Chinese-Medicine/
 │   ├── 03_检索策略优化.md         # 多药品过滤 + BM25 后过滤
 │   └── 04_最终评估报告.md         # 最终评估结果
 ├── requirements.txt
+├── requirements-langchain.txt    # LangChain 版依赖（与主依赖共存）
 └── README.md
 ```
 
@@ -213,6 +223,8 @@ Chinese-Medicine/
 | **MRR** | 0.9100 | ≥0.80 | ✅ |
 | **P50 延迟** | 0.834s | - | - |
 | **P95 延迟** | 1.495s | - | - |
+
+> 注：上表为 2026-07-06 报告数据。2026-08-30 复测与消融实验见 [05_LangChain对比实验](docs/05_LangChain对比实验.md) 与 [07_LangChain标准版架构](docs/07_LangChain标准版架构.md)——当前最优配置为 LangChain 标准版 Ensemble 融合（未启用重排）：Hit@5 = 94%，MRR = 0.9166，P50 = 0.051s。
 
 ### 分类型结果
 
@@ -382,10 +394,51 @@ python scripts/build/build_index.py --test
 - [ETL 解析修复](docs/02_ETL解析修复.md) — 样式覆盖扩展 + OCR 字符纠正
 - [检索策略优化](docs/03_检索策略优化.md) — 多药品过滤 + BM25 后过滤 + 过滤器扩展
 - [最终评估报告](docs/04_最终评估报告.md) — 100 题测试集详细评估结果
+- [LangChain 对比实验](docs/05_LangChain对比实验.md) — 手撕版 vs LangChain vs 纯标准组件三方对比
+- [LLM 提供商配置](docs/06_LLM提供商配置.md) — .env 切换 LLM 端点（LongCat / Agnes 等）
+- [LangChain 标准版架构](docs/07_LangChain标准版架构.md) — 完全独立实现 + 消融实验
 
 ---
 
 ## 更新记录
+
+### 2026-08-30 LangChain 标准版（完全独立实现）+ 消融实验
+
+将 LangChain 引擎重写为**完全独立的标准组件实现**（不依赖 `src/` 任何模块，可单独交付），旧的自定义适配版归档至 `langchain_app/_archive_custom/`。架构与踩坑记录见 [docs/07](docs/07_LangChain标准版架构.md)。
+
+**核心结果**（同 100 题测试集、同判分公式）：
+
+| 引擎 | Hit@5 | MRR | P50 延迟 |
+|------|-------|-----|---------|
+| 手撕版（当前代码实测） | 89% | 0.8900 | 0.727s |
+| LangChain 标准版（完整混合+重排） | 92% | 0.9120 | 0.683s |
+| **LangChain 标准版（Ensemble 融合，未启用重排）** | **94%** | **0.9166** | **0.051s** |
+| 标准版消融：纯向量+重排 | 92% | 0.9008 | 0.360s |
+
+**关键发现**：CrossEncoder 重排在本数据集上为负收益（-2pp Hit@5、13 倍延迟），最优上线配置为 Ensemble 融合不加重排——用测量代替假设。
+
+**标准组件栈**：
+
+| 环节 | 组件 |
+|---|---|
+| 检索融合 | `FAISS` + `BM25Retriever` → `EnsembleRetriever`（内置 RRF） |
+| 重排（可选） | `HuggingFaceCrossEncoder` + `BaseDocumentCompressor` |
+| 主链 | LCEL 声明式 + `RunnableBranch` 守卫短路 + `RunnableWithMessageHistory` 会话记忆 |
+| 提示词 | `ChatPromptTemplate` + `MessagesPlaceholder`（多轮 condense-question 改写） |
+
+**运行方式**：
+
+```bash
+pip install -r requirements-langchain.txt
+python langchain_app/build_index.py          # 构建索引（FAISS 已有则复用）
+python scripts/run/run_lc_api.py             # API 服务（8001，前端零改动切换）
+python scripts/run/run_eval_lc.py [--no-rerank] [--no-bm25]   # 评估与消融
+```
+
+### 2026-08-30 问题领域守卫与 LLM 提供商
+
+- LLM 接入切换为环境变量配置（`.env`），支持任意 OpenAI 兼容端点（当前 agnes-2.5-flash 免费通道，详见 [docs/06](docs/06_LLM提供商配置.md)）
+- 兼容推理类模型（guard/dialogue 小预算调用适配 `reasoning_content`）
 
 ### 2026-07-07 问题领域守卫：非医药问题拦截
 
