@@ -130,3 +130,95 @@ def load_test_queries(limit: int = None, query_type: str = None) -> List[Dict]:
     if limit:
         queries = queries[:limit]
     return queries
+
+
+# ============================================================
+# 生成评估（口径与主项目 GenerationEvaluator 一致：
+#   关键词覆盖率 = 命中的期望关键词占比；引用率；延迟分位）
+# ============================================================
+
+@dataclass
+class GenQueryResult:
+    query_id: str
+    query: str
+    query_type: str
+    answer: str = ""
+    answer_keywords_hit: int = 0
+    answer_keywords_total: int = 0
+    keyword_coverage: float = 0.0
+    has_citations: bool = False
+    latency: float = 0.0
+    retrieval_latency: float = 0.0
+
+
+@dataclass
+class GenEvalReport:
+    engine: str
+    total_queries: int
+    timestamp: str
+    avg_keyword_coverage: float
+    citation_rate: float
+    latency_p50: float
+    latency_p95: float
+    latency_p99: float
+    avg_latency: float
+    by_type: Dict[str, dict] = field(default_factory=dict)
+    results: List[dict] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+def evaluate_generation(service, test_queries: List[Dict], engine: str = "lc-standard",
+                        verbose: bool = True) -> GenEvalReport:
+    """逐题调用 service.answer（每题新会话，无跨题污染），计算生成质量指标"""
+    results: List[GenQueryResult] = []
+    for i, tc in enumerate(test_queries, 1):
+        keywords = tc.get("expected_answer_keywords", []) or []
+        t0 = time.time()
+        out = service.answer(tc["query"])  # 不传 session_id → 每题独立会话
+        latency = time.time() - t0
+
+        answer = out.get("answer", "")
+        hit = sum(1 for kw in keywords if kw and kw in answer)
+        qr = GenQueryResult(
+            query_id=tc["id"], query=tc["query"], query_type=tc["type"],
+            answer=answer[:800],
+            answer_keywords_hit=hit,
+            answer_keywords_total=len(keywords),
+            keyword_coverage=hit / len(keywords) if keywords else 0.0,
+            has_citations=bool(out.get("citations")),
+            latency=latency,
+            retrieval_latency=out.get("retrieval_latency", 0.0),
+        )
+        results.append(qr)
+        if verbose and i % 10 == 0:
+            print(f"  进度: {i}/{len(test_queries)}")
+
+    n = len(results)
+    lats = [r.latency for r in results]
+    by_type: Dict[str, dict] = {}
+    for r in results:
+        b = by_type.setdefault(r.query_type, {"count": 0, "cov": 0.0, "cite": 0, "lat": 0.0})
+        b["count"] += 1
+        b["cov"] += r.keyword_coverage
+        b["cite"] += 1 if r.has_citations else 0
+        b["lat"] += r.latency
+    for t, b in by_type.items():
+        b["avg_keyword_coverage"] = b["cov"] / b["count"]
+        b["citation_rate"] = b["cite"] / b["count"]
+        b["avg_latency"] = b["lat"] / b["count"]
+
+    return GenEvalReport(
+        engine=engine,
+        total_queries=n,
+        timestamp=time.strftime("%Y-%m-%d %H:%M:%S"),
+        avg_keyword_coverage=sum(r.keyword_coverage for r in results) / n,
+        citation_rate=sum(1 for r in results if r.has_citations) / n,
+        latency_p50=_percentile(lats, 50),
+        latency_p95=_percentile(lats, 95),
+        latency_p99=_percentile(lats, 99),
+        avg_latency=sum(lats) / n if n else 0,
+        by_type=by_type,
+        results=[asdict(r) for r in results],
+    )

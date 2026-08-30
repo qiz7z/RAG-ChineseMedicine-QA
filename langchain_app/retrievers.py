@@ -178,9 +178,13 @@ class PharmacopoeiaRetriever(BaseRetriever):
                 search_kwargs={"k": self.k_vector, "filter": filt}
             )
             legs = [v]
-            if self.enable_bm25:
-                self.bm25.k = self.k_bm25 * 4  # 过滤损失召回，扩大召回补偿
-                legs.append(FilteredRetriever(base=self.bm25, predicate=filt))
+            if self.enable_bm25 and self.bm25 is not None:
+                # 过滤损失召回，扩大 BM25 召回量补偿。
+                # 用浅拷贝而非直接改共享实例的 k（pydantic model_copy 只复制
+                # 字段，重量级 BM25Okapi 底层索引共享）——避免并发请求互相踩 k
+                bm25_scaled = self.bm25.model_copy()
+                bm25_scaled.k = self.k_bm25 * 4
+                legs.append(FilteredRetriever(base=bm25_scaled, predicate=filt))
             ensemble = EnsembleRetriever(
                 retrievers=legs, weights=list(RRF_WEIGHTS[: len(legs)])
             )
