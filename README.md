@@ -2,7 +2,7 @@
 
 基于《中国药典》2020 年版一部构建的端到端 RAG（检索增强生成）系统，覆盖从原始文档解析到智能问答的完整流水线。
 
-系统从 54,442 段原始 Word 文档中提取 **2,389 个药品条目**、生成 **11,369 个语义切片**，通过向量检索 + BM25 + RRF 融合 + 重排的混合检索架构，实现 **Hit@5 = 94%** 的检索准确率（[LangChain 标准版](docs/07_LangChain标准版架构.md) Ensemble 融合最优配置），并集成大模型（LongCat / 任意 OpenAI 兼容端点）提供专业问答服务。项目包含**手写实现**与 **LangChain 标准版**两套完全独立引擎，可并行运行、对比评估。
+系统从 54,442 段原始 Word 文档中提取 **2,300+ 个药品条目**、生成 **11,369 个语义切片**，通过向量检索 + BM25 + RRF 融合 + 元数据过滤的混合检索架构，实现 **Hit@5 = 94%** 的检索准确率（[LangChain 标准版](docs/07_LangChain标准版架构.md) Ensemble 融合最优配置），并集成大模型（LongCat / 任意 OpenAI 兼容端点）提供专业问答服务。项目包含**手写实现**与 **LangChain 标准版**两套完全独立引擎，可并行运行、对比评估。
 
 ---
 
@@ -100,6 +100,7 @@ Chinese-Medicine/
 │   ├── guard.py / prompts.py / postprocess.py  # 守卫/提示词/引用标注
 │   ├── service.py / api.py       # 服务层 + FastAPI（8001，Schema 与手撕版一致）
 │   ├── eval.py                   # 独立评估器（判分公式与主项目一致）
+│   ├── tests/                    # 30 个单元测试（查询理解/守卫/后处理/判分/检索器）
 │   └── _archive_custom/          # 旧自定义适配版存档（不参与运行）
 ├── scripts/
 │   ├── run/                      # 启动脚本
@@ -327,6 +328,26 @@ python scripts/build/build_index.py --skip-embedding
 python scripts/build/build_index.py --test
 ```
 
+### LangChain 标准版（第二套引擎）
+
+```bash
+pip install -r requirements-langchain.txt
+
+# 构建标准版索引（FAISS 已有则复用，仅 BM25 + 药品名清单约 11 秒）
+python langchain_app/build_index.py
+
+# 启动标准版 API（端口 8001，与手撕版 8000 可并行）
+python scripts/run/run_lc_api.py
+# 前端零改动切换引擎：API_BASE_URL=http://127.0.0.1:8001 streamlit run src/webui/app.py
+
+# 评估与消融（不需要 LLM 额度）
+python scripts/run/run_eval_lc.py [--no-rerank] [--no-bm25]
+python scripts/run/run_eval_lc.py --mode generation   # 生成评估（需 LLM 额度）
+
+# 单元测试（30 个）
+python -m pytest langchain_app/tests/ -v
+```
+
 ---
 
 ## 技术栈
@@ -336,8 +357,9 @@ python scripts/build/build_index.py --test
 | Embedding | BAAI/bge-large-zh-v1.5 | 1024 维中文语义向量 |
 | 向量检索 | FAISS | IndexFlatIP 精确内积检索 |
 | 关键词检索 | rank-bm25 + jieba | 中文分词 + BM25Okapi |
-| 重排模型 | BAAI/bge-reranker-v2-m3 | CrossEncoder 跨语言重排 |
-| LLM | 美团 LongCat 2.0 | OpenAI 兼容接口 |
+| 重排模型 | BAAI/bge-reranker-v2-m3 | CrossEncoder 跨语言重排（消融验证为负收益，默认关闭） |
+| LLM | 可配置 OpenAI 兼容端点 | LongCat 2.0 / Agnes 等，.env 一行切换（见 docs/06） |
+| LangChain 引擎 | LangChain 1.x 标准组件 | EnsembleRetriever(RRF) / LCEL / RunnableWithMessageHistory（独立实现） |
 | API 框架 | FastAPI + Uvicorn | 异步高性能 + 自动文档 |
 | Web UI | Streamlit | 数据应用可视化 |
 | 元数据 | SQLite | 结构化过滤与查询 |
@@ -416,6 +438,8 @@ python scripts/build/build_index.py --test
 | 标准版消融：纯向量+重排 | 92% | 0.9008 | 0.360s |
 
 **关键发现**：CrossEncoder 重排在本数据集上为负收益（-2pp Hit@5、13 倍延迟），最优上线配置为 Ensemble 融合不加重排——用测量代替假设。
+
+**生成侧对照实验**（同 100 题、同通道 agnes-2.5-flash）：标准版关键词覆盖率 60.5%（手撕版 58.6%）、引用率 100%（92%）、延迟持平；生成侧重排同样无收益（59.2% vs 60.5%），"去重排"在检索与生成两侧均成立。**数值一致性校验已移植到标准版**（与手撕版同口径同逻辑），实测检出率 13% vs 手撕版 12%，同量级。详见 [docs/07](docs/07_LangChain标准版架构.md)。
 
 **标准组件栈**：
 

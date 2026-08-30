@@ -1,6 +1,10 @@
 # 05 · LangChain 对比实验：手撕管线 vs LangChain 重建 vs 纯标准组件
 
 > 实验日期：2026-08-30 · 测试集：100 题（data/eval/test_queries.json）· 评估器：src/eval/evaluator.py（三方共用，口径一致）
+>
+> ⚠️ 本篇的"LangChain hybrid"为**旧自定义适配版**（复用 src/ 模块的过渡实现，代码已归档至 `langchain_app/_archive_custom/`）。
+> 现行标准版（完全独立实现）的架构与最新消融数据见 **[07_LangChain标准版架构](07_LangChain标准版架构.md)**，其最优配置 Hit@5 = 94%。
+> 本篇保留价值：三方对照的方法论与"重排负收益"结论的首次发现过程。
 
 ## 结论速览
 
