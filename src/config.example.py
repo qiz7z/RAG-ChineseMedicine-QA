@@ -112,8 +112,8 @@ WINDOW_SIZE = 500           # 滑动窗口大小
 # ============================================================
 
 # --- LLM 模型配置（美团 LongCat 2.0，OpenAI 兼容接口）---
-# API Key 从环境变量读取，避免硬编码泄露
-# 请填入你自己的 API Key：https://longcat.chat/platform/api_keys
+# API Key 从环境变量或项目根目录 .env 文件读取（.env 已被 git 忽略），
+# 不要把真实 Key 写进任何 .py 文件。获取 Key: https://longcat.chat/platform/api_keys
 LONGCAT_API_KEY = os.environ.get("LONGCAT_API_KEY", "your_api_key_here")
 LONGCAT_BASE_URL = os.environ.get("LONGCAT_BASE_URL", "https://api.longcat.chat/openai")
 LONGCAT_MODEL = os.environ.get("LONGCAT_MODEL", "LongCat-2.0")

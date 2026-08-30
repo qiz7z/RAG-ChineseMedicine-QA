@@ -329,8 +329,9 @@ class TestDrugs:
         assert r.status_code == 200
         data = r.json()
         assert data["total"] > 0
+        # /api/v1/drugs 返回的 drugs 是药品名字符串列表
         for drug in data["drugs"]:
-            assert "黄" in drug.get("drug_name", "")
+            assert "黄" in drug
 
 
 # ============================================================

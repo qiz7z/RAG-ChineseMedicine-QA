@@ -156,7 +156,8 @@ class DialogueManager:
             resolved = self.llm_client.chat(
                 messages,
                 temperature=0.0,   # 指代消解需要确定性输出
-                max_tokens=256,
+                # 预算需容纳推理类模型的思考内容；对非推理模型无影响
+                max_tokens=1024,
             )
 
             resolved = resolved.strip()

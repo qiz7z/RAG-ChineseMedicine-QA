@@ -193,6 +193,29 @@ class FaissVectorIndex:
     # 检索
     # ----------------------------------------------------------
 
+    @staticmethod
+    def _match_metadata(meta: Dict[str, Any], where: Dict[str, Any]) -> bool:
+        """判断单条元数据是否满足过滤条件。
+
+        支持：
+          - 普通等值:   {"category": "药材和饮片"}
+          - $in 算子:   {"drug_name": {"$in": ["人参", "人参-饮片"]}}
+          - $and 组合:  {"$and": [{...}, {...}]}
+        """
+        for key, value in where.items():
+            if key == "$and":
+                if not all(FaissVectorIndex._match_metadata(meta, sub) for sub in value):
+                    return False
+            elif key.startswith("$"):
+                # 未支持的顶层算子（如旧版的裸 $in）：忽略，不参与匹配
+                continue
+            elif isinstance(value, dict) and "$in" in value:
+                if meta.get(key) not in value["$in"]:
+                    return False
+            elif meta.get(key) != value:
+                return False
+        return True
+
     def query(
         self,
         query_embedding: np.ndarray,
@@ -205,7 +228,7 @@ class FaissVectorIndex:
         Args:
             query_embedding: 查询向量 (dim,)，必须已归一化
             top_k: 返回结果数
-            where: 元数据过滤条件（如 {"drug_name": "人参"}）
+            where: 元数据过滤条件，支持等值、$in、$and（如 {"$and": [{"drug_name": {"$in": [...]}}, {"category": "..."}]}）
 
         Returns:
             结果列表，每个元素包含 id, content, metadata, score
@@ -219,22 +242,10 @@ class FaissVectorIndex:
 
         # 如果有过滤条件，先过滤再检索
         if where:
-            # 找到满足条件的索引
-            valid_indices = []
-            for i, meta in enumerate(self.metadatas):
-                match = True
-                for key, value in where.items():
-                    if key == "$in":
-                        continue
-                    if isinstance(value, dict) and "$in" in value:
-                        if meta.get(key) not in value["$in"]:
-                            match = False
-                            break
-                    elif meta.get(key) != value:
-                        match = False
-                        break
-                if match:
-                    valid_indices.append(i)
+            valid_indices = [
+                i for i, meta in enumerate(self.metadatas)
+                if self._match_metadata(meta, where)
+            ]
 
             if not valid_indices:
                 return []

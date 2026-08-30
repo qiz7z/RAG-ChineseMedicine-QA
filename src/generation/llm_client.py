@@ -131,6 +131,11 @@ class LLMClient:
 
             except Exception as e:
                 last_error = e
+                status_code = getattr(e, "status_code", None)
+                # 4xx（除 429 限流）为不可重试错误（鉴权/参数/额度等），重试无意义
+                if status_code is not None and 400 <= status_code < 500 and status_code != 429:
+                    logger.error(f"LLM 调用失败（不可重试错误 HTTP {status_code}）: {e}")
+                    break
                 if attempt < LLM_MAX_RETRIES:
                     delay = LLM_RETRY_DELAY ** attempt
                     logger.warning(

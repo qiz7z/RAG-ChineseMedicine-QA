@@ -69,6 +69,9 @@ class SessionManager:
     # 会话过期时间（小时）
     SESSION_TIMEOUT_HOURS = 24
 
+    # 过期清理的最小间隔（秒），避免每次创建会话都全量扫描
+    CLEANUP_INTERVAL_SECONDS = 600
+
     def __init__(self, generator_factory=None):
         """
         Args:
@@ -79,6 +82,17 @@ class SessionManager:
         """
         self.sessions: Dict[str, SessionInfo] = {}
         self.generator_factory = generator_factory
+        self._last_cleanup = time.time()
+
+    def _maybe_cleanup(self) -> None:
+        """距上次清理超过 CLEANUP_INTERVAL_SECONDS 时清理一次过期会话。"""
+        if time.time() - self._last_cleanup < self.CLEANUP_INTERVAL_SECONDS:
+            return
+        self._last_cleanup = time.time()
+        try:
+            self.cleanup_expired()
+        except Exception as e:
+            logger.warning(f"清理过期会话失败: {e}")
 
     def create_session(self) -> str:
         """
@@ -87,6 +101,7 @@ class SessionManager:
         Returns:
             会话 ID
         """
+        self._maybe_cleanup()
         session_id = f"sess_{uuid.uuid4().hex[:12]}"
 
         # 为新会话创建独立的 Generator（含独立 DialogueManager）
