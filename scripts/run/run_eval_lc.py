@@ -72,6 +72,7 @@ def main():
             print(f"    {t}: n={v['count']} hit@5={v['hit_at_5']:.2%} mrr={v['mrr']:.4f}")
     else:
         from service import ChatService
+        from retrievers import build_hybrid_retriever
         from eval import evaluate_generation, load_test_queries
 
         if not LLM_API_KEY:
@@ -86,7 +87,12 @@ def main():
         print(f"  LangChain 标准版生成评估 | 引擎: {engine_name} | 题数: {len(test_queries)}")
         print("=" * 70)
 
-        service = ChatService()
+        # 消融开关作用于检索层（重排影响上下文构成，进而影响生成质量）
+        retriever = build_hybrid_retriever(
+            enable_reranker=not args.no_rerank,
+            enable_bm25=not args.no_bm25,
+        )
+        service = ChatService(retriever=retriever)
         report = evaluate_generation(service, test_queries, engine=engine_name)
 
         print()
