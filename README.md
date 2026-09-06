@@ -49,6 +49,8 @@ flowchart TD
 
 图例：紫色 = LLM 出场点（守卫语义判定 / 指代消解 / 生成），绿色 = 数据资产（三套索引），其余为确定性代码。**两套独立引擎**（手写版 `:8000` / LangChain 标准版 `:8001`）共享同一份数据资产与同一评测口径，仅检索管线与编排层不同。
 
+![主链路流程图（PNG 附图）](docs/pipeline_main.png)
+
 检索指标不是调出来的，是下面这个闭环测出来的：
 
 ```mermaid
@@ -64,6 +66,8 @@ flowchart LR
     style A fill:#EF9F27,stroke:#854F0B,color:#000
     style C fill:#EF9F27,stroke:#854F0B,color:#000
 ```
+
+![评测闭环流程图（PNG 附图）](docs/pipeline_eval.png)
 
 模块速览（文字版）：
 
@@ -183,6 +187,11 @@ Chinese-Medicine/
 │   ├── 02_ETL解析修复.md          # 样式覆盖 + OCR 纠错
 │   ├── 03_检索策略优化.md         # 多药品过滤 + BM25 后过滤
 │   └── 04_最终评估报告.md         # 最终评估结果
+│   ├── 05_LangChain对比实验.md    # 手撕版 vs 标准版 vs 纯标准组件
+│   ├── 06_LLM提供商配置.md        # .env 切换 LLM 端点
+│   ├── 07_LangChain标准版架构.md  # 标准版实现 + 消融实验
+│   ├── pipeline_main.png          # 主链路流程图 PNG 附图（mermaid 渲染）
+│   └── pipeline_eval.png          # 评测闭环流程图 PNG 附图
 ├── requirements.txt
 ├── requirements-langchain.txt    # LangChain 版依赖（与主依赖共存）
 └── README.md
