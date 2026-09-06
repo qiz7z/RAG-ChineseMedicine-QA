@@ -8,6 +8,65 @@
 
 ## 系统架构
 
+离线索引只跑一次，产出三套数据资产；在线问答每次提问按 **① → ⑨** 顺序执行：
+
+```mermaid
+flowchart TD
+    A[药典 Word 原文<br>2020 年版一部 · 54,442 段] --> B[ETL 流水线<br>parser → cleaner → chunker<br>+ OCR 纠错表：黄茂→黄芪]
+    B --> C[三级语义切分<br>药品边界 → 章节边界 → 滑动窗口]
+    C --> D[数据资产<br>2,387 药品条目 · 11,369 语义切片<br>13 个元数据字段]
+
+    D --> E[bge-large-zh 向量化<br>归一化内积]
+    D --> F[jieba 分词]
+    D --> G[元数据]
+
+    E --> H[(FAISS 向量索引)]
+    F --> I[(BM25 关键词索引)]
+    G --> J[(SQLite 元数据库)]
+
+    K[用户提问] --> L{① 领域守卫<br>关键词快通道 0ms / LLM 语义判定}
+    L -->|域外问题| M[礼貌拒绝<br>不浪费检索与 LLM 算力]
+    L -->|医药问题| N[② 指代消解<br>仅多轮：它的功能主治 → 人参的功能主治]
+    N --> O[③ 查询理解<br>药品名变体扩展 · 横向分类判断]
+    O --> P[④ 双路检索<br>向量路：FAISS + 元数据过滤<br>BM25 路：关键词召回 + SQLite 后过滤]
+    H --> P
+    I --> P
+    J --> P
+    P --> Q[⑤ RRF 融合 k=60<br>→ top30 候选]
+    Q --> R[⑥ 重排 CrossEncoder<br>消融证明负收益 · 默认关闭]
+    R --> S[⑦ Prompt 组装<br>System 规则 + 参考资料 + 对话历史]
+    S --> T[⑧ LLM 生成<br>LongCat / 任意 OpenAI 兼容端点]
+    T --> U[⑨ 后处理<br>引用标注 · 数值一致性校验<br>实测检出 13% 幻觉风险 · 用药安全提醒]
+    U --> V[回答 + 引用来源<br>SSE 流式输出]
+
+    style L fill:#7F77DD,stroke:#534AB7,color:#fff
+    style N fill:#7F77DD,stroke:#534AB7,color:#fff
+    style T fill:#7F77DD,stroke:#534AB7,color:#fff
+    style H fill:#1D9E75,stroke:#0F6E56,color:#fff
+    style I fill:#1D9E75,stroke:#0F6E56,color:#fff
+    style J fill:#1D9E75,stroke:#0F6E56,color:#fff
+```
+
+图例：紫色 = LLM 出场点（守卫语义判定 / 指代消解 / 生成），绿色 = 数据资产（三套索引），其余为确定性代码。**两套独立引擎**（手写版 `:8000` / LangChain 标准版 `:8001`）共享同一份数据资产与同一评测口径，仅检索管线与编排层不同。
+
+检索指标不是调出来的，是下面这个闭环测出来的：
+
+```mermaid
+flowchart LR
+    A[100 题分层评测集<br>8 种题型] --> B[检索评测<br>Hit@K / MRR / 延迟分位]
+    B --> C[消融实验<br>逐个组件开关]
+    C --> D[发现：重排负收益<br>-2pp · 13× 延迟 → 裁剪]
+    C --> E[发现：横向查询仅 10%<br>分类映射缺陷 → 修复至 70%]
+    D --> F[最优配置<br>Ensemble 融合去重排<br>Hit@5 94% · P50 0.051s]
+    E --> F
+    F --> G[结论可复现<br>报告 JSON + 判分公式 + git 提交]
+
+    style A fill:#EF9F27,stroke:#854F0B,color:#000
+    style C fill:#EF9F27,stroke:#854F0B,color:#000
+```
+
+模块速览（文字版）：
+
 ```
 中国药典 2020 一部.docx
         │
