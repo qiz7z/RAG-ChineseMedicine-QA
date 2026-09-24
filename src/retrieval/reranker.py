@@ -32,7 +32,7 @@ from pathlib import Path
 from typing import List, Dict, Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from config import RERANKER_MODEL_PATH, RERANKER_TOP_K, RERANKER_MAX_LENGTH
+from config import RERANKER_MODEL_PATH, RERANKER_TOP_K, RERANKER_MAX_LENGTH, RAG_DEVICE
 
 
 class Reranker:
@@ -55,7 +55,9 @@ class Reranker:
         self.model_path = model_path or RERANKER_MODEL_PATH
         self.max_length = max_length or RERANKER_MAX_LENGTH
 
-        # 自动检测设备
+        # 自动检测设备（RAG_DEVICE 显式指定时优先）
+        if device is None:
+            device = RAG_DEVICE
         if device is None:
             try:
                 import torch

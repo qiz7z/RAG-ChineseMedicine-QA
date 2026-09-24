@@ -48,7 +48,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from config import (
     VECTOR_TOP_K, BM25_TOP_K, RRF_K, RRF_TOP_N,
-    RERANKER_TOP_K, ENABLE_RERANKER,
+    RERANKER_TOP_K, ENABLE_RERANKER, ENABLE_SECTION_BOOST,
     CONTEXT_MAX_CHARS_PER_CHUNK, CONTEXT_MAX_TOTAL_CHARS,
     BM25_INDEX_PATH, SQLITE_DB_PATH,
 )
@@ -253,11 +253,7 @@ class Retriever:
             filter_drugs = parsed["drug_names"]
             # 从 SQLite 获取所有匹配的药品名（包括 "-饮片" 等变体）
             all_drug_names = self.meta_store.get_all_drug_names()
-            expanded_drugs = set()
-            for fd in filter_drugs:
-                for dn in all_drug_names:
-                    if fd in dn or dn in fd:
-                        expanded_drugs.add(dn)
+            expanded_drugs = self._expand_drug_variants(filter_drugs, all_drug_names)
             if expanded_drugs:
                 chroma_filter = {"drug_name": {"$in": list(expanded_drugs)}}
 
@@ -301,9 +297,11 @@ class Retriever:
                 for r in bm25_results:
                     meta = bm25_meta_map.get(r["id"], {})
                     drug = meta.get("drug_name", "")
-                    # 检查是否匹配任一过滤药品（精确匹配或子串匹配）
+                    # 检查是否匹配任一过滤药品（单向：查询药名是检索到药名的子串）
+                    # 反向匹配（drug in filter_drug）会把更短的无关药名放进来，
+                    # 与向量路保持一致的口径，见上方 expanded_drugs 的说明。
                     for filter_drug in filter_drugs:
-                        if filter_drug in drug or drug in filter_drug:
+                        if filter_drug in drug:
                             r["metadata"] = meta
                             filtered_bm25.append(r)
                             break
@@ -350,13 +348,24 @@ class Retriever:
             r["metadata"] = meta
         component_latency["metadata_enrichment"] = time.time() - t0
 
+        # ============ 5.5 章节感知召回 ============
+        # 查询解析出的目标章节此前只用于药品名过滤，章节信息被浪费，导致
+        # "药品召回对了、章节没进 top-k"。这里在候选集内把正文含【目标章节】
+        # 标记的 chunk 提前（同命中数保持 RRF 原序），不引入任何模型。
+        if ENABLE_SECTION_BOOST and parsed.get("sections") and fused:
+            fused = self._promote_section_hits(
+                fused, parsed["sections"], parsed.get("drug_names") or []
+            )
+        component_latency["section_boost"] = time.time() - t0
+
         # ============ 6. 重排 ============
         t0 = time.time()
         if self.reranker and fused:
             reranked = self.reranker.rerank(query, fused, top_k=top_k)
         else:
-            # 不重排，直接用 RRF 分数排序
-            reranked = sorted(fused, key=lambda x: x.get("rrf_score", 0), reverse=True)[:top_k]
+            # 不重排：fused 已按「章节命中数 → RRF 分数」排好序，直接截断。
+            # 未启用章节提升时，等价于按 rrf_score 降序取 top_k（与改造前一致）。
+            reranked = fused[:top_k]
         component_latency["reranking"] = time.time() - t0
 
         # ============ 7. 转换为 SearchResult ============
@@ -395,6 +404,102 @@ class Retriever:
             latency=total_latency,
             component_latency=component_latency,
         )
+
+    # ----------------------------------------------------------
+    # 药品名变体扩展
+    # ----------------------------------------------------------
+
+    @staticmethod
+    def _expand_drug_variants(
+        filter_drugs: List[str],
+        all_drug_names: List[str],
+    ) -> set:
+        """把查询到的药品名扩展为"以它为主体的变体"集合（单向子串）。
+
+        只保留 `fd in dn` 方向：如 人参 → {人参, 人参-饮片, 人参叶}。
+
+        **反向（`dn in fd`）是历史缺陷**：查"双黄连口服液"时 `"黄连" in "双黄连口服液"`
+        成立，会把黄连/黄连片/黄连胶囊拉进过滤集，抵消查询解析器已做好的最长匹配
+        去重（`_extract_drug_names`），使 top-1 落到黄连条目上。
+        语料中共 433 个条目的药名包含另一药名，均受此影响。
+
+        见 tests/test_retrieval_fixes.py::TestDrugVariantExpansion
+        """
+        expanded = set()
+        for fd in filter_drugs:
+            for dn in all_drug_names:
+                if fd in dn:
+                    expanded.add(dn)
+        return expanded
+
+    # ----------------------------------------------------------
+    # 章节感知召回
+    # ----------------------------------------------------------
+
+    @staticmethod
+    def _section_hits(chunk: Dict[str, Any], expected_sections: List[str]) -> int:
+        """统计该候选正文命中了多少个期望章节。
+
+        判据与评测 strict 口径（src/eval/evaluator.py::section_match）保持一致：
+        在 chunk **正文**里找 `【期望章节】` 标记，而不是比对 metadata 的 section
+        字段——后者是 ETL 的合并桶名（临床应用 / 药品概要 / 完整条目），与药典
+        原生章节名不同源，直接比对会大面积假阴性。
+        """
+        content = chunk.get("content") or ""
+        section_field = (chunk.get("metadata") or {}).get("section") or ""
+        hits = 0
+        for sec in expected_sections:
+            if f"【{sec}】" in content:
+                hits += 1
+            elif sec == "来源" and section_field in ("药品概要", "完整条目"):
+                # 【来源】正文在这两种 chunk 里不带【】标记
+                hits += 1
+        return hits
+
+    @staticmethod
+    def _name_exactness(chunk: Dict[str, Any], queried_drugs: List[str]) -> int:
+        """药名与查询药名的贴合度：2=该药本身或其饮片，1=含该药名的其他制剂，0=无关。
+
+        查询药名到候选的扩展是**子串**方向（黄芪 → 黄芪-饮片/黄芪颗粒/炙黄芪），
+        所以「问黄芪」时候选池里会混入大量含黄芪的成药。strict 口径只认
+        「该药本身 + 其饮片」，排序上也应对齐，否则成药会把正主挤下去
+        （实测：修正药名后 炙黄芪 成为合法条目，把 黄芪-饮片 从第 1 位压到第 3~5 位，
+        连带 8 道黄芪相关题目的 strict@1 一起下降）。
+        """
+        name = (chunk.get("metadata") or {}).get("drug_name") or ""
+        if not name or not queried_drugs:
+            return 0
+        best = 0
+        for q in queried_drugs:
+            if not q:
+                continue
+            if name == q or name == f"{q}-饮片":
+                return 2
+            if q in name:
+                best = max(best, 1)
+        return best
+
+    @staticmethod
+    def _promote_section_hits(
+        candidates: List[Dict[str, Any]],
+        expected_sections: List[str],
+        queried_drugs: Optional[List[str]] = None,
+    ) -> List[Dict[str, Any]]:
+        """把命中目标章节的候选提到前面；命中数相同时，**药名更贴合**的优先。
+
+        排序键 = (章节命中数, 药名贴合度)，组内保持 RRF 原序。
+        只在候选集内重排，不改变召回集合本身；若没有任何候选命中目标章节，
+        原序返回（说明章节信息对本次检索无增益，不做无谓扰动）。
+        """
+        scored = [
+            ((Retriever._section_hits(c, expected_sections),
+              Retriever._name_exactness(c, queried_drugs or [])), c)
+            for c in candidates
+        ]
+        if not any(key[0] for key, _ in scored):
+            return candidates
+        # sorted 是稳定排序：键相同时保持 RRF 原序
+        return [c for _, c in sorted(scored, key=lambda x: x[0], reverse=True)]
 
     # ----------------------------------------------------------
     # 上下文组装

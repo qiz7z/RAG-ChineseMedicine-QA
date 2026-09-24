@@ -58,6 +58,15 @@ class QueryParser:
         "请列举", "列举", "列出",
     ]
 
+    # 分类简称 → 元数据里的实际分类值
+    # （chunks 中 category ∈ {药材和饮片, 成方制剂和单味制剂, 植物油脂和提取物}）
+    # 与 langchain_app/query_understanding.py::CATEGORY_MAP 保持一致
+    CATEGORY_MAP = {
+        "药材": "药材和饮片",
+        "成方制剂": "成方制剂和单味制剂",
+        "植物油脂和提取物": "植物油脂和提取物",
+    }
+
     def __init__(self, drug_names: List[str] = None):
         """
         Args:
@@ -296,22 +305,27 @@ class QueryParser:
         """
         根据查询内容判断应该限制到哪个分类。
 
-        返回值：
-          - "药材" — 查询强调“药材/中药”
-          - "成方制剂" — 查询强调“方剂/中成药/成药”
+        返回值（已映射为元数据中的实际分类值）：
+          - "药材和饮片" — 查询强调“药材/中药”
+          - "成方制剂和单味制剂" — 查询强调“方剂/中成药/成药”
           - None — 不限定分类
+
+        注意：必须返回元数据里的**实际值**。历史实现返回简称（"药材"/"成方制剂"），
+        与 chunks 中真实的 "药材和饮片"/"成方制剂和单味制剂" 不相等，
+        导致 category 过滤恒不命中、横向查询召回为空（见 docs 修复记录）。
+        langchain_app/query_understanding.py 的 CATEGORY_MAP 早已修好，此处对齐。
         """
         # 明确提到方剂/中成药/成药
         fang_keywords = ["方剂", "中成药", "成药", "成方", "方子", "汤剂", "丸", "散", "膏", "丹"]
         for kw in fang_keywords:
             if kw in query:
-                return "成方制剂"
+                return self.CATEGORY_MAP["成方制剂"]
 
         # 明确提到药材/中药/草药
         yao_keywords = ["药材", "中药", "草药", "饮片", "药草", "中药材"]
         for kw in yao_keywords:
             if kw in query:
-                return "药材"
+                return self.CATEGORY_MAP["药材"]
 
         # 默认不限定
         return None

@@ -7,6 +7,7 @@ BGE Embedding（标准版）
 不是框架定制。
 """
 import sys
+import logging
 from pathlib import Path
 from typing import List
 
@@ -18,6 +19,7 @@ from config import (
     EMBEDDING_MODEL_PATH,
     EMBEDDING_BATCH_SIZE,
     BGE_QUERY_INSTRUCTION,
+    RAG_DEVICE,
 )
 
 
@@ -34,7 +36,9 @@ def build_embeddings(device: str = None) -> BGEQueryEmbeddings:
     import torch
 
     if device is None:
-        device = "cuda" if torch.cuda.is_available() else "cpu"
+        device = RAG_DEVICE or ("cuda" if torch.cuda.is_available() else "cpu")
+
+    logging.getLogger(__name__).info("Embedding 设备: %s", device)
 
     return BGEQueryEmbeddings(
         model_name=EMBEDDING_MODEL_PATH,

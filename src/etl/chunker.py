@@ -314,7 +314,12 @@ class PharmacopoeiaChunker:
         if not parts:
             return
 
-        content = '\n'.join(parts)
+        # 缺陷 15 配套：正文头部补一行药品名。
+        # 合并前的各章节正文里**没有药名**（「【性味与归经】甘，平。归肝经。」），
+        # BM25 对「天麻的性味归经」这类查询的 药名 token 得不到命中，
+        # 向量也缺少药名锚点——实测会导致该切片进不了候选池，
+        # 章节提升（按正文标记匹配）再强也救不回没被召回的候选。
+        content = f"{entry.get('drug_name', '')}\n" + '\n'.join(parts)
 
         # 如果合并后仍然超长，拆分
         if len(content) > MAX_CHUNK_CHARS:

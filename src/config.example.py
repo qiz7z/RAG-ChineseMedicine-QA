@@ -51,10 +51,10 @@ RRF_TOP_N = 30                     # RRF 融合后保留的候选数
 # BGE-Reranker-v2-m3：跨语言重排模型，支持中英双语
 # 使用 CrossEncoder 架构，对 query-document 对进行打分
 # 模型路径优先从环境变量 RERANKER_MODEL_PATH 读取
-# 如果未设置环境变量，则使用下面的默认路径（请修改为你的本地路径）
+# 未设置时默认用项目内 models/bge-reranker-v2-m3（也可改为你的本地绝对路径）
 RERANKER_MODEL_PATH = os.environ.get(
     "RERANKER_MODEL_PATH",
-    r"D:\MODEL\BAAI\bge-reranker-v2-m3",  # ← 修改为你本地的模型路径
+    os.path.join(MODELS_DIR, "bge-reranker-v2-m3"),
 )
 RERANKER_TOP_K = 5                 # 重排后返回的最终结果数
 RERANKER_MAX_LENGTH = 512          # 重排模型最大序列长度
@@ -63,7 +63,12 @@ RERANKER_MAX_LENGTH = 512          # 重排模型最大序列长度
 # 检索引擎配置（阶段三）
 # ============================================================
 # 是否启用重排（关闭则直接返回 RRF 融合结果）
-ENABLE_RERANKER = True
+# 消融实验证明重排为负收益，故默认关闭；需要开启时设 ENABLE_RERANKER=1
+ENABLE_RERANKER = os.environ.get("ENABLE_RERANKER", "0").strip().lower() in ("1", "true", "yes")
+# 是否启用章节感知召回（把正文含【目标章节】的候选提前；设 0 关闭做消融）
+ENABLE_SECTION_BOOST = os.environ.get(
+    "ENABLE_SECTION_BOOST", "1"
+).strip().lower() in ("1", "true", "yes")
 # 上下文组装时每个 chunk 的最大字符数（截断过长内容）
 CONTEXT_MAX_CHARS_PER_CHUNK = 800
 # 上下文组装时的最大总字符数

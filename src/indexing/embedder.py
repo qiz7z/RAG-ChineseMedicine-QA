@@ -17,7 +17,12 @@ import numpy as np
 
 # 设置路径
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-from config import EMBEDDING_MODEL_NAME, EMBEDDING_BATCH_SIZE, BGE_QUERY_INSTRUCTION
+from config import (
+    EMBEDDING_MODEL_NAME,
+    EMBEDDING_BATCH_SIZE,
+    BGE_QUERY_INSTRUCTION,
+    RAG_DEVICE,
+)
 
 
 class Embedder:
@@ -35,7 +40,9 @@ class Embedder:
 
         self.model_name = model_name or EMBEDDING_MODEL_NAME
 
-        # 自动检测设备
+        # 自动检测设备（RAG_DEVICE 显式指定时优先）
+        if device is None:
+            device = RAG_DEVICE
         if device is None:
             try:
                 import torch

@@ -25,6 +25,24 @@ CATEGORY_MAP = {
     "植物油脂和提取物": "植物油脂和提取物",
 }
 
+# 用户说法 → 药典原生章节名（用于章节感知召回；与手撕版 SECTION_MARKERS 同源）
+_SECTION_SYNONYMS = {
+    "性味与归经": "性味与归经", "性味归经": "性味与归经",
+    "性味": "性味与归经", "归经": "性味与归经",
+    "功能与主治": "功能与主治", "功能主治": "功能与主治",
+    "功能": "功能与主治", "主治": "功能与主治",
+    "功效": "功能与主治", "作用": "功能与主治", "疗效": "功能与主治",
+    "用法与用量": "用法与用量", "用法用量": "用法与用量",
+    "用法": "用法与用量", "用量": "用法与用量",
+    "性状": "性状", "外观": "性状", "形状": "性状",
+    "鉴别": "鉴别", "检查": "检查",
+    "含量测定": "含量测定", "含量": "含量测定", "测定": "含量测定",
+    "炮制": "炮制", "制法": "制法",
+    "贮藏": "贮藏", "储藏": "贮藏", "保存": "贮藏",
+    "处方": "处方", "规格": "规格", "来源": "来源",
+    "浸出物": "浸出物", "特征图谱": "特征图谱", "指纹图谱": "指纹图谱",
+}
+
 
 @dataclass
 class QueryInfo:
@@ -34,6 +52,7 @@ class QueryInfo:
     expanded_drugs: Optional[set] = None   # 扩展后的药品名集合（用于 $in 式过滤）
     is_horizontal: bool = False
     category: Optional[str] = None         # 已映射到实际分类值
+    sections: List[str] = field(default_factory=list)   # 识别到的目标章节（标准化后）
 
 
 class QueryAnalyzer:
@@ -45,6 +64,7 @@ class QueryAnalyzer:
     def analyze(self, query: str) -> QueryInfo:
         info = QueryInfo(raw_query=query)
         info.drug_names = self._detect_drugs(query)
+        info.sections = self._detect_sections(query)
 
         if info.drug_names:
             info.expanded_drugs = self.expand(info.drug_names)
@@ -55,20 +75,35 @@ class QueryAnalyzer:
         return info
 
     def expand(self, drug_names: List[str]) -> set:
-        """变体扩展：如"人参" → {"人参", "人参-饮片", "人参叶", ...}"""
+        """变体扩展：如"人参" → {"人参", "人参-饮片", "人参叶", ...}
+
+        只做**单向**扩展（查询药名是候选药名的子串）。反向匹配
+        （`dn in fd`，如查"双黄连口服液"命中"黄连"）会引入更短的无关药名，
+        与 `_detect_drugs` 的最长匹配去重相冲突，故不采用。
+        """
         expanded = set()
         for fd in drug_names:
             for dn in self.drug_names:
-                if fd in dn or dn in fd:
+                if fd in dn:
                     expanded.add(dn)
         return expanded
 
     # ----------------------------------------------------------
 
     def _detect_drugs(self, query: str) -> List[str]:
-        """按长度降序匹配（避免'人参叶'被'人参'抢先命中后漏配）"""
-        found = [name for name in self.drug_names if name in query]
-        found.sort(key=len, reverse=True)
+        """按长度降序匹配，并剔除已被更长药名包含的子串。
+
+        例："双黄连口服液的含量测定" → ["双黄连口服液"]，不保留"黄连"——
+        否则药品过滤会同时放行黄连条目，top-1 落到黄连上。
+        （与 src/retrieval/query_parser.py::_extract_drug_names 的行为对齐）
+        """
+        found: List[str] = []
+        for name in sorted(self.drug_names, key=len, reverse=True):
+            if name not in query:
+                continue
+            if any(name in longer for longer in found):
+                continue          # 已是更长命中药名的子串 → 跳过
+            found.append(name)
         return found
 
     def _is_horizontal(self, query: str) -> bool:
@@ -89,3 +124,11 @@ class QueryAnalyzer:
         if re.search(r"药材|中药|饮片|生药", query):
             return CATEGORY_MAP["药材"]
         return None
+
+    def _detect_sections(self, query: str) -> List[str]:
+        """识别查询指向的药典章节（标准化为原生章节名）。
+
+        用 set 收集，避免"性味归经"同时命中"性味"和"归经"产生重复。
+        """
+        return list({std for user_word, std in _SECTION_SYNONYMS.items()
+                     if user_word in query})

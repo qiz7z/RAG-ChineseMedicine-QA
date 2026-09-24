@@ -54,11 +54,36 @@ BGE_QUERY_INSTRUCTION = "为这个句子生成表示以用于检索相关文章�
 EMBEDDING_BATCH_SIZE = 32
 EMBEDDING_DIM = 1024
 
-# 重排模型（CrossEncoder）
+# 重排模型（CrossEncoder）：默认指向项目内 models/，不再硬编码 Windows 盘符
 RERANKER_MODEL_PATH = os.environ.get(
-    "RERANKER_MODEL_PATH", r"D:\MODEL\BAAI\bge-reranker-v2-m3"
+    "RERANKER_MODEL_PATH", str(MODELS_DIR / "bge-reranker-v2-m3")
 )
 RERANKER_TOP_N = 5
+RERANKER_MAX_LENGTH = int(os.environ.get("RERANKER_MAX_LENGTH", "512"))
+
+# 是否启用重排（与主项目同名同义，默认关闭）
+# 理由同主项目：本数据集上 CrossEncoder 重排为负收益（见 docs/05、docs/07），
+# 且部署环境未下载重排模型，开启会因模型缺失而启动失败。
+# 需要复现"开重排"对照时：设 ENABLE_RERANKER=1，或显式传
+# build_hybrid_retriever(enable_reranker=True) / 评测脚本去掉 --no-rerank。
+ENABLE_RERANKER = os.environ.get("ENABLE_RERANKER", "0").strip().lower() in ("1", "true", "yes")
+
+# 是否启用「章节感知召回」（与主项目同名同义）
+# 把正文含【目标章节】标记的候选提前，判据与评测 strict 口径一致。
+# 这是标准版此前与手撕版 strict 指标差距的主因之一（标准版原先没有章节解析）。
+ENABLE_SECTION_BOOST = os.environ.get(
+    "ENABLE_SECTION_BOOST", "1"
+).strip().lower() in ("1", "true", "yes")
+
+# ------------------------------------------------------------
+# 计算设备
+# ------------------------------------------------------------
+# 留空 / auto = 自动（有 CUDA 就用 CUDA），行为与改造前一致。
+# 低显存机型（如 8GB 笔记本卡）上 embedding(1.3GB) + reranker(2.27GB) 同时驻留
+# CUDA 会把显存顶到上限、触发驱动级崩溃；此时可设 RAG_DEVICE=cpu 规避。
+# 设备只影响延迟，不影响排序结果，因此评测口径不受影响。
+_rag_device_env = os.environ.get("RAG_DEVICE", "").strip().lower()
+RAG_DEVICE = None if _rag_device_env in ("", "auto") else _rag_device_env
 
 # ------------------------------------------------------------
 # LLM（OpenAI 兼容接口；变量名沿用 LONGCAT_* 以与主项目共用 .env）
