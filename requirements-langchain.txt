@@ -4,7 +4,9 @@
 # 注意：LangChain 1.x 与 0.x API 差异大，版本变动时需回归测试
 # ============================================================
 
-langchain==1.3.9                   # 核心框架（1.x：LCEL + create_agent 范式，旧 Chain 类已移入 langchain-legacy）
+langchain==1.3.9                   # 核心框架（1.x：LCEL + create_agent 范式，旧 Chain 类已移入 langchain-classic）
 langchain-openai==1.3.2            # ChatOpenAI（用于调用 LongCat 2.0 OpenAI 兼容接口）
 langchain-huggingface==1.2.2       # HuggingFaceEmbeddings（本地 BGE 编码，替代已废弃的 community 版本）
 langchain-community==0.4.2         # FAISS 向量库（官方已标注停止维护，升级时需回归测试）
+langchain-classic==1.0.8           # EnsembleRetriever（retrievers.py 直接 import；原清单漏声明，
+                                   # 靠间接依赖装上，干净环境会 ImportError）
