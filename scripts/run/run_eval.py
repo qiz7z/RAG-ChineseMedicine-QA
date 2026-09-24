@@ -78,10 +78,18 @@ def print_retrieval_report(report):
     print("  ┌─────────────────────────────────────────────────────────┐")
     print("  │                    检索质量指标                          │")
     print("  ├─────────────────────────────────────────────────────────┤")
-    print(f"  │  Hit@1:  {report.hit_at_1:>8.2%}   {'✓' if report.hit_at_1 >= 0.70 else '✗'} (目标: ≥70%)          │")
-    print(f"  │  Hit@3:  {report.hit_at_3:>8.2%}   {'✓' if report.hit_at_3 >= 0.80 else '✗'} (目标: ≥80%)          │")
-    print(f"  │  Hit@5:  {report.hit_at_5:>8.2%}   {'✓' if report.hit_at_5 >= 0.90 else '✗'} (目标: ≥90%)          │")
-    print(f"  │  MRR:       {report.mrr:>8.4f}   {'✓' if report.mrr >= 0.80 else '✗'} (目标: ≥0.80)        │")
+    print(f"  │  [loose 粗召回口径，全 {report.total_queries:>3d} 题]                    │")
+    print(f"  │    Hit@1:  {report.hit_at_1:>8.2%}   {'✓' if report.hit_at_1 >= 0.70 else '✗'} (目标: ≥70%)          │")
+    print(f"  │    Hit@3:  {report.hit_at_3:>8.2%}   {'✓' if report.hit_at_3 >= 0.80 else '✗'} (目标: ≥80%)          │")
+    print(f"  │    Hit@5:  {report.hit_at_5:>8.2%}   {'✓' if report.hit_at_5 >= 0.90 else '✗'} (目标: ≥90%)          │")
+    print(f"  │    MRR:       {report.mrr:>8.4f}   {'✓' if report.mrr >= 0.80 else '✗'} (目标: ≥0.80)        │")
+    print("  ├─────────────────────────────────────────────────────────┤")
+    print(f"  │  [strict 严格口径，可评测 {report.evaluable_queries:>3d} 题]                  │")
+    print(f"  │    Hit@1:  {report.strict_hit_at_1:>8.2%}   (药品名精确 + 章节真实出现)      │")
+    print(f"  │    Hit@3:  {report.strict_hit_at_3:>8.2%}                                    │")
+    print(f"  │    Hit@5:  {report.strict_hit_at_5:>8.2%}   ← 对外报数用这一行              │")
+    print(f"  │    MRR:       {report.strict_mrr:>8.4f}                                  │")
+    print(f"  │    不可评测题: {report.unevaluable_queries:>2d} 道（expected_drugs 为空，已剔出分母）     │")
     print("  ├─────────────────────────────────────────────────────────┤")
     print("  │                    性能指标                              │")
     print(f"  │  平均延迟:  {report.avg_latency:.3f}s                           │")
@@ -93,12 +101,33 @@ def print_retrieval_report(report):
 
     # 分类型结果
     if report.by_type:
-        print("  分类型检索结果:")
-        print(f"  {'类型':<20s} {'数量':>4s} {'Hit@5':>10s} {'MRR':>8s} {'延迟':>8s}")
-        print(f"  {'─'*20} {'─'*4} {'─'*10} {'─'*8} {'─'*8}")
+        print("  分类型检索结果（strict 列只统计该类型的可评测题）:")
+        print(f"  {'类型':<20s} {'数量':>4s} {'loose@5':>9s} {'strict@5':>9s} {'MRR':>8s} {'延迟':>8s}")
+        print(f"  {'─'*20} {'─'*4} {'─'*9} {'─'*9} {'─'*8} {'─'*8}")
         for t, v in sorted(report.by_type.items(), key=lambda x: -x[1]['count']):
-            print(f"  {t:<20s} {v['count']:>4d} {v['hit_at_5']:>10.2%} {v['mrr']:>8.4f} {v['avg_latency']:>7.3f}s")
+            s = v.get('strict_hit_at_5')
+            s_txt = f"{s:>9.2%}" if s is not None else f"{'n/a':>9s}"
+            print(f"  {t:<20s} {v['count']:>4d} {v['hit_at_5']:>9.2%} {s_txt} {v['mrr']:>8.4f} {v['avg_latency']:>7.3f}s")
     print()
+
+    # strict 未命中归因（对症下药：覆盖 / 判定 / 切片）
+    strict_missed = [r for r in report.results if r.evaluable and not r.strict_hit]
+    if strict_missed:
+        from collections import Counter
+        reason_cn = {
+            "drug_not_recalled": "药品未进前5（覆盖问题）",
+            "drug_not_exact": "召回的是含该药的别条目（子串放大器）",
+            "section_missing": "药品对了但章节不符（切片/排序）",
+        }
+        cnt = Counter(r.strict_miss_reason for r in strict_missed)
+        print(f"  strict 未命中 {len(strict_missed)} 道，归因:")
+        for k, c in cnt.most_common():
+            print(f"    {c:>3d}  {k}  {reason_cn.get(k, '')}")
+        for r in strict_missed:
+            print(f"    {r.query_id} [{r.query_type}] {r.query}")
+            print(f"       期望药品/章节 → 实际 top1: {r.retrieved_drugs[:1]} / {r.retrieved_sections[:1]}"
+                  f"   归因={r.strict_miss_reason}")
+        print()
 
     # 未命中查询
     missed = [r for r in report.results if not r.hit]
@@ -125,9 +154,20 @@ def print_generation_report(report):
     print("  │                    生成质量指标                          │")
     print("  ├─────────────────────────────────────────────────────────┤")
     print(f"  │  关键词覆盖率:       {report.avg_keyword_coverage:>8.2%}   {'✓' if report.avg_keyword_coverage >= 0.70 else '✗'} (目标: ≥70%)    │")
-    print(f"  │  引用率:             {report.citation_rate:>8.2%}   {'✓' if report.citation_rate >= 0.80 else '✗'} (目标: ≥80%)    │")
-    print(f"  │  一致性问题率:       {report.consistency_issue_rate:>8.2%}   {'✓' if report.consistency_issue_rate <= 0.10 else '✗'} (目标: ≤10%)   │")
+    print(f"  │  引用率⚠️恒真:       {report.citation_rate:>8.2%}   （引用由检索结果机械拼出，非质量指标）  │")
+    print(f"  │  数值一致性检出:     {report.consistency_issue_rate:>8.2%}   （只查带单位数值，是幻觉率下界）  │")
     print(f"  │  安全提醒率:         {report.medical_disclaimer_rate:>8.2%}                      │")
+    g = getattr(report, "grounding", None) or {}
+    if g:
+        print("  ├─────────────────────────────────────────────────────────┤")
+        print("  │        ★ 有据性判分（LLM-as-judge，对外应引用这一组）     │")
+        print(f"  │  幻觉率:             {g.get('hallucination_rate', 0):>8.2%}   (无据+矛盾)/论断数            │")
+        print(f"  │    ├ 无据(编造):     {g.get('unsupported_rate', 0):>8.2%}   {g.get('unsupported', 0):>4d}/{g.get('claims_total', 0):<4d} 条论断            │")
+        print(f"  │    └ 与来源矛盾:     {g.get('contradiction_rate', 0):>8.2%}   {g.get('contradicted', 0):>4d}/{g.get('claims_total', 0):<4d} 条论断            │")
+        print(f"  │  回答有据率:         {g.get('grounded_answer_rate', 0):>8.2%}   {g.get('judged_answers', 0)} 条回答中完全无编造/矛盾   │")
+        print(f"  │  论断有据率:         {g.get('citation_support_rate', 0):>8.2%}   {g.get('supported', 0):>4d}/{g.get('claims_total', 0):<4d} 条论断（替代恒真引用率）│")
+        if g.get("excluded_judge_errors"):
+            print(f"  │  ⚠️ 判定失败被排除:  {g['excluded_judge_errors']:>4d} 题（不计入以上比例）            │")
     print("  ├─────────────────────────────────────────────────────────┤")
     print("  │                    性能指标                              │")
     print(f"  │  端到端平均延迟:     {report.avg_latency:.3f}s                        │")
@@ -181,8 +221,12 @@ def save_report(report, mode: str):
     return filepath
 
 
-def run_retrieval_eval(test_queries):
-    """运行检索评估"""
+def run_retrieval_eval(test_queries, enable_reranker=None):
+    """运行检索评估
+
+    Args:
+        enable_reranker: None=用 config 默认值；False=关重排（消融对照）
+    """
     from retrieval.retriever import Retriever
     from eval.evaluator import RetrievalEvaluator
 
@@ -191,7 +235,9 @@ def run_retrieval_eval(test_queries):
     print("  初始化检索引擎...")
     print("=" * 70)
 
-    retriever = Retriever()
+    retriever = Retriever(enable_reranker=enable_reranker)
+    if enable_reranker is not None:
+        print(f"  [消融] 重排开关 = {enable_reranker}")
 
     print()
     print(f"  开始检索评估 ({len(test_queries)} 题)...")
@@ -207,8 +253,14 @@ def run_retrieval_eval(test_queries):
     return report
 
 
-def run_generation_eval(test_queries):
-    """运行生成评估"""
+def run_generation_eval(test_queries, grounding: bool = True, crosscheck: bool = False):
+    """运行生成评估
+
+    Args:
+        grounding: 是否额外做**有据性判分**（LLM-as-judge，每题多一次 LLM 调用）。
+                   产出真实的幻觉率 / 回答有据率，替代恒真的 citation_rate
+                   与只查数值的 consistency_issue_rate。见 src/eval/grounding_judge.py。
+    """
     from generation.generator import Generator
     from eval.evaluator import GenerationEvaluator
 
@@ -231,7 +283,24 @@ def run_generation_eval(test_queries):
     print(f"  注意: 每题约需 3-8 秒，总计约需 {len(test_queries) * 5 // 60} 分钟")
     print()
 
-    evaluator = GenerationEvaluator(generator)
+    judge = None
+    cc_judge = None
+    if grounding:
+        try:
+            from generation.llm_client import LLMClient
+            from eval.grounding_judge import GroundingJudge
+            judge = GroundingJudge(LLMClient())
+            print(f"  有据性判分: 已开启（判官模型 {judge.model_name}，每题额外 1 次 LLM 调用）")
+            print("              产出 hallucination_rate / grounded_answer_rate / citation_support_rate")
+        except Exception as e:                     # noqa: BLE001
+            print(f"  [WARN] 有据性判分初始化失败，已跳过: {type(e).__name__}: {e}")
+
+    if crosscheck and grounding:
+        from eval.grounding_judge import QuoteVerifiedJudge
+        cc_judge = QuoteVerifiedJudge(LLMClient())
+        print(f"  第二判官(引文核验): 已开启（每题再 +1 次 LLM 调用）——用于交叉验证第一判官")
+    evaluator = GenerationEvaluator(generator, grounding_judge=judge,
+                                    crosscheck_judge=cc_judge)
     report = evaluator.evaluate(test_queries, verbose=True)
 
     print_generation_report(report)
@@ -249,6 +318,16 @@ def main():
     )
     parser.add_argument("--limit", type=int, default=0, help="测试题数量限制（0=全部）")
     parser.add_argument("--type", type=str, default="", help="按问题类型筛选")
+    parser.add_argument("--no-rerank", action="store_true",
+                        help="关闭 CrossEncoder 重排（消融对照；默认沿用 config.ENABLE_RERANKER）")
+    parser.add_argument("--crosscheck", action="store_true",
+                        help="生成评估时加开**引文核验式第二判官**（每题 +1 次 LLM 调用）。"
+                             "机制与第一判官不同：要求判官逐字抄出支撑原文，代码再核验引文真伪，"
+                             "用于交叉验证「回答有据率」结论是否可靠。")
+    parser.add_argument("--no-grounding", action="store_true",
+                        help="生成评估时关闭有据性判分（LLM-as-judge）。"
+                             "默认开启——它产出真实的幻觉率与回答有据率，"
+                             "而老的 citation_rate 是恒真指标、consistency_issue_rate 只是数值型下界")
     args = parser.parse_args()
 
     print("=" * 70)
@@ -265,10 +344,14 @@ def main():
 
     # 运行评估
     if args.mode in ("retrieval", "all"):
-        run_retrieval_eval(test_queries)
+        run_retrieval_eval(
+            test_queries,
+            enable_reranker=False if args.no_rerank else None,
+        )
 
     if args.mode in ("generation", "all"):
-        run_generation_eval(test_queries)
+        run_generation_eval(test_queries, grounding=not args.no_grounding,
+                            crosscheck=args.crosscheck)
 
     print()
     print("=" * 70)

@@ -37,6 +37,10 @@ data/raw/*.docx
 # data/vectorstore/
 
 # Model weights (download from HuggingFace)
+# 模型权重（行尾注释会把规则写坏：gitignore 不支持行尾 # 注释）
+models/**/model.safetensors
+# bge-reranker-v2-m3 是可选组件（默认关重排），整体不入库
+models/bge-reranker-v2-m3/
 models/bge-large-zh-v1.5/model.safetensors
 models/bge-large-zh-v1.5/*.bin
 
@@ -59,3 +63,7 @@ src/config.py
 
 # 版权文档，不入库：请自行从官方渠道获取
 2020年药典一部.docx
+
+# IDE 临时产物（.workbuddy/memory 是记忆，保留）
+.workbuddy/tmp/
+.workbuddy/upload/

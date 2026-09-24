@@ -3,12 +3,16 @@
 LangChain 标准版评估运行脚本
 =============================
 用法:
-  # 完整混合检索评估（不需要 LLM 额度）
+  # 默认评估（不需要 LLM 额度）
+  # 重排是否启用由 config.ENABLE_RERANKER 决定（当前默认关闭）
   python scripts/run/run_eval_lc.py
 
   # 消融实验
-  python scripts/run/run_eval_lc.py --no-rerank     # 去掉 CrossEncoder 重排
+  python scripts/run/run_eval_lc.py --no-rerank     # 显式关闭 CrossEncoder 重排
   python scripts/run/run_eval_lc.py --no-bm25       # 纯向量（对照 baseline）
+
+  # 强制开启重排（需先下载 bge-reranker-v2-m3 模型）
+  ENABLE_RERANKER=1 python scripts/run/run_eval_lc.py
 
   # 子集 / 按类型
   python scripts/run/run_eval_lc.py --limit 10 --type "横向条件查询"
@@ -17,11 +21,15 @@ import sys
 import io
 import json
 import time
+import logging
 import argparse
 from pathlib import Path
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
+# 让检索层的 logger（加载设备、召回条数等）在评测日志里可见
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(name)s: %(message)s")
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(PROJECT_ROOT / 'langchain_app'))
@@ -37,11 +45,15 @@ def main():
     parser.add_argument("--type", type=str, default="", help="按问题类型筛选")
     args = parser.parse_args()
 
-    from config import REPORT_DIR, LLM_API_KEY
+    from config import REPORT_DIR, LLM_API_KEY, ENABLE_RERANKER
 
-    engine_name = "lc-std"
-    if args.no_rerank:
-        engine_name += "-noRerank"
+    # 重排是否生效：--no-rerank 显式关闭；否则沿用 config.ENABLE_RERANKER。
+    # 与主项目 run_eval.py 同语义（默认取 config），避免未下载重排模型时
+    # 裸跑评测因缺模型而报错。
+    reranker_on = False if args.no_rerank else ENABLE_RERANKER
+
+    # 报告名如实反映重排状态，便于与历史报告对齐
+    engine_name = "lc-std" if reranker_on else "lc-std-noRerank"
     if args.no_bm25:
         engine_name += "-noBM25"
 
@@ -58,18 +70,24 @@ def main():
         print("=" * 70)
 
         retriever = build_hybrid_retriever(
-            enable_reranker=not args.no_rerank,
+            enable_reranker=reranker_on,
             enable_bm25=not args.no_bm25,
         )
         report = evaluate_retrieval(retriever, test_queries, engine=engine_name)
 
         print()
-        print(f"  Hit@1: {report.hit_at_1:.2%} | Hit@3: {report.hit_at_3:.2%} | "
-              f"Hit@5: {report.hit_at_5:.2%} | MRR: {report.mrr:.4f}")
+        print(f"  [loose 粗召回] Hit@1: {report.hit_at_1:.2%} | Hit@3: {report.hit_at_3:.2%} | "
+              f"Hit@5: {report.hit_at_5:.2%} | MRR: {report.mrr:.4f}   (全 {report.total_queries} 题)")
+        print(f"  [strict 严格] Hit@1: {report.strict_hit_at_1:.2%} | Hit@3: {report.strict_hit_at_3:.2%} | "
+              f"Hit@5: {report.strict_hit_at_5:.2%} | MRR: {report.strict_mrr:.4f}   "
+              f"(可评测 {report.evaluable_queries}/{report.total_queries} 题)")
         print(f"  延迟 P50: {report.latency_p50:.3f}s | P95: {report.latency_p95:.3f}s")
-        print("  分类型:")
+        print("  分类型（hit@5：loose / strict）:")
         for t, v in sorted(report.by_type.items(), key=lambda x: -x[1]["count"]):
-            print(f"    {t}: n={v['count']} hit@5={v['hit_at_5']:.2%} mrr={v['mrr']:.4f}")
+            s = v["strict_hit_at_5"]
+            s_txt = f"{s:.2%}" if s is not None else "n/a"
+            print(f"    {t}: n={v['count']} loose={v['hit_at_5']:.2%} "
+                  f"strict={s_txt} mrr={v['mrr']:.4f}")
     else:
         from service import ChatService
         from retrievers import build_hybrid_retriever
@@ -89,7 +107,7 @@ def main():
 
         # 消融开关作用于检索层（重排影响上下文构成，进而影响生成质量）
         retriever = build_hybrid_retriever(
-            enable_reranker=not args.no_rerank,
+            enable_reranker=reranker_on,
             enable_bm25=not args.no_bm25,
         )
         service = ChatService(retriever=retriever)
