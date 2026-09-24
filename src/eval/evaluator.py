@@ -303,6 +303,16 @@ class EvalReport:
     unevaluable_queries: int = 0
     out_of_scope_queries: int = 0    # 标了 out_of_scope 的题：两项口径都不计分
 
+    # 召回率（**项目书口径**：Recall@5 ≥ 90%）
+    #   Recall@K = |top-K 命中的期望药| / |期望药|，按题取均值；药名精确匹配（含 -饮片），不判章节。
+    #   full_recall_at_5 = 期望药**全部**进 top-5 的题占比（最严读法）。
+    # 与 Hit@K 的区别：Hit@K 只要"命中至少一个期望药"，期望是药集合时偏松。
+    recall_at_1: float = 0.0
+    recall_at_3: float = 0.0
+    recall_at_5: float = 0.0
+    full_recall_at_5: float = 0.0
+    recall_queries: int = 0
+
     # 生成指标
     avg_keyword_coverage: float = 0.0
     citation_rate: float = 0.0
@@ -349,6 +359,16 @@ class EvalReport:
                 "criteria": "strict：药品名精确（含该药饮片条目）+ 期望章节在 chunk 正文真实出现；"
                             "分母仅含可评测题（expected_drugs 非空）；"
                             "标了 out_of_scope 的题不计分",
+            },
+            "recall": {
+                "at_1": round(self.recall_at_1, 4),
+                "at_3": round(self.recall_at_3, 4),
+                "at_5": round(self.recall_at_5, 4),
+                "full_at_5": round(self.full_recall_at_5, 4),
+                "queries": self.recall_queries,
+                "criteria": "Recall@K = |top-K 命中的期望药| / |期望药|，按题取均值；"
+                            "药名精确匹配（含该药饮片条目）、不判章节；"
+                            "full_at_5 = 期望药全部进 top-5 的题占比",
             },
             "generation": {
                 "avg_keyword_coverage": round(self.avg_keyword_coverage, 4),
@@ -526,12 +546,12 @@ class RetrievalEvaluator:
         report.results = results
 
         # 计算汇总指标
-        self._compute_metrics(report)
+        self._compute_metrics(report, test_queries)
 
         return report
 
-    def _compute_metrics(self, report: EvalReport):
-        """计算汇总指标"""
+    def _compute_metrics(self, report: EvalReport, test_queries: List[Dict] = None):
+        """计算汇总指标（`test_queries` 用于召回率：需要每题的 `expected_drugs`）"""
         results = report.results
         n = len(results)
         if n == 0:
@@ -580,13 +600,38 @@ class RetrievalEvaluator:
         report.latency_p99 = self._percentile(sorted_lat, 99)
         report.avg_latency = report.avg_retrieval_latency
 
+        # ---- 召回率（项目书口径）----
+        exp_of = {q.get("id"): (q.get("expected_drugs") or [])
+                  for q in (test_queries or [])}
+        recall_rows = []
+        for r in evaluable:
+            exp = exp_of.get(r.query_id) or []
+            if not exp:
+                continue
+            got = [d or "" for d in (r.retrieved_drugs or [])]
+
+            def _cov(k: int) -> float:
+                return sum(1 for e in exp
+                           if any(drug_match_strict(g, [e], g.endswith("-饮片"))
+                                  for g in got[:k])) / len(exp)
+
+            recall_rows.append((_cov(1), _cov(3), _cov(5)))
+        if recall_rows:
+            nr = len(recall_rows)
+            report.recall_queries = nr
+            report.recall_at_1 = sum(a for a, _, _ in recall_rows) / nr
+            report.recall_at_3 = sum(b for _, b, _ in recall_rows) / nr
+            report.recall_at_5 = sum(c for _, _, c in recall_rows) / nr
+            report.full_recall_at_5 = sum(1 for _, _, c in recall_rows if c >= 1.0) / nr
+
         # 分类型统计（两档并列）
         by_type = {}
         for r in results:
             t = r.query_type
             if t not in by_type:
                 by_type[t] = {"count": 0, "evaluable": 0, "hits": 0, "strict_hits": 0,
-                              "mrr_sum": 0.0, "strict_mrr_sum": 0.0, "latency_sum": 0.0}
+                              "mrr_sum": 0.0, "strict_mrr_sum": 0.0, "latency_sum": 0.0,
+                              "recall_sum": 0.0, "recall_n": 0}
             by_type[t]["count"] += 1
             if r.hit:
                 by_type[t]["hits"] += 1
@@ -599,6 +644,13 @@ class RetrievalEvaluator:
                 if r.strict_first_hit_rank > 0:
                     by_type[t]["strict_mrr_sum"] += 1.0 / r.strict_first_hit_rank
             by_type[t]["latency_sum"] += r.retrieval_latency
+            _exp = exp_of.get(r.query_id) or []
+            if r.evaluable and _exp:
+                _got = [d or "" for d in (r.retrieved_drugs or [])][:5]
+                by_type[t]["recall_sum"] += sum(
+                    1 for e in _exp
+                    if any(drug_match_strict(g, [e], g.endswith("-饮片")) for g in _got)) / len(_exp)
+                by_type[t]["recall_n"] += 1
 
         for t, v in by_type.items():
             c = v["count"]
@@ -608,6 +660,8 @@ class RetrievalEvaluator:
             v["strict_hit_at_5"] = round(v["strict_hits"] / ev, 4) if ev > 0 else None
             v["strict_mrr"] = round(v["strict_mrr_sum"] / ev, 4) if ev > 0 else None
             v["avg_latency"] = round(v["latency_sum"] / c, 3) if c > 0 else 0
+            rn = v.pop("recall_n", 0)
+            v["recall_at_5"] = round(v.pop("recall_sum", 0.0) / rn, 4) if rn else None
             del v["hits"]
             del v["strict_hits"]
             del v["mrr_sum"]

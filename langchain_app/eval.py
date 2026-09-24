@@ -90,6 +90,12 @@ class EvalReport:
     evaluable_queries: int = 0
     unevaluable_queries: int = 0
     out_of_scope_queries: int = 0    # 标了 out_of_scope 的题：两项口径都不计分
+    # 召回率（项目书口径，定义与 src/eval/evaluator.py 完全一致）
+    recall_at_1: float = 0.0
+    recall_at_3: float = 0.0
+    recall_at_5: float = 0.0
+    full_recall_at_5: float = 0.0
+    recall_queries: int = 0
     by_type: Dict[str, dict] = field(default_factory=dict)
     results: List[dict] = field(default_factory=list)
 
@@ -275,6 +281,31 @@ def evaluate_retrieval(retriever, test_queries: List[Dict], engine: str = "lc-st
     else:
         s_hit1 = s_hit3 = s_hit5 = s_mrr = 0.0
 
+    # 召回率（项目书口径）：期望药集合被 top-K 覆盖的比例，按题均值；不判章节
+    _recall_rows = []
+    for _r, _q in zip(results, test_queries):
+        _exp = _q.get("expected_drugs") or []
+        if not (_r.evaluable and _exp):
+            continue
+        _got = list(_r.retrieved_drugs or [])
+
+        def _cov(_k: int) -> float:
+            return sum(1 for _e in _exp
+                       if any(_drug_match_strict(_g, [_e], _g.endswith("-饮片"))
+                              for _g in _got[:_k])) / len(_exp)
+
+        _recall_rows.append((_cov(1), _cov(3), _cov(5)))
+    if _recall_rows:
+        _nr = len(_recall_rows)
+        recall_at_1 = sum(a for a, _, _ in _recall_rows) / _nr
+        recall_at_3 = sum(b for _, b, _ in _recall_rows) / _nr
+        recall_at_5 = sum(c for _, _, c in _recall_rows) / _nr
+        full_recall_at_5 = sum(1 for _, _, c in _recall_rows if c >= 1.0) / _nr
+        recall_queries = _nr
+    else:
+        recall_at_1 = recall_at_3 = recall_at_5 = full_recall_at_5 = 0.0
+        recall_queries = 0
+
     by_type: Dict[str, dict] = {}
     for r in results:
         b = by_type.setdefault(r.query_type, {
@@ -288,6 +319,15 @@ def evaluate_retrieval(retriever, test_queries: List[Dict], engine: str = "lc-st
             b["strict_hits"] += 1 if r.strict_hit else 0
             b["strict_rr"] += 1 / r.strict_first_hit_rank if r.strict_hit else 0
         b["lat"] += r.retrieval_latency
+        # 召回率（项目书口径，按题型）
+        _exp = dict((q.get("id"), q.get("expected_drugs") or []) for q in test_queries).get(r.query_id) or []
+        if r.evaluable and _exp:
+            _got = [d or "" for d in (r.retrieved_drugs or [])][:5]
+            b.setdefault("recall_sum", 0.0)
+            b.setdefault("recall_n", 0)
+            b["recall_sum"] += sum(1 for e in _exp
+                                   if any(_drug_match_strict(g, [e], g.endswith("-饮片")) for g in _got)) / len(_exp)
+            b["recall_n"] += 1
     for t, b in by_type.items():
         b["hit_at_5"] = b["hits"] / b["count"]
         b["mrr"] = b["rr"] / b["count"]
@@ -296,6 +336,8 @@ def evaluate_retrieval(retriever, test_queries: List[Dict], engine: str = "lc-st
         b["strict_mrr"] = (b["strict_rr"] / b["evaluable"]
                            if b["evaluable"] else None)
         b["avg_latency"] = b["lat"] / b["count"]
+        _rn = b.pop("recall_n", 0)
+        b["recall_at_5"] = round(b.pop("recall_sum", 0.0) / _rn, 4) if _rn else None
 
     report = EvalReport(
         engine=engine,
@@ -305,6 +347,8 @@ def evaluate_retrieval(retriever, test_queries: List[Dict], engine: str = "lc-st
         strict_hit_at_1=s_hit1, strict_hit_at_3=s_hit3, strict_hit_at_5=s_hit5,
         strict_mrr=s_mrr, evaluable_queries=m, unevaluable_queries=n - m,
         out_of_scope_queries=out_of_scope,
+        recall_at_1=recall_at_1, recall_at_3=recall_at_3, recall_at_5=recall_at_5,
+        full_recall_at_5=full_recall_at_5, recall_queries=recall_queries,
         latency_p50=_percentile(lats, 50),
         latency_p95=_percentile(lats, 95),
         latency_p99=_percentile(lats, 99),

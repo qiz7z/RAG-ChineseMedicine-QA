@@ -82,6 +82,9 @@ def main():
               f"Hit@5: {report.strict_hit_at_5:.2%} | MRR: {report.strict_mrr:.4f}   "
               f"(可评测 {report.evaluable_queries}/{report.total_queries} 题)")
         print(f"  延迟 P50: {report.latency_p50:.3f}s | P95: {report.latency_p95:.3f}s")
+        print(f"  [召回率·项目书口径] Recall@1: {report.recall_at_1:.2%} | Recall@3: {report.recall_at_3:.2%} | "
+              f"Recall@5: {report.recall_at_5:.2%} | 全召回@5: {report.full_recall_at_5:.2%} "
+              f"(可评测 {report.recall_queries} 题；药名精确匹配、不判章节)")
         print("  分类型（hit@5：loose / strict）:")
         for t, v in sorted(report.by_type.items(), key=lambda x: -x[1]["count"]):
             s = v["strict_hit_at_5"]

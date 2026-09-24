@@ -99,6 +99,14 @@ def print_retrieval_report(report):
     print("  └─────────────────────────────────────────────────────────┘")
     print()
 
+    # 召回率（项目书口径：Recall@5 ≥ 90%）
+    print(f"  召回率（项目书口径）: @1 {report.recall_at_1:.2%} | @3 {report.recall_at_3:.2%} "
+          f"| @5 {report.recall_at_5:.2%} {'✓' if report.recall_at_5 >= 0.90 else '✗'}"
+          f"   (目标 ≥90%)")
+    print(f"    ├ 全召回@5: {report.full_recall_at_5:.2%}（期望药**全部**进 top-5 的题占比）"
+          f" | 可评测 {report.recall_queries} 题 | 药名精确匹配、**不判章节**")
+    print()
+
     # 分类型结果
     if report.by_type:
         print("  分类型检索结果（strict 列只统计该类型的可评测题）:")

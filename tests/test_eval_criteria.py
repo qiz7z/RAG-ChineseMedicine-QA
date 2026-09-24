@@ -26,6 +26,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from eval.evaluator import (  # noqa: E402
+    EvalReport, QueryResult, RetrievalEvaluator,
     attribute_strict_miss, drug_match_loose, drug_match_strict,
     judge_result, section_match, normalize_text,
 )
@@ -388,3 +389,66 @@ class TestOutOfScopeParity:
         lc = (ROOT / "langchain_app" / "eval.py").read_text(encoding="utf-8")
         for name, text in (("src/eval/evaluator.py", src), ("langchain_app/eval.py", lc)):
             assert 'tc.get("out_of_scope")' in text, f"{name} 未过滤 out_of_scope"
+
+
+class TestRecall:
+    """召回率（**项目书口径** Recall@5 ≥ 90%）
+
+    与 Hit@K 的区别：Hit@K 只要"top-K 命中**至少一个**期望药"，
+    而「跨品种比较」「横向条件查询」的期望是**药集合**，
+    只命中其中一个也算 Hit → 偏松。Recall@K 量的是集合被覆盖的比例。
+    """
+
+    def _qr(self, qid, drugs):
+        qr = QueryResult(query=qid, query_id=qid, query_type="t")
+        qr.retrieved_drugs = drugs
+        qr.evaluable = True
+        qr.first_hit_rank = 1
+        qr.strict_first_hit_rank = 1
+        qr.strict_hit = True
+        qr.retrieval_latency = 0.01
+        return qr
+
+    def _calc(self, results, queries):
+        rep = EvalReport(total_queries=len(results))
+        rep.results = results
+        RetrievalEvaluator(None)._compute_metrics(rep, queries)
+        return rep
+
+    def test_single_drug_equals_hit(self):
+        """单药题：Recall@K 与 strict Hit@K 等价（期望药只有一个）"""
+        rep = self._calc([self._qr("Q1", ["人参", "黄芪"])],
+                         [{"id": "Q1", "expected_drugs": ["人参"]}])
+        assert rep.recall_at_1 == 1.0 and rep.recall_at_5 == 1.0
+        assert rep.full_recall_at_5 == 1.0
+
+    def test_multi_drug_partial_recall(self):
+        """期望 3 个药、top-5 只召回 1 个 → Recall@5 = 1/3（而 Hit 仍算命中）"""
+        rep = self._calc([self._qr("Q1", ["丹参", "苏木", "血竭"])],
+                         [{"id": "Q1", "expected_drugs": ["丹参", "红花", "桃仁"]}])
+        assert abs(rep.recall_at_5 - 1 / 3) < 1e-9
+        assert rep.full_recall_at_5 == 0.0, "只有部分召回时全召回率应为 0"
+
+    def test_full_recall_all_drugs(self):
+        rep = self._calc([self._qr("Q1", ["丹参", "红花"])],
+                         [{"id": "Q1", "expected_drugs": ["丹参", "红花"]}])
+        assert rep.recall_at_5 == 1.0 and rep.full_recall_at_5 == 1.0
+
+    def test_top_k_cutoff(self):
+        """第 2 名才出现 → Recall@1=0、Recall@5=1"""
+        rep = self._calc([self._qr("Q1", ["别的药", "人参"])],
+                         [{"id": "Q1", "expected_drugs": ["人参"]}])
+        assert rep.recall_at_1 == 0.0
+        assert rep.recall_at_3 == 1.0 and rep.recall_at_5 == 1.0
+
+    def test_yinpian_variant_counts_as_recall(self):
+        """期望「人参」、召回「人参-饮片」应算命中（与 strict 口径一致）"""
+        rep = self._calc([self._qr("Q1", ["人参-饮片"])],
+                         [{"id": "Q1", "expected_drugs": ["人参"]}])
+        assert rep.recall_at_1 == 1.0
+
+    def test_by_type_has_recall(self):
+        rep = self._calc([self._qr("Q1", ["丹参"]), self._qr("Q2", ["别的"])],
+                         [{"id": "Q1", "expected_drugs": ["丹参"]},
+                          {"id": "Q2", "expected_drugs": ["红花"]}])
+        assert rep.by_type["t"]["recall_at_5"] == 0.5
