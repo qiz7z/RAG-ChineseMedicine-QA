@@ -1,0 +1,1829 @@
+{
+  "engine": "lc-std-noRerank",
+  "total_queries": 100,
+  "timestamp": "2026-08-30 12:44:51",
+  "hit_at_1": 0.9,
+  "hit_at_3": 0.92,
+  "hit_at_5": 0.94,
+  "mrr": 0.9166230158730159,
+  "latency_p50": 0.05111122131347656,
+  "latency_p95": 0.08000445365905762,
+  "latency_p99": 0.8287382125854492,
+  "avg_latency": 0.061692728996276855,
+  "by_type": {
+    "单药品单属性查询": {
+      "count": 25,
+      "hits": 25,
+      "rr": 24.5,
+      "lat": 1.928208351135254,
+      "hit_at_5": 1.0,
+      "mrr": 0.98,
+      "avg_latency": 0.07712833404541015
+    },
+    "单药品多属性查询": {
+      "count": 15,
+      "hits": 15,
+      "rr": 14.25,
+      "lat": 0.9743030071258545,
+      "hit_at_5": 1.0,
+      "mrr": 0.95,
+      "avg_latency": 0.06495353380839029
+    },
+    "精确数值查询": {
+      "count": 15,
+      "hits": 15,
+      "rr": 15.0,
+      "lat": 0.8630924224853516,
+      "hit_at_5": 1.0,
+      "mrr": 1.0,
+      "avg_latency": 0.05753949483235677
+    },
+    "跨品种比较查询": {
+      "count": 10,
+      "hits": 10,
+      "rr": 8.7,
+      "lat": 0.5619363784790039,
+      "hit_at_5": 1.0,
+      "mrr": 0.8699999999999999,
+      "avg_latency": 0.05619363784790039
+    },
+    "横向条件查询": {
+      "count": 10,
+      "hits": 7,
+      "rr": 4.212301587301587,
+      "lat": 0.4810316562652588,
+      "hit_at_5": 0.7,
+      "mrr": 0.4212301587301587,
+      "avg_latency": 0.048103165626525876
+    },
+    "方法通则查询": {
+      "count": 10,
+      "hits": 10,
+      "rr": 10.0,
+      "lat": 0.501990795135498,
+      "hit_at_5": 1.0,
+      "mrr": 1.0,
+      "avg_latency": 0.05019907951354981
+    },
+    "否定性问题": {
+      "count": 5,
+      "hits": 5,
+      "rr": 5.0,
+      "lat": 0.30014967918395996,
+      "hit_at_5": 1.0,
+      "mrr": 1.0,
+      "avg_latency": 0.06002993583679199
+    },
+    "多轮对话": {
+      "count": 10,
+      "hits": 10,
+      "rr": 10.0,
+      "lat": 0.5585606098175049,
+      "hit_at_5": 1.0,
+      "mrr": 1.0,
+      "avg_latency": 0.055856060981750486
+    }
+  },
+  "results": [
+    {
+      "query_id": "Q001",
+      "query": "人参的性味归经是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.8287382125854492,
+      "retrieved_drugs": [
+        "人参-饮片",
+        "人参",
+        "人参叶",
+        "人参总皂苷",
+        "人参茎叶总皂苷",
+        "人参总皂苷",
+        "人参茎叶总皂苷"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q002",
+      "query": "黄芪的功能主治是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.04851055145263672,
+      "retrieved_drugs": [
+        "黄芪",
+        "黄芪颗粒",
+        "黄芪健胃膏"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q003",
+      "query": "当归的用法用量是怎样的？",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.0630037784576416,
+      "retrieved_drugs": [
+        "当归",
+        "当归补血口服液",
+        "当归调经颗粒",
+        "当归流浸膏",
+        "当归",
+        "当归养血丸",
+        "当归调经颗粒",
+        "当归龙荟丸",
+        "当归补血口服液",
+        "当归补血口服液"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q004",
+      "query": "黄连的性状是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.052066802978515625,
+      "retrieved_drugs": [
+        "黄连",
+        "黄连胶囊",
+        "黄连",
+        "黄连",
+        "黄连胶囊",
+        "胡黄连",
+        "黄连",
+        "黄连上清胶囊",
+        "黄连上清胶囊",
+        "复方黄连素片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q005",
+      "query": "甘草的来源是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.048004150390625,
+      "retrieved_drugs": [
+        "甘草",
+        "甘草",
+        "炙甘草",
+        "甘草浸膏",
+        "甘草",
+        "甘草",
+        "甘草"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q006",
+      "query": "川芎的性味归经",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.0480499267578125,
+      "retrieved_drugs": [
+        "川芎茶调散",
+        "川芎茶调丸",
+        "复方川芎片",
+        "川芎茶调片",
+        "川芎茶调颗粒",
+        "川芎茶调袋泡茶",
+        "川芎茶调丸（浓缩丸）",
+        "冬虫夏草",
+        "川楝子",
+        "乐脉片"
+      ],
+      "first_hit_rank": 2,
+      "hit": true
+    },
+    {
+      "query_id": "Q007",
+      "query": "白芍的功能主治",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.04200625419616699,
+      "retrieved_drugs": [
+        "白芍-饮片",
+        "白芍-饮片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q008",
+      "query": "茯苓的用法用量",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.044489145278930664,
+      "retrieved_drugs": [
+        "茯苓",
+        "茯苓皮",
+        "茯苓",
+        "桂枝茯苓丸",
+        "茯苓",
+        "桂枝茯苓胶囊",
+        "桂枝茯苓片",
+        "桂枝茯苓胶囊",
+        "桂枝茯苓片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q009",
+      "query": "麻黄的注意事项",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.04100298881530762,
+      "retrieved_drugs": [
+        "麻黄",
+        "麻黄",
+        "麻黄",
+        "麻黄",
+        "麻黄",
+        "麻黄",
+        "麻黄根"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q010",
+      "query": "何首乌的贮藏方法",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.04562807083129883,
+      "retrieved_drugs": [
+        "何首乌",
+        "制何首乌",
+        "何首乌",
+        "制何首乌",
+        "制何首乌",
+        "制何首乌"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q011",
+      "query": "丹参的功能主治是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.04499983787536621,
+      "retrieved_drugs": [
+        "丹参",
+        "丹参片",
+        "复方丹参喷雾剂",
+        "冠心丹参胶囊",
+        "复方丹参胶囊",
+        "丹参-饮片",
+        "丹参-饮片",
+        "复方丹参滴丸",
+        "丹参水提物（丹参总酚酸提取物）",
+        "冠心丹参片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q012",
+      "query": "陈皮的性味归经",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.0411372184753418,
+      "retrieved_drugs": [
+        "陈皮",
+        "陈皮",
+        "陈皮-饮片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q013",
+      "query": "半夏的用法用量",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.046999216079711914,
+      "retrieved_drugs": [
+        "法半夏",
+        "法半夏",
+        "法半夏",
+        "姜半夏",
+        "清半夏",
+        "清半夏",
+        "半夏",
+        "半夏",
+        "姜半夏",
+        "法半夏"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q014",
+      "query": "枸杞子的功能主治",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.03900504112243652,
+      "retrieved_drugs": [
+        "枸杞子",
+        "枸杞子"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q015",
+      "query": "天麻的性味归经",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.04107379913330078,
+      "retrieved_drugs": [
+        "天麻",
+        "全天麻胶囊",
+        "强力天麻杜仲丸",
+        "天麻祛风补片",
+        "天麻",
+        "天麻",
+        "天麻醒脑胶囊",
+        "天麻丸",
+        "天麻钩藤颗粒",
+        "天麻头痛片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q016",
+      "query": "麦冬的功能主治",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.03999638557434082,
+      "retrieved_drugs": [
+        "麦冬",
+        "山麦冬",
+        "麦冬",
+        "麦冬",
+        "麦冬"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q017",
+      "query": "金银花的用法用量",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.04816436767578125,
+      "retrieved_drugs": [
+        "金银花露",
+        "金银花"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q018",
+      "query": "柴胡的注意事项",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.0409998893737793,
+      "retrieved_drugs": [
+        "柴胡",
+        "柴胡滴丸",
+        "柴胡",
+        "柴胡口服液",
+        "柴胡口服液",
+        "柴胡滴丸",
+        "柴胡滴丸",
+        "柴胡",
+        "柴胡",
+        "柴胡滴丸"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q019",
+      "query": "地黄的性状特征",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.04431557655334473,
+      "retrieved_drugs": [
+        "地黄",
+        "地黄",
+        "地黄",
+        "地黄",
+        "熟地黄",
+        "杞菊地黄胶囊",
+        "地黄",
+        "地黄",
+        "地黄",
+        "六味地黄颗粒"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q020",
+      "query": "五味子的功能主治",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.04370880126953125,
+      "retrieved_drugs": [
+        "参茬五味子胶囊",
+        "参茬五味子颗粒",
+        "参茂五味子片",
+        "五味子糖浆",
+        "五味子-饮片",
+        "五味子-饮片",
+        "五味子糖浆",
+        "南五味子",
+        "五味子糖浆",
+        "参茬五味子胶囊"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q021",
+      "query": "山药的来源",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.03900146484375,
+      "retrieved_drugs": [
+        "山药-饮片",
+        "山药",
+        "山药-饮片",
+        "山药-饮片",
+        "黄山药",
+        "山药-饮片",
+        "无比山药丸"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q022",
+      "query": "桔梗的性味归经",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.04506993293762207,
+      "retrieved_drugs": [
+        "桔梗冬花片",
+        "桔梗",
+        "桔梗冬花片",
+        "桔梗冬花片",
+        "桔梗冬花片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q023",
+      "query": "百合的功能主治",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.048139095306396484,
+      "retrieved_drugs": [
+        "百合",
+        "百合",
+        "百合",
+        "百合固金口服液",
+        "百合",
+        "百合固金丸（浓缩丸）",
+        "百合固金颗粒",
+        "百合固金片",
+        "百合固金丸（浓缩丸）",
+        "百合固金丸"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q024",
+      "query": "决明子的用法用量",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.055094003677368164,
+      "retrieved_drugs": [
+        "决明子",
+        "决明子",
+        "决明子"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q025",
+      "query": "泽泻的性味归经",
+      "query_type": "单药品单属性查询",
+      "retrieval_latency": 0.04900383949279785,
+      "retrieved_drugs": [
+        "泽泻",
+        "泽泻",
+        "泽泻",
+        "泽泻",
+        "泽泻"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q026",
+      "query": "黄芪的性状和功能主治分别是什么？",
+      "query_type": "单药品多属性查询",
+      "retrieval_latency": 0.0764007568359375,
+      "retrieved_drugs": [
+        "黄芪",
+        "黄芪颗粒",
+        "黄芪健胃膏"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q027",
+      "query": "人参的性味归经和功能主治",
+      "query_type": "单药品多属性查询",
+      "retrieval_latency": 0.07151484489440918,
+      "retrieved_drugs": [
+        "人参-饮片",
+        "人参",
+        "人参总皂苷",
+        "人参",
+        "人参茎叶总皂苷",
+        "人参茎叶总皂苷"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q028",
+      "query": "当归的性味和用法用量",
+      "query_type": "单药品多属性查询",
+      "retrieval_latency": 0.08164739608764648,
+      "retrieved_drugs": [
+        "当归",
+        "当归补血口服液",
+        "当归流浸膏",
+        "当归调经颗粒",
+        "当归",
+        "当归拈痛丸"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q029",
+      "query": "黄连的性状、性味和功能主治",
+      "query_type": "单药品多属性查询",
+      "retrieval_latency": 0.07692885398864746,
+      "retrieved_drugs": [
+        "黄连胶囊",
+        "黄连",
+        "黄连",
+        "黄连胶囊",
+        "黄连",
+        "黄连上清胶囊",
+        "黄连上清胶囊"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q030",
+      "query": "甘草的来源、性味和功能主治",
+      "query_type": "单药品多属性查询",
+      "retrieval_latency": 0.07851576805114746,
+      "retrieved_drugs": [
+        "甘草",
+        "甘草",
+        "炙甘草",
+        "甘草浸膏",
+        "甘草",
+        "甘草",
+        "甘草",
+        "甘草流浸膏"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q031",
+      "query": "川芎的性状和功能主治是什么",
+      "query_type": "单药品多属性查询",
+      "retrieval_latency": 0.09806013107299805,
+      "retrieved_drugs": [
+        "川芎茶调颗粒",
+        "川芎茶调袋泡茶",
+        "川芎茶调片",
+        "川芎茶调丸",
+        "复方川芎片",
+        "川芎茶调散",
+        "川芎茶调丸（浓缩丸）",
+        "川楝子",
+        "普乐安胶囊",
+        "川楝子"
+      ],
+      "first_hit_rank": 4,
+      "hit": true
+    },
+    {
+      "query_id": "Q032",
+      "query": "白芍的来源、性味和用法用量",
+      "query_type": "单药品多属性查询",
+      "retrieval_latency": 0.052075862884521484,
+      "retrieved_drugs": [
+        "白芍-饮片",
+        "白芍-饮片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q033",
+      "query": "丹参的性味归经和功能主治",
+      "query_type": "单药品多属性查询",
+      "retrieval_latency": 0.04700112342834473,
+      "retrieved_drugs": [
+        "丹参-饮片",
+        "丹参-饮片",
+        "丹参水提物（丹参总酚酸提取物）",
+        "丹参片",
+        "丹参",
+        "丹参酮提取物",
+        "丹参",
+        "冠心丹参片",
+        "复方丹参胶囊"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q034",
+      "query": "陈皮的来源、性味和功能主治",
+      "query_type": "单药品多属性查询",
+      "retrieval_latency": 0.05303049087524414,
+      "retrieved_drugs": [
+        "陈皮",
+        "陈皮",
+        "蛇胆陈皮散",
+        "陈皮-饮片",
+        "蛇胆陈皮胶囊",
+        "蛇胆陈皮散",
+        "陈皮",
+        "蛇胆陈皮片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q035",
+      "query": "天麻的性状和功能主治",
+      "query_type": "单药品多属性查询",
+      "retrieval_latency": 0.050000667572021484,
+      "retrieved_drugs": [
+        "强力天麻杜仲丸",
+        "全天麻胶囊",
+        "天麻",
+        "天麻祛风补片",
+        "全天麻胶囊",
+        "天麻",
+        "天麻头痛片",
+        "天麻醒脑胶囊",
+        "天麻",
+        "天麻钩藤颗粒"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q036",
+      "query": "枸杞子的来源和性味功能",
+      "query_type": "单药品多属性查询",
+      "retrieval_latency": 0.05321955680847168,
+      "retrieved_drugs": [
+        "枸杞子",
+        "枸杞子",
+        "枸杞子"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q037",
+      "query": "麦冬的性状、性味和功能",
+      "query_type": "单药品多属性查询",
+      "retrieval_latency": 0.05800127983093262,
+      "retrieved_drugs": [
+        "山麦冬",
+        "麦冬",
+        "麦冬",
+        "麦冬"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q038",
+      "query": "柴胡的来源和功能主治",
+      "query_type": "单药品多属性查询",
+      "retrieval_latency": 0.05139327049255371,
+      "retrieved_drugs": [
+        "柴胡",
+        "柴胡",
+        "柴胡",
+        "柴胡",
+        "柴胡滴丸",
+        "柴胡口服液",
+        "柴胡口服液",
+        "柴胡滴丸",
+        "柴胡滴丸",
+        "小柴胡颗粒"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q039",
+      "query": "五味子的性状和功能主治",
+      "query_type": "单药品多属性查询",
+      "retrieval_latency": 0.05700564384460449,
+      "retrieved_drugs": [
+        "五味子糖浆",
+        "五味子",
+        "五味子-饮片",
+        "参茬五味子颗粒",
+        "参茬五味子胶囊",
+        "五味子糖浆",
+        "南五味子",
+        "五味子-饮片",
+        "参茂五味子片",
+        "参茬五味子胶囊"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q040",
+      "query": "茯苓的来源、性状和用法用量",
+      "query_type": "单药品多属性查询",
+      "retrieval_latency": 0.06950736045837402,
+      "retrieved_drugs": [
+        "茯苓",
+        "茯苓皮",
+        "茯苓",
+        "茯苓",
+        "桂枝茯苓丸",
+        "茯苓",
+        "桂枝茯苓片",
+        "桂枝茯苓胶囊",
+        "桂枝茯苓丸",
+        "桂枝茯苓胶囊"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q041",
+      "query": "人参含量测定中人参皂苷Rg1的限度是多少？",
+      "query_type": "精确数值查询",
+      "retrieval_latency": 0.0880441665649414,
+      "retrieved_drugs": [
+        "人参茎叶总皂苷",
+        "人参总皂苷",
+        "人参总皂苷",
+        "人参茎叶总皂苷"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q042",
+      "query": "黄芪含量测定中黄芪甲苷的含量标准",
+      "query_type": "精确数值查询",
+      "retrieval_latency": 0.06908965110778809,
+      "retrieved_drugs": [
+        "黄芪",
+        "黄芪颗粒",
+        "黄芪健胃膏",
+        "黄芪"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q043",
+      "query": "黄连含量测定中盐酸小檗碱的限度",
+      "query_type": "精确数值查询",
+      "retrieval_latency": 0.07300448417663574,
+      "retrieved_drugs": [
+        "黄连",
+        "黄连",
+        "清胃黄连片",
+        "黄连上清颗粒",
+        "黄连胶囊",
+        "黄连上清片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q044",
+      "query": "甘草含量测定中甘草酸的含量标准是多少",
+      "query_type": "精确数值查询",
+      "retrieval_latency": 0.07309675216674805,
+      "retrieved_drugs": [
+        "甘草",
+        "甘草",
+        "甘草浸膏",
+        "甘草流浸膏",
+        "炙甘草"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q045",
+      "query": "丹参含量测定中丹参酮的限度",
+      "query_type": "精确数值查询",
+      "retrieval_latency": 0.03916764259338379,
+      "retrieved_drugs": [
+        "复方丹参喷雾剂",
+        "丹参",
+        "冠心丹参胶囊",
+        "复方丹参滴丸",
+        "丹参酮提取物",
+        "复方丹参喷雾剂",
+        "复方丹参丸（浓缩丸）",
+        "复方丹参胶囊",
+        "复方丹参片",
+        "丹参片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q046",
+      "query": "金银花含量测定中绿原酸的含量标准",
+      "query_type": "精确数值查询",
+      "retrieval_latency": 0.04400944709777832,
+      "retrieved_drugs": [
+        "金银花"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q047",
+      "query": "当归的用法用量具体是多少克",
+      "query_type": "精确数值查询",
+      "retrieval_latency": 0.03899025917053223,
+      "retrieved_drugs": [
+        "当归补血口服液",
+        "当归",
+        "当归调经颗粒",
+        "当归流浸膏",
+        "养血当归胶囊",
+        "当归养血丸",
+        "当归龙荟丸",
+        "当归"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q048",
+      "query": "人参的用法用量是多少克",
+      "query_type": "精确数值查询",
+      "retrieval_latency": 0.04094338417053223,
+      "retrieved_drugs": [
+        "人参-饮片",
+        "人参总皂苷",
+        "人参茎叶总皂苷",
+        "人参茎叶总皂苷",
+        "人参总皂苷"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q049",
+      "query": "黄芪的用法用量具体数值",
+      "query_type": "精确数值查询",
+      "retrieval_latency": 0.04524803161621094,
+      "retrieved_drugs": [
+        "黄芪颗粒",
+        "黄芪",
+        "黄芪健胃膏"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q050",
+      "query": "枸杞子的用法用量是多少",
+      "query_type": "精确数值查询",
+      "retrieval_latency": 0.036031484603881836,
+      "retrieved_drugs": [
+        "枸杞子"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q051",
+      "query": "五味子含量测定中五味子醇甲的标准",
+      "query_type": "精确数值查询",
+      "retrieval_latency": 0.056001901626586914,
+      "retrieved_drugs": [
+        "五味子糖浆",
+        "五味子糖浆",
+        "参茬五味子颗粒",
+        "五味子糖浆",
+        "五味子糖浆",
+        "南五味子",
+        "五味子",
+        "参茬五味子胶囊",
+        "参茂五味子片",
+        "南五味子"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q052",
+      "query": "麦冬含量测定中的指标成分",
+      "query_type": "精确数值查询",
+      "retrieval_latency": 0.06450891494750977,
+      "retrieved_drugs": [
+        "山麦冬",
+        "麦冬",
+        "麦冬",
+        "麦冬"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q053",
+      "query": "柴胡含量测定中柴胡皂苷的含量",
+      "query_type": "精确数值查询",
+      "retrieval_latency": 0.06900501251220703,
+      "retrieved_drugs": [
+        "柴胡",
+        "柴胡滴丸",
+        "柴胡",
+        "柴胡",
+        "柴胡",
+        "柴胡滴丸",
+        "柴胡"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q054",
+      "query": "陈皮含量测定中橙皮苷的限度标准",
+      "query_type": "精确数值查询",
+      "retrieval_latency": 0.06742691993713379,
+      "retrieved_drugs": [
+        "蛇胆陈皮胶囊",
+        "蛇胆陈皮散",
+        "蛇胆陈皮片",
+        "陈皮"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q055",
+      "query": "桔梗的用法用量是多少克",
+      "query_type": "精确数值查询",
+      "retrieval_latency": 0.058524370193481445,
+      "retrieved_drugs": [
+        "桔梗冬花片",
+        "桔梗冬花片",
+        "桔梗",
+        "桔梗冬花片",
+        "桔梗冬花片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q056",
+      "query": "人参和西洋参在功能主治上有什么区别？",
+      "query_type": "跨品种比较查询",
+      "retrieval_latency": 0.06739616394042969,
+      "retrieved_drugs": [
+        "西洋参",
+        "西洋参",
+        "人参",
+        "人参茎叶总皂苷",
+        "人参总皂苷",
+        "人参",
+        "人参-饮片",
+        "人参总皂苷",
+        "人参茎叶总皂苷",
+        "人参茎叶总皂苷"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q057",
+      "query": "黄芪和白术的补气功效有什么不同",
+      "query_type": "跨品种比较查询",
+      "retrieval_latency": 0.06751894950866699,
+      "retrieved_drugs": [
+        "黄芪",
+        "黄芪颗粒",
+        "黄芪健胃膏",
+        "白术-饮片",
+        "白术",
+        "白术-饮片",
+        "黄芪-饮片",
+        "黄芪颗粒"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q058",
+      "query": "生地和熟地的功效区别",
+      "query_type": "跨品种比较查询",
+      "retrieval_latency": 0.049523115158081055,
+      "retrieved_drugs": [
+        "壮腰健身丸",
+        "地黄",
+        "镇心痛口服液",
+        "地黄",
+        "妇良片",
+        "薄荷脑",
+        "熟地黄",
+        "独活寄生丸",
+        "地黄",
+        "桂枝"
+      ],
+      "first_hit_rank": 2,
+      "hit": true
+    },
+    {
+      "query_id": "Q059",
+      "query": "赤芍和白芍的功效差异",
+      "query_type": "跨品种比较查询",
+      "retrieval_latency": 0.059999942779541016,
+      "retrieved_drugs": [
+        "白芍-饮片",
+        "赤芍-饮片",
+        "白芍-饮片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q060",
+      "query": "黄连和黄芩的清热功效对比",
+      "query_type": "跨品种比较查询",
+      "retrieval_latency": 0.055510520935058594,
+      "retrieved_drugs": [
+        "黄连胶囊",
+        "黄连",
+        "黄芩",
+        "黄连上清颗粒",
+        "黄连",
+        "黄连上清胶囊",
+        "黄连",
+        "黄连上清颗粒",
+        "黄连上清胶囊",
+        "黄连上清片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q061",
+      "query": "丹参和川芎的活血作用比较",
+      "query_type": "跨品种比较查询",
+      "retrieval_latency": 0.0390012264251709,
+      "retrieved_drugs": [
+        "丹参-饮片",
+        "丹参-饮片",
+        "复方丹参喷雾剂",
+        "丹参",
+        "复方丹参片",
+        "复方丹参滴丸"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q062",
+      "query": "陈皮和青皮的理气功效区别",
+      "query_type": "跨品种比较查询",
+      "retrieval_latency": 0.06637048721313477,
+      "retrieved_drugs": [
+        "青皮",
+        "青皮",
+        "青皮",
+        "青皮",
+        "陈皮",
+        "陈皮",
+        "蛇胆陈皮散",
+        "陈皮-饮片",
+        "蛇胆陈皮胶囊",
+        "蛇胆陈皮片"
+      ],
+      "first_hit_rank": 5,
+      "hit": true
+    },
+    {
+      "query_id": "Q063",
+      "query": "茯苓和薏苡仁的利湿功效",
+      "query_type": "跨品种比较查询",
+      "retrieval_latency": 0.049005985260009766,
+      "retrieved_drugs": [
+        "茯苓",
+        "茯苓",
+        "茯苓皮",
+        "桂枝茯苓胶囊",
+        "茯苓"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q064",
+      "query": "麻黄和桂枝的发汗解表功效",
+      "query_type": "跨品种比较查询",
+      "retrieval_latency": 0.056610107421875,
+      "retrieved_drugs": [
+        "麻黄",
+        "麻黄",
+        "麻黄",
+        "桂枝",
+        "桂枝-饮片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q065",
+      "query": "当归和白芍的养血功效比较",
+      "query_type": "跨品种比较查询",
+      "retrieval_latency": 0.05099987983703613,
+      "retrieved_drugs": [
+        "白芍-饮片",
+        "养血当归胶囊",
+        "养血当归胶囊",
+        "当归补血口服液",
+        "养血当归胶囊",
+        "当归",
+        "当归调经颗粒",
+        "养血当归胶囊",
+        "当归调经颗粒",
+        "白芍-饮片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q066",
+      "query": "哪些药材含有挥发油成分？",
+      "query_type": "横向条件查询",
+      "retrieval_latency": 0.04008030891418457,
+      "retrieved_drugs": [
+        "莪术-饮片",
+        "没药-饮片",
+        "石菖蒲",
+        "佩兰",
+        "草果",
+        "薄荷-饮片",
+        "甘松",
+        "草果",
+        "香附-饮片",
+        "肉豆蔻"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q067",
+      "query": "含有黄连素的药材有哪些",
+      "query_type": "横向条件查询",
+      "retrieval_latency": 0.05699968338012695,
+      "retrieved_drugs": [
+        "复方黄连素片",
+        "黄连",
+        "黄连",
+        "黄连",
+        "黄连胶囊",
+        "胡黄连",
+        "黄连",
+        "黄连",
+        "黄连胶囊",
+        "黄连"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q068",
+      "query": "哪些药材具有补气功效",
+      "query_type": "横向条件查询",
+      "retrieval_latency": 0.052042245864868164,
+      "retrieved_drugs": [
+        "黄芪-饮片",
+        "丁香-饮片",
+        "蜂胶",
+        "人参-饮片",
+        "石膏",
+        "香椽-饮片",
+        "川B",
+        "炙红茂",
+        "千年健",
+        "沉香-饮片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q069",
+      "query": "哪些药材有清热解毒的功效",
+      "query_type": "横向条件查询",
+      "retrieval_latency": 0.05099177360534668,
+      "retrieved_drugs": [
+        "清半夏",
+        "忍冬藤-饮片",
+        "金沸草",
+        "升麻-饮片",
+        "黄柏-饮片",
+        "大血藤-饮片",
+        "金龙胆草",
+        "马齿免-饮片",
+        "连翘",
+        "一枝黄花-饮片"
+      ],
+      "first_hit_rank": 9,
+      "hit": true
+    },
+    {
+      "query_id": "Q070",
+      "query": "性味甘温的药材有哪些",
+      "query_type": "横向条件查询",
+      "retrieval_latency": 0.04614424705505371,
+      "retrieved_drugs": [
+        "甘草",
+        "紫苏梗-饮片",
+        "丁香-饮片",
+        "仙茅-饮片",
+        "甘遂",
+        "何首乌-饮片",
+        "甘松",
+        "篇蓄-饮片",
+        "莪术",
+        "忍冬藤-饮片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q071",
+      "query": "归肺经的药材有哪些",
+      "query_type": "横向条件查询",
+      "retrieval_latency": 0.0480036735534668,
+      "retrieved_drugs": [
+        "紫苑-饮片",
+        "百部",
+        "紫苏子-饮片",
+        "桔梗-饮片",
+        "芥子-饮片",
+        "紫花前胡-饮片",
+        "马勃-饮片",
+        "当归",
+        "野马追-饮片",
+        "紫苏梗-饮片"
+      ],
+      "first_hit_rank": 56,
+      "hit": true
+    },
+    {
+      "query_id": "Q072",
+      "query": "具有活血化瘀功效的药材",
+      "query_type": "横向条件查询",
+      "retrieval_latency": 0.04426264762878418,
+      "retrieved_drugs": [
+        "活血止痛散",
+        "蜂胶",
+        "活血止痛散",
+        "石膏",
+        "羌活",
+        "千年健",
+        "苏木-饮片",
+        "青风藤",
+        "活血壮筋丸",
+        "山香圆叶-饮片"
+      ],
+      "first_hit_rank": 0,
+      "hit": false
+    },
+    {
+      "query_id": "Q073",
+      "query": "有毒性的药材有哪些",
+      "query_type": "横向条件查询",
+      "retrieval_latency": 0.0529937744140625,
+      "retrieved_drugs": [
+        "狼毒",
+        "医痫丸",
+        "狼毒",
+        "防风",
+        "金龙胆草",
+        "酸枣仁",
+        "狼毒",
+        "牛黄",
+        "铁皮石斛",
+        "龟甲-饮片"
+      ],
+      "first_hit_rank": 0,
+      "hit": false
+    },
+    {
+      "query_id": "Q074",
+      "query": "可以安神的药材",
+      "query_type": "横向条件查询",
+      "retrieval_latency": 0.042513370513916016,
+      "retrieved_drugs": [
+        "安神补心颗粒",
+        "安神补心丸",
+        "八味沉香散",
+        "安神补心丸",
+        "安神补脑液",
+        "安神补心颗粒",
+        "止咳宝片",
+        "花蕊石-饮片",
+        "健脑安神片",
+        "正骨水"
+      ],
+      "first_hit_rank": 0,
+      "hit": false
+    },
+    {
+      "query_id": "Q075",
+      "query": "具有利水渗湿作用的药材",
+      "query_type": "横向条件查询",
+      "retrieval_latency": 0.04699993133544922,
+      "retrieved_drugs": [
+        "锁阳-饮片",
+        "筋骨草",
+        "蓋政仁-饮片",
+        "蓋政仁-饮片",
+        "蜂胶",
+        "商陆",
+        "石膏",
+        "商陆",
+        "千年健",
+        "秦皮-饮片"
+      ],
+      "first_hit_rank": 12,
+      "hit": true
+    },
+    {
+      "query_id": "Q076",
+      "query": "薄层色谱法的操作步骤是什么？",
+      "query_type": "方法通则查询",
+      "retrieval_latency": 0.0525212287902832,
+      "retrieved_drugs": [
+        "鼻炎康片",
+        "普乐安胶囊",
+        "庆余辟瘟丹",
+        "软脉灵口服液",
+        "胆石通胶囊",
+        "马钱子散",
+        "乙肝养阴活血颗粒",
+        "小儿清热止咳合剂（小儿清热止咳口服液）",
+        "胃疡宁丸",
+        "小儿热速清颗粒"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q077",
+      "query": "高效液相色谱法的原理",
+      "query_type": "方法通则查询",
+      "retrieval_latency": 0.046002864837646484,
+      "retrieved_drugs": [
+        "庆余辟瘟丹",
+        "痔疮胶囊",
+        "颠茄流浸膏",
+        "颠茄酊",
+        "茵陈提取物",
+        "莪术油",
+        "降脂灵颗粒",
+        "澳泰乐颗粒",
+        "抗栓再造丸",
+        "颠茄浸膏"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q078",
+      "query": "水分测定法有哪些方法",
+      "query_type": "方法通则查询",
+      "retrieval_latency": 0.04997682571411133,
+      "retrieved_drugs": [
+        "筋骨草",
+        "漏芦-饮片",
+        "锁阳-饮片",
+        "白鲜皮",
+        "猪胆粉",
+        "黄柏",
+        "陈皮",
+        "何首乌",
+        "炙黄芷",
+        "罂粟壳-饮片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q079",
+      "query": "灰分测定法的操作",
+      "query_type": "方法通则查询",
+      "retrieval_latency": 0.04899907112121582,
+      "retrieved_drugs": [
+        "羌活",
+        "黄柏",
+        "前胡-饮片",
+        "牛黄",
+        "何首乌",
+        "疾藜",
+        "锁阳-饮片",
+        "益心酮分散片",
+        "红大戟",
+        "维血宁合剂"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q080",
+      "query": "浸出物测定法怎么做",
+      "query_type": "方法通则查询",
+      "retrieval_latency": 0.0450749397277832,
+      "retrieved_drugs": [
+        "丹参",
+        "沉香",
+        "大黄",
+        "威灵仙",
+        "黄芪",
+        "天麻",
+        "野马追",
+        "亚麻子",
+        "黄连上清颗粒",
+        "复脉定胶囊"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q081",
+      "query": "中药鉴别的常用方法",
+      "query_type": "方法通则查询",
+      "retrieval_latency": 0.045000314712524414,
+      "retrieved_drugs": [
+        "灵莲花颗粒",
+        "周氏回生丸",
+        "血塞通颗粒",
+        "滑膜炎胶囊",
+        "血塞通片",
+        "滑膜炎颗粒",
+        "血塞通胶囊",
+        "滑膜炎片",
+        "三七总皂苜",
+        "通窍耳聋丸"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q082",
+      "query": "气相色谱法适用于什么检测",
+      "query_type": "方法通则查询",
+      "retrieval_latency": 0.05657243728637695,
+      "retrieved_drugs": [
+        "妇科止带胶囊",
+        "参芍胶囊",
+        "通幽润燥丸",
+        "康莱特软胶囊",
+        "西汉养生口服液（滋肾健脑液）",
+        "复方夏天无片",
+        "正气片",
+        "泌石通胶囊",
+        "蕾香正气口服液",
+        "养正消积胶囊"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q083",
+      "query": "重金属检查的方法",
+      "query_type": "方法通则查询",
+      "retrieval_latency": 0.04509592056274414,
+      "retrieved_drugs": [
+        "金振口服液",
+        "冬虫夏草",
+        "玄明粉",
+        "西洋参",
+        "五福化毒片",
+        "海蝶艄",
+        "紫雪散",
+        "冰片（合成龙脑）",
+        "海藻",
+        "般石膏"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q084",
+      "query": "紫外分光光度法的应用",
+      "query_type": "方法通则查询",
+      "retrieval_latency": 0.05474400520324707,
+      "retrieved_drugs": [
+        "莪术油",
+        "红花",
+        "妇必舒阴道泡腾片",
+        "华山参片",
+        "胆石通胶囊",
+        "烫伤油",
+        "舒肝解郁胶囊",
+        "西汉养生口服液（滋肾健脑液）",
+        "体外培育牛黄",
+        "裸花紫珠胶囊"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q085",
+      "query": "中药炮制的目的是什么",
+      "query_type": "方法通则查询",
+      "retrieval_latency": 0.05800318717956543,
+      "retrieved_drugs": [
+        "炮姜",
+        "复方丹参滴丸",
+        "制川乌",
+        "止喘灵注射液",
+        "制天南星",
+        "血塞通颗粒",
+        "制何首乌",
+        "血塞通片",
+        "制草乌",
+        "血塞通胶囊"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q086",
+      "query": "黄连有毒性吗？",
+      "query_type": "否定性问题",
+      "retrieval_latency": 0.05111122131347656,
+      "retrieved_drugs": [
+        "黄连",
+        "黄连",
+        "黄连胶囊",
+        "黄连",
+        "黄连胶囊",
+        "黄连上清胶囊",
+        "黄连",
+        "黄连",
+        "黄连上清丸",
+        "胡黄连"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q087",
+      "query": "人参能随便吃吗",
+      "query_type": "否定性问题",
+      "retrieval_latency": 0.08000445365905762,
+      "retrieved_drugs": [
+        "人参",
+        "人参茎叶总皂苷",
+        "人参-饮片",
+        "人参总皂苷",
+        "人参茎叶总皂苷",
+        "人参总皂苷",
+        "人参茎叶总皂苷",
+        "人参总皂苷",
+        "人参叶",
+        "人参叶"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q088",
+      "query": "黄芪有没有副作用",
+      "query_type": "否定性问题",
+      "retrieval_latency": 0.053520917892456055,
+      "retrieved_drugs": [
+        "黄芪颗粒",
+        "黄芪",
+        "黄芪健胃膏"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q089",
+      "query": "当归孕妇能用吗",
+      "query_type": "否定性问题",
+      "retrieval_latency": 0.05451250076293945,
+      "retrieved_drugs": [
+        "当归",
+        "当归",
+        "当归调经颗粒",
+        "当归流浸膏",
+        "当归",
+        "当归补血口服液",
+        "当归补血口服液",
+        "养血当归胶囊",
+        "当归调经颗粒",
+        "当归拈痛丸"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q090",
+      "query": "麻黄长期服用安全吗",
+      "query_type": "否定性问题",
+      "retrieval_latency": 0.06100058555603027,
+      "retrieved_drugs": [
+        "麻黄根",
+        "麻黄",
+        "麻黄",
+        "麻黄",
+        "麻黄"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q091",
+      "query": "人参的性味归经是什么？",
+      "query_type": "多轮对话",
+      "retrieval_latency": 0.07008862495422363,
+      "retrieved_drugs": [
+        "人参-饮片",
+        "人参",
+        "人参叶",
+        "人参总皂苷",
+        "人参茎叶总皂苷",
+        "人参总皂苷",
+        "人参茎叶总皂苷"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q092",
+      "query": "黄芪的功能主治有哪些？",
+      "query_type": "多轮对话",
+      "retrieval_latency": 0.0610041618347168,
+      "retrieved_drugs": [
+        "黄芪",
+        "黄芪颗粒",
+        "黄芪健胃膏"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q093",
+      "query": "当归有什么功效？",
+      "query_type": "多轮对话",
+      "retrieval_latency": 0.054082632064819336,
+      "retrieved_drugs": [
+        "当归",
+        "当归",
+        "当归调经颗粒",
+        "当归补血口服液",
+        "养血当归胶囊",
+        "当归拈痛丸",
+        "当归",
+        "当归补血口服液",
+        "当归流浸膏",
+        "养血当归胶囊"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q094",
+      "query": "黄连性味怎样？",
+      "query_type": "多轮对话",
+      "retrieval_latency": 0.05003714561462402,
+      "retrieved_drugs": [
+        "黄连",
+        "黄连",
+        "黄连",
+        "黄连胶囊",
+        "黄连上清丸",
+        "黄连胶囊",
+        "黄连上清胶囊",
+        "黄连上清片",
+        "黄连上清颗粒",
+        "黄连"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q095",
+      "query": "甘草的来源是什么？",
+      "query_type": "多轮对话",
+      "retrieval_latency": 0.06699967384338379,
+      "retrieved_drugs": [
+        "甘草",
+        "甘草",
+        "炙甘草",
+        "甘草浸膏",
+        "甘草",
+        "甘草",
+        "甘草"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q096",
+      "query": "天麻能治什么病？",
+      "query_type": "多轮对话",
+      "retrieval_latency": 0.05039644241333008,
+      "retrieved_drugs": [
+        "天麻",
+        "天麻钩藤颗粒",
+        "天麻丸",
+        "天麻祛风补片",
+        "强力天麻杜仲丸",
+        "天麻醒脑胶囊",
+        "全天麻胶囊",
+        "全天麻胶囊",
+        "半夏天麻丸",
+        "天麻祛风补片"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q097",
+      "query": "丹参的性味归经",
+      "query_type": "多轮对话",
+      "retrieval_latency": 0.052997589111328125,
+      "retrieved_drugs": [
+        "丹参-饮片",
+        "丹参",
+        "丹参水提物（丹参总酚酸提取物）",
+        "丹参片",
+        "丹参酮提取物",
+        "复方丹参喷雾剂"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q098",
+      "query": "枸杞子怎么用？",
+      "query_type": "多轮对话",
+      "retrieval_latency": 0.0455167293548584,
+      "retrieved_drugs": [
+        "枸杞子",
+        "枸杞子"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q099",
+      "query": "柴胡能治什么？",
+      "query_type": "多轮对话",
+      "retrieval_latency": 0.04400038719177246,
+      "retrieved_drugs": [
+        "柴胡",
+        "柴胡口服液",
+        "柴胡滴丸",
+        "柴胡",
+        "柴胡舒肝丸",
+        "柴胡滴丸",
+        "柴胡口服液",
+        "柴胡",
+        "柴胡",
+        "柴胡"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    },
+    {
+      "query_id": "Q100",
+      "query": "陈皮的性味归经是什么？",
+      "query_type": "多轮对话",
+      "retrieval_latency": 0.06343722343444824,
+      "retrieved_drugs": [
+        "陈皮",
+        "陈皮",
+        "陈皮-饮片",
+        "蛇胆陈皮散"
+      ],
+      "first_hit_rank": 1,
+      "hit": true
+    }
+  ]
+}

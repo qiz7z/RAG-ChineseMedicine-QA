@@ -1,0 +1,715 @@
+{
+  "eval_type": "retrieval",
+  "total_queries": 10,
+  "timestamp": "2026-07-06 08:55:23",
+  "retrieval": {
+    "recall_at_1": 0.3,
+    "recall_at_3": 0.5,
+    "recall_at_5": 0.5,
+    "mrr": 0.3833
+  },
+  "generation": {
+    "avg_keyword_coverage": 0.0,
+    "citation_rate": 0.0,
+    "consistency_issue_rate": 0.0,
+    "medical_disclaimer_rate": 0.0
+  },
+  "performance": {
+    "latency_p50": 1.503,
+    "latency_p95": 2.32,
+    "latency_p99": 2.32,
+    "avg_latency": 1.523,
+    "avg_retrieval_latency": 1.523,
+    "avg_llm_latency": 0.0
+  },
+  "by_type": {
+    "单药品单属性查询": {
+      "count": 10,
+      "recall_at_5": 0.5,
+      "mrr": 0.3833,
+      "avg_latency": 1.523
+    }
+  },
+  "results": [
+    {
+      "query_id": "Q001",
+      "query": "人参的性味归经是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "人工牛黄-饮片",
+        "肿节风",
+        "南沙参-饮片",
+        "冬葵果",
+        "二母宁嗽丸"
+      ],
+      "retrieved_sections": [
+        "完整条目",
+        "鉴别",
+        "临床应用",
+        "临床应用",
+        "鉴别-段"
+      ],
+      "recall_hit": false,
+      "first_hit_rank": 0,
+      "retrieval_latency": 2.32,
+      "answer": "",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 0,
+      "keyword_coverage": 0.0,
+      "has_citations": false,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 0.0,
+      "component_latency": {},
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "人工牛黄-饮片",
+          "section": "完整条目",
+          "score": 0.9666,
+          "content_preview": "【炮制】润透,切薄片，干燥，或用时粉碎、捣碎。 人参片本品呈圆形或类圆形薄片。外表皮灰黄色。切 面淡黄白色或类白色，显粉性，形成层环纹棕黄色，皮部有黄 棕色的点状树脂道及放射性裂隙。体轻,质脆。香气特"
+        },
+        {
+          "rank": 2,
+          "drug_name": "肿节风",
+          "section": "鉴别",
+          "score": 0.7747,
+          "content_preview": "（除横切面外）【检查】【浸出物】【含量测定】 同药材。 1性味与归经】苦、辛，平。归心、肝经。"
+        },
+        {
+          "rank": 3,
+          "drug_name": "南沙参-饮片",
+          "section": "临床应用",
+          "score": 0.4273,
+          "content_preview": "【炮制】除去杂质，洗净，润透，切丝，干燥。 【检查】总灰分 同药材，不得过6.0%。 【浸出物】同药材，不得少于10.0%。 【性味与归经】苦、涩，寒。归肝、胆、大肠经。 【功能与主治】清热燥湿，收涩"
+        },
+        {
+          "rank": 4,
+          "drug_name": "冬葵果",
+          "section": "临床应用",
+          "score": 0.0401,
+          "content_preview": "【检查】水分 不得过10.0%（通则0832第二法）。 总灰分 不得过11.0%（通则2302） „ 【性味】甘、涩，凉。 【功能与主治】清热利尿，消肿。用于尿闭，水肿，口渴； 尿路感染。 【用法与用"
+        },
+        {
+          "rank": 5,
+          "drug_name": "二母宁嗽丸",
+          "section": "鉴别-段",
+          "score": 0.0165,
+          "content_preview": "（1）取本品，置显微镜下观察：草酸钙簇晶直径 20-68^m,棱角锐尖（人参）。纤维成束或散离，壁厚，表面有 纵裂纹，两端断裂成帚状或较平截（黄芷）。薄壁细胞纺锤形， 壁略厚，表面有极微细的斜向交错纹"
+        }
+      ]
+    },
+    {
+      "query_id": "Q002",
+      "query": "黄芪的功能主治是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "九味羌活颗粒",
+        "注射用灯盏花素",
+        "玉屏风口服液",
+        "养阴生血合剂",
+        "通关藤-饮片"
+      ],
+      "retrieved_sections": [
+        "鉴别-段",
+        "临床应用",
+        "临床应用",
+        "临床应用",
+        "临床应用"
+      ],
+      "recall_hit": false,
+      "first_hit_rank": 0,
+      "retrieval_latency": 1.492,
+      "answer": "",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 0,
+      "keyword_coverage": 0.0,
+      "has_citations": false,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 0.0,
+      "component_latency": {},
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "九味羌活颗粒",
+          "section": "鉴别-段",
+          "score": 0.3401,
+          "content_preview": "量，研细，取约lg,精密称定，精密加入70%乙醇20ml,称定 重量，超声处理（功率300W,频率40kHz）10分钟，放冷，再称 定重量，用70%乙醇补足减失的重量，摇匀，滤过，取续滤液， 即得。测"
+        },
+        {
+          "rank": 2,
+          "drug_name": "注射用灯盏花素",
+          "section": "临床应用",
+          "score": 0.1007,
+          "content_preview": "【性状】本品为淡黄色至黄色的疏松块状物。 【功能与主治】活血化瘀，通络止痛。用于中风及其后 遗症，冠心病，心绞痛。 【用法与用量】肌内注射，一次5〜10mg, 一日2次，临 用前，用注射用水2ml溶解"
+        },
+        {
+          "rank": 3,
+          "drug_name": "玉屏风口服液",
+          "section": "临床应用",
+          "score": 0.0602,
+          "content_preview": "【处方】黄英600g 防风200g 白术（炒）200g 【性状】本品为棕红色至棕褐色的液体；味甜、微苦、涩。 【功能与主治】益气，固表，止汗。用于表虚不固，自汗 恶风，面色觥白，或体虚易感风邪者。 【"
+        },
+        {
+          "rank": 4,
+          "drug_name": "养阴生血合剂",
+          "section": "临床应用",
+          "score": 0.0449,
+          "content_preview": "【处方】地黄400g 黄茂500g 当归200g 玄参300g 麦冬300g 石斛2OOg 川萼200g 【性状】本品为深棕褐色的液体;气香，味微甜、微苦。 【功能与主治】养阴清热，益气生血。用于阴虚"
+        },
+        {
+          "rank": 5,
+          "drug_name": "通关藤-饮片",
+          "section": "临床应用",
+          "score": 0.0407,
+          "content_preview": "【炮制】黄精 除去杂质，洗净，略润，切厚片，干燥。 【检查】水分 同药材，不得过15.0%。 【检查】水分 同药材，不得过15.。％。 【性味与归经】甘，平。归脾、肺、肾经。 【功能与主治】补气养阴，"
+        }
+      ]
+    },
+    {
+      "query_id": "Q003",
+      "query": "当归的用法用量是怎样的？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "当归龙荟丸",
+        "西青果",
+        "养血饮口服液",
+        "乳核散结片",
+        "复方益母草胶囊"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "临床应用",
+        "临床应用",
+        "制法",
+        "制法"
+      ],
+      "recall_hit": true,
+      "first_hit_rank": 1,
+      "retrieval_latency": 1.503,
+      "answer": "",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 0,
+      "keyword_coverage": 0.0,
+      "has_citations": false,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 0.0,
+      "component_latency": {},
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "当归龙荟丸",
+          "section": "临床应用",
+          "score": 0.862,
+          "content_preview": "【性状】本品为黄绿色至深褐色的水丸;气微，味苦。 【检查】应符合丸剂项下有关的各项规定（通则° 【功能与主治】泻火通便。用于肝胆火旺，心烦不宁，头 晕目眩，耳鸣耳聋，胁肋疼痛，脱腹胀痛，大便秘结。 【"
+        },
+        {
+          "rank": 2,
+          "drug_name": "西青果",
+          "section": "临床应用",
+          "score": 0.8066,
+          "content_preview": "【浸出物】照醇溶性浸出物测定法（通则2201）项下的 热浸法测定，用70%乙醇作溶剂，不得少于45. 0%。 【炮制】当归除去杂质，洗净，润透，切薄片，晒干或低 温干燥。 【性状】本品形如当归片。切面"
+        },
+        {
+          "rank": 3,
+          "drug_name": "养血饮口服液",
+          "section": "临床应用",
+          "score": 0.6478,
+          "content_preview": "【处方】当归150g 黄芷200g 鹿角胶15g 阿胶5g 大枣100g 【性状】本品为淡黄色至红棕色的液体；气香，味甘， 微苦。 【功能与主治】补气养血，益肾助脾。用于气血两亏，崩 漏下血，体虚羸弱"
+        },
+        {
+          "rank": 4,
+          "drug_name": "乳核散结片",
+          "section": "制法",
+          "score": 0.141,
+          "content_preview": "以上十味，当归提取挥发油，挥发油备用，药渣 和蒸馅后的水溶液与其余柴胡等九味加水煎煮二次，滤过，滤 液合并，浓缩成稠膏，加适量的淀粉混匀，干燥，粉碎，过筛，加 入适量淀粉、梭甲纤维素钠或糊精，制粒，干"
+        },
+        {
+          "rank": 5,
+          "drug_name": "复方益母草胶囊",
+          "section": "制法",
+          "score": 0.1195,
+          "content_preview": "以上三味，取当归加水，浸泡2小时，提取挥发 油4小时，收集挥发油，用无水硫酸钠脱水，用9倍量的倍他 环糊精包合（60°C搅拌3小时，搅拌速度800转/分钟），包合 物于40°C干燥，备用；蒸馅后的水溶"
+        }
+      ]
+    },
+    {
+      "query_id": "Q004",
+      "query": "黄连的性状是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "黄连胶囊",
+        "香连丸（浓缩丸）",
+        "驻车丸",
+        "香苏调胃片",
+        "戊己丸"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "临床应用",
+        "临床应用",
+        "临床应用",
+        "临床应用"
+      ],
+      "recall_hit": true,
+      "first_hit_rank": 1,
+      "retrieval_latency": 1.411,
+      "answer": "",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 0,
+      "keyword_coverage": 0.0,
+      "has_citations": false,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 0.0,
+      "component_latency": {},
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "黄连胶囊",
+          "section": "临床应用",
+          "score": 0.8922,
+          "content_preview": "【处方】黄连250g 【制法】取黄连，粉碎成细粉，混匀，装入胶囊，制成 1000粒，即得。 【性状】本品为硬胶囊，内容物为黄褐色粉末；气微，味 极苦。 【检查】应符合胶囊剂项下有关的各项规定（通则 0"
+        },
+        {
+          "rank": 2,
+          "drug_name": "香连丸（浓缩丸）",
+          "section": "临床应用",
+          "score": 0.8677,
+          "content_preview": "【处方】萸黄连400g 木香100g 【性状】本品为棕色至棕褐色的浓缩丸;气微，味苦。 【检查】应符合丸剂项下有关的各项规定（通则0108）o 【功能与主治】清热化湿，行气止痛。用于大肠湿热所 致的痢"
+        },
+        {
+          "rank": 3,
+          "drug_name": "驻车丸",
+          "section": "临床应用",
+          "score": 0.8353,
+          "content_preview": "【处方】黄连360g 炮姜120g 当归180g 阿胶180g 【制法】以上四味，粉碎成细粉，过筛，混匀，用醋60ml 加适量的水泛丸，干燥，即得。 【性状】本品为黄褐色的水丸;气微香，味苦、微辛。 "
+        },
+        {
+          "rank": 4,
+          "drug_name": "香苏调胃片",
+          "section": "临床应用",
+          "score": 0.8068,
+          "content_preview": "【性状】本品为糖衣片，除去糖衣后显深棕色；气微香， 味甘、微辛。 【检查】应符合片剂项下有关的各项规定（通则0101）. 【功能与主治】解表和中，健胃化滞。用于胃肠积滞、外 感时邪所致的身热体倦、饮食"
+        },
+        {
+          "rank": 5,
+          "drug_name": "戊己丸",
+          "section": "临床应用",
+          "score": 0.7815,
+          "content_preview": "【处方】黄连300g 吴茱萸（制）50g 白芍（炒）300g 【制法】以上三味，粉碎成细粉，过筛，混匀，用水泛丸, 干燥，即得。 【性状】本品为棕黄色的水丸；味苦,稍有麻辣感。 【检查】应符合丸剂项下"
+        }
+      ]
+    },
+    {
+      "query_id": "Q005",
+      "query": "甘草的来源是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "巴戟天",
+        "甘草浸膏",
+        "快胃片",
+        "胃疡灵颗粒",
+        "玄麦甘桔胶囊"
+      ],
+      "retrieved_sections": [
+        "性状",
+        "完整条目",
+        "含量测定",
+        "含量测定",
+        "含量测定"
+      ],
+      "recall_hit": true,
+      "first_hit_rank": 2,
+      "retrieval_latency": 1.476,
+      "answer": "",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 0,
+      "keyword_coverage": 0.0,
+      "has_citations": false,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 0.0,
+      "component_latency": {},
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "巴戟天",
+          "section": "性状",
+          "score": 0.0459,
+          "content_preview": "甘草 根呈圆柱形，长25〜100cm,直径 0.6〜3.5cm。外皮松紧不一。表面红棕色或灰棕色，具显 著的纵皱纹、沟纹、皮孔及稀疏的细根痕。质坚实，断面略 显纤维性，黄白色，粉性，形成层环明显，射线"
+        },
+        {
+          "rank": 2,
+          "drug_name": "甘草浸膏",
+          "section": "完整条目",
+          "score": 0.0414,
+          "content_preview": "LICORICE EXTRACT 本品为甘草经加工制成的浸膏。 【制法】取甘草，润透，切片，加水煎煮三次，每次2小 时，合并煎液，放置过夜使沉淀，取上清液浓缩至稠膏状，取出 适量，照〔含量测定〕项下的"
+        },
+        {
+          "rank": 3,
+          "drug_name": "快胃片",
+          "section": "含量测定",
+          "score": 0.0343,
+          "content_preview": "照高效液相色谱法（通则0512）测定。 色谱条件与系统适用性试验以十八烷基硅烷键合硅胶 为填充剂；以乙腊-0.2%磷酸溶液（15 : 85）为流动相；检测波 长为277nm0理论板数按甘草甘峰计算应不"
+        },
+        {
+          "rank": 4,
+          "drug_name": "胃疡灵颗粒",
+          "section": "含量测定",
+          "score": 0.0326,
+          "content_preview": "照高效液相色谱法（通则0512）测定。 色谱条件与系统适用性试验 以十八烷基硅烷键合硅胶 为填充剂；以乙＞0.5%冰醋酸（10 : 90）为流动相；检测波长 为276nm。理论板数按甘草昔峰计算应不低"
+        },
+        {
+          "rank": 5,
+          "drug_name": "玄麦甘桔胶囊",
+          "section": "含量测定",
+          "score": 0.0309,
+          "content_preview": "甘草照高效液相色谱法（通则0512） 测定。 色谱条件与系统适用性试验以十八烷基硅烷键合硅胶 为填充剂；以乙腊-0. 1%歸酸溶液（37 : 63）为流动相；检测波 长为250nm。理论板数按甘草酸峰"
+        }
+      ]
+    },
+    {
+      "query_id": "Q006",
+      "query": "川芎的性味归经",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "青 黛",
+        "制川乌",
+        "人参叶-饮片",
+        "制草乌",
+        "川楝子"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "临床应用",
+        "完整条目",
+        "临床应用",
+        "临床应用"
+      ],
+      "recall_hit": false,
+      "first_hit_rank": 0,
+      "retrieval_latency": 1.516,
+      "answer": "",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 0,
+      "keyword_coverage": 0.0,
+      "has_citations": false,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 0.0,
+      "component_latency": {},
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "青 黛",
+          "section": "临床应用",
+          "score": 0.8197,
+          "content_preview": "【性味与归经】咸，寒。归肝经。 【功能与主治】清热解毒，凉血消斑，泻火定惊。用于温 毒发斑，血热吐岫，胸痛咳血，口疮，舞腮，喉痹，小儿惊痫。 【用法与用量】1〜3g,宜入丸散用。外用适量。 【贮藏】置"
+        },
+        {
+          "rank": 2,
+          "drug_name": "制川乌",
+          "section": "临床应用",
+          "score": 0.8113,
+          "content_preview": "【性味与归经】辛、苦，热;有毒。归心、肝、肾、脾经。 【功能与主治】祛风除湿，温经止痛。用于风寒湿痹，关 节疼痛，心腹冷痛，寒疝作痛及麻醉止痛。 【用法与用量】L 5〜3g,先煎、久煎。 【注意】孕妇"
+        },
+        {
+          "rank": 3,
+          "drug_name": "人参叶-饮片",
+          "section": "完整条目",
+          "score": 0.7471,
+          "content_preview": "【炮制】用时打碎。 【性味与归经】苦、涩，微寒。归肺、心经。 【功能与主治】活血止痛，止血生肌，收湿敛疮，清肺化 痰。用于跌扑伤痛，外伤出血，吐血岫血，疮疡不敛，湿疹、湿 疮，肺热咳嗽。 【用法与用量"
+        },
+        {
+          "rank": 4,
+          "drug_name": "制草乌",
+          "section": "临床应用",
+          "score": 0.7459,
+          "content_preview": "【性味与归经】辛、苦，热;有毒。归心、肝、肾、脾经。 【功能与主治】同草乌。 【用法与用量】1. 5〜3g,宜先煎、久煎。 【注意】【贮藏】同制川乌。"
+        },
+        {
+          "rank": 5,
+          "drug_name": "川楝子",
+          "section": "临床应用",
+          "score": 0.5171,
+          "content_preview": "【检查】水分 不得过12. 0%（通则0832第二法）。 总灰分 不得过5.0%（通则2302）。 【浸出物】照水溶性浸出物测定法（通则2201）项下的 热浸法测定，不得少于32.0%。 【炮制】川楝"
+        }
+      ]
+    },
+    {
+      "query_id": "Q007",
+      "query": "白芍的功能主治",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "柴胡口服液",
+        "北沙参-饮片",
+        "荷叶丸",
+        "四味珍层冰硼滴眼液",
+        "白带丸"
+      ],
+      "retrieved_sections": [
+        "含量测定",
+        "临床应用",
+        "检查",
+        "检查",
+        "临床应用"
+      ],
+      "recall_hit": false,
+      "first_hit_rank": 0,
+      "retrieval_latency": 1.457,
+      "answer": "",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 0,
+      "keyword_coverage": 0.0,
+      "has_citations": false,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 0.0,
+      "component_latency": {},
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "柴胡口服液",
+          "section": "含量测定",
+          "score": 0.9527,
+          "content_preview": "照高效液相色谱法（通则0512）测定。 色谱条件与系统适用性试验以十八烷基硅烷键合硅胶 为填充剂；以乙月青-水（15 : 85）为流动相；检测波长为230nmo 理论板数按芍药苷峰计算应不低于2000"
+        },
+        {
+          "rank": 2,
+          "drug_name": "北沙参-饮片",
+          "section": "临床应用",
+          "score": 0.9348,
+          "content_preview": "【炮制】白芍洗净，润透，切薄片，干燥。 【浸出物】同药材。 炒白芍 取净白芍片，照清炒法（通则0213）炒至微黄色。 【性状】本品形如白芍片，表面微黄色或淡棕黄色，有的 可见焦斑。气微香。 【检查】水"
+        },
+        {
+          "rank": 3,
+          "drug_name": "荷叶丸",
+          "section": "检查",
+          "score": 0.8975,
+          "content_preview": "应符合丸剂项下有关的各项规定（通则0108）. 【含量测定】照高效液相色谱法（通则0512）测定。 色谱条件与系统适用性试验以十八烷基硅烷键合硅胶 为填充剂；以乙月青-水（15 = 85）为流动相；检"
+        },
+        {
+          "rank": 4,
+          "drug_name": "四味珍层冰硼滴眼液",
+          "section": "检查",
+          "score": 0.8965,
+          "content_preview": "应符合丸剂项下有关的各项规定（通则0108）. 【含量测定】照高效液相色谱法（通则0512）测定。 色谱条件与系统适用性试验以十八烷基硅烷键合硅胶 为填充剂；以乙月青-水（17 : 83）为流动相；检"
+        },
+        {
+          "rank": 5,
+          "drug_name": "白带丸",
+          "section": "临床应用",
+          "score": 0.7497,
+          "content_preview": "【处方】黄柏（酒炒）150g 椿皮300g 白芍ioog 当归ioog 醋香附50g 【性状】本品为黄棕色至黑棕色的浓缩水丸；味苦。 【检查】应符合丸剂项下有关的各项规定（通则0108） 0 【功能与"
+        }
+      ]
+    },
+    {
+      "query_id": "Q008",
+      "query": "茯苓的用法用量",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "固本咳喝片",
+        "通宣理肺胶囊",
+        "桂枝茯苓胶囊",
+        "乌鸡白凤颗粒",
+        "肾炎康复片"
+      ],
+      "retrieved_sections": [
+        "制法",
+        "制法",
+        "制法",
+        "制法",
+        "制法"
+      ],
+      "recall_hit": true,
+      "first_hit_rank": 3,
+      "retrieval_latency": 1.504,
+      "answer": "",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 0,
+      "keyword_coverage": 0.0,
+      "has_citations": false,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 0.0,
+      "component_latency": {},
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "固本咳喝片",
+          "section": "制法",
+          "score": 0.7417,
+          "content_preview": "以上七味，取茯苓34. 5g,粉碎成细粉，备用； 剩余的茯苓与其余党参等六味加水煎煮三次，第一次3小 时，第二次2小时，第三次1小时，煎液滤过，滤液合并，静置 24小时，取上清液，滤过，滤液减压浓缩至"
+        },
+        {
+          "rank": 2,
+          "drug_name": "通宣理肺胶囊",
+          "section": "制法",
+          "score": 0.6722,
+          "content_preview": "以上十一味，取茯苓76. 3g粉碎成细粉；紫苏叶 提取挥发油，挥发油用倍他环糊精包结，蒸馅后的水溶液另器 收集；剩余茯苓、苦杏仁和姜半夏，加80%乙醇回流提取二 次，每次2小时，上清液减压回收乙醇，浓"
+        },
+        {
+          "rank": 3,
+          "drug_name": "桂枝茯苓胶囊",
+          "section": "制法",
+          "score": 0.5232,
+          "content_preview": "以上五味，取茯苓192g,粉碎成细粉；牡丹皮 用水蒸气蒸偏，收集蒸憶液，分取挥发性成分，备用；药渣 与桂枝、白芍、桃仁及剩余的茯苓用90%乙醇提取二次， 合并提取液，回收乙醇至无醇味，减压浓缩至适量；"
+        },
+        {
+          "rank": 4,
+          "drug_name": "乌鸡白凤颗粒",
+          "section": "制法",
+          "score": 0.5126,
+          "content_preview": "以上六味，取茯苓110g粉碎成细粉，筛余部分 与剩余茯苓加水煎煮三次，每次30分钟，滤过，滤液合并，浓 缩至稠膏状；酒萸肉加乙醇回流提取二次，每次1小时，滤过， 药渣备用，滤液合并，回收乙醇，浓缩至稠"
+        },
+        {
+          "rank": 5,
+          "drug_name": "肾炎康复片",
+          "section": "制法",
+          "score": 0.4493,
+          "content_preview": "以上五味，土茯苓183g、广蕾香粉碎成细粉；剩 余的土茯苓与其余槐花等三味加水煎煮二次,第一次3小时， 第二次2小时，煎液滤过，滤液合并，浓缩至适量，加入土茯苓 和广蕾香的细粉，混匀，干燥，粉碎成细粉"
+        }
+      ]
+    },
+    {
+      "query_id": "Q009",
+      "query": "麻黄的注意事项",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "猫爪草",
+        "小儿咳喝灵口服液",
+        "疏痛安涂膜剂",
+        "猫爪草",
+        "荟暴红止咳口服液"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "检查",
+        "含量测定-成分2",
+        "性状",
+        "检查"
+      ],
+      "recall_hit": false,
+      "first_hit_rank": 0,
+      "retrieval_latency": 1.51,
+      "answer": "",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 0,
+      "keyword_coverage": 0.0,
+      "has_citations": false,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 0.0,
+      "component_latency": {},
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "猫爪草",
+          "section": "临床应用",
+          "score": 0.7236,
+          "content_preview": "【浸出物】照醇溶性浸出物测定法（通则2201）项下的 热浸法测定，用稀乙醇作溶剂，不得少于30.0%。 【性味与归经】甘、辛，温。归肝、肺经。 【功能与主治】化痰散结，解毒消肿。用于療疡痰核，疔 疮肿"
+        },
+        {
+          "rank": 2,
+          "drug_name": "小儿咳喝灵口服液",
+          "section": "检查",
+          "score": 0.5314,
+          "content_preview": "相对密度 应不低于1. OU规格（1）〕或1.03 〔规格（2）〕（通则0601）。 pH值 应为4.0〜6. 0（通则0631） 0 其他应符合合剂项下有关的各项规定（通则0181） o 【含量测定"
+        },
+        {
+          "rank": 3,
+          "drug_name": "疏痛安涂膜剂",
+          "section": "含量测定-成分2",
+          "score": 0.4959,
+          "content_preview": "麻黄 照高效液相色谱法（通则0512）测定。 色谱条件与系统适用性试验以十八烷基硅烷键合 硅胶为填充剂；以乙腊-0. 02mol/L磷酸二氢钾溶液（含 0. 2%三乙胺，用磷酸调节pH值至2. 7）（"
+        },
+        {
+          "rank": 4,
+          "drug_name": "猫爪草",
+          "section": "性状",
+          "score": 0.4938,
+          "content_preview": "草麻黄呈细长圆柱形，少分枝，直径1〜 2mm。有的带少量棕色木质茎。表面淡绿色至黄绿色，有细 纵脊线，触之微有粗糙感。节明显，节间长2〜6cm。节上有 膜质鳞叶，长3〜4mm；裂片2（稀3）,锐三角形"
+        },
+        {
+          "rank": 5,
+          "drug_name": "荟暴红止咳口服液",
+          "section": "检查",
+          "score": 0.4217,
+          "content_preview": "应符合片剂项下有关的各项规定（通则0101）。 【含量测定】麻黄照高效液相色谱法（通则0512）测定。 色谱条件与系统适用性试验以极性乙酷连接苯基键合 硅胶为填充剂；以甲醇-0. 092%磷酸溶液（含"
+        }
+      ]
+    },
+    {
+      "query_id": "Q010",
+      "query": "何首乌的贮藏方法",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "何首乌-饮片",
+        "降脂灵片",
+        "活力苏口服液",
+        "血脂宁丸",
+        "何首乌-饮片"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "临床应用",
+        "临床应用",
+        "临床应用",
+        "炮制"
+      ],
+      "recall_hit": true,
+      "first_hit_rank": 1,
+      "retrieval_latency": 1.044,
+      "answer": "",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 0,
+      "keyword_coverage": 0.0,
+      "has_citations": false,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 0.0,
+      "component_latency": {},
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "何首乌-饮片",
+          "section": "临床应用",
+          "score": 0.9744,
+          "content_preview": "【炮制】除去杂质，洗净，稍浸，润透，切厚片或块，干燥。 【性味与归经】苦、甘、涩,微温。归肝、心、肾经。 【功能与主治】解毒，消痈，截疟，润肠通便。用于疮痈， 原痂，风疹瘙痒，久疟体虚，肠燥便秘。 【"
+        },
+        {
+          "rank": 2,
+          "drug_name": "降脂灵片",
+          "section": "临床应用",
+          "score": 0.8103,
+          "content_preview": "【处方】制何首乌222g 枸杞子222g 黄精296g 山楂148g 决明子44g 【性状】本品为糖衣片或薄膜衣片，除去包衣后，显棕色 至棕褐色；味微酸、涩。 【检查】应符合片剂项下有关的各项规定（通"
+        },
+        {
+          "rank": 3,
+          "drug_name": "活力苏口服液",
+          "section": "临床应用",
+          "score": 0.791,
+          "content_preview": "【处方】制何首乌1000g 淫羊蕾300g 黄精（制）440g 枸杞子300g 黄芷440g 丹参220g 【性状】本品为棕黄色至棕色的液体；味甜、微涩。 【功能与主治】益气补血，滋养肝肾。用于年老体"
+        },
+        {
+          "rank": 4,
+          "drug_name": "血脂宁丸",
+          "section": "临床应用",
+          "score": 0.7384,
+          "content_preview": "【处方】决明子2.5g 山楂50g 荷叶7. 5g 制何首乌2. 5g 【制法】以上四味，与白糖粉碎成细粉，过筛，混匀。每 lOOg粉末加炼蜜70~90g制成大蜜丸，即得。 【性状】本品为棕褐色的大蜜"
+        },
+        {
+          "rank": 5,
+          "drug_name": "何首乌-饮片",
+          "section": "炮制",
+          "score": 0.6112,
+          "content_preview": "取何首乌片或块，照炖法（通则0213）用黑豆汁 拌匀，置非铁质的适宜容器内，炖至汁液吸尽;或照蒸法（通则 0213）,清蒸或用黑豆汁拌匀后蒸,蒸至内外均呈棕褐色，或晒 至半干，切片，干燥。 每100k"
+        }
+      ]
+    }
+  ]
+}

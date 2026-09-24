@@ -207,11 +207,25 @@ def print_generation_report(report):
     print()
 
 
-def save_report(report, mode: str):
-    """保存评估报告到 JSON 文件"""
+def _rerank_tag(explicit: bool = None) -> str:
+    """当前重排配置的标签，写进报告文件名。
+
+    为什么需要：src 的**开重排与关重排报告此前同名**（`eval_retrieval_2026…`），
+    事后只能靠时间戳猜，极易把消融数字当成主结果（2026-09-24 就误读了一次，
+    差点把「开重排 93.58%」当成 README 采用的「关重排 91.74%」）。
+    lc 侧早有 `noRerank`/`std` 区分，src 侧补齐。
+    """
+    from config import ENABLE_RERANKER
+    eff = ENABLE_RERANKER if explicit is None else explicit
+    return "rerank" if eff else "noRerank"
+
+
+def save_report(report, mode: str, config_note: str = ""):
+    """保存评估报告到 JSON 文件（`config_note` 会写进文件名，如 `noRerank`）"""
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
     timestamp = time.strftime("%Y%m%d_%H%M%S")
-    filename = f"eval_{mode}_{timestamp}.json"
+    tag = f"_{config_note}" if config_note else ""
+    filename = f"eval_{mode}{tag}_{timestamp}.json"
     filepath = REPORT_DIR / filename
 
     with open(filepath, 'w', encoding='utf-8') as f:
@@ -247,7 +261,7 @@ def run_retrieval_eval(test_queries, enable_reranker=None):
     report = evaluator.evaluate(test_queries, verbose=True)
 
     print_retrieval_report(report)
-    save_report(report, "retrieval")
+    save_report(report, "retrieval", _rerank_tag(enable_reranker))
 
     retriever.close()
     return report
@@ -304,7 +318,7 @@ def run_generation_eval(test_queries, grounding: bool = True, crosscheck: bool =
     report = evaluator.evaluate(test_queries, verbose=True)
 
     print_generation_report(report)
-    save_report(report, "generation")
+    save_report(report, "generation", _rerank_tag())
 
     return report
 

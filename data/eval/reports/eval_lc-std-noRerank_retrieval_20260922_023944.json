@@ -1,0 +1,486 @@
+{
+  "engine": "lc-std-noRerank",
+  "total_queries": 6,
+  "timestamp": "2026-09-22 02:39:44",
+  "hit_at_1": 1.0,
+  "hit_at_3": 1.0,
+  "hit_at_5": 1.0,
+  "mrr": 1.0,
+  "latency_p50": 0.08518671989440918,
+  "latency_p95": 1.6003029346466064,
+  "latency_p99": 1.6003029346466064,
+  "avg_latency": 0.33443113168080646,
+  "avg_doc_count": 5.0,
+  "strict_hit_at_1": 0.8333333333333334,
+  "strict_hit_at_3": 1.0,
+  "strict_hit_at_5": 1.0,
+  "strict_mrr": 0.8888888888888888,
+  "evaluable_queries": 6,
+  "unevaluable_queries": 0,
+  "by_type": {
+    "子串药名干扰": {
+      "count": 6,
+      "evaluable": 6,
+      "hits": 6,
+      "strict_hits": 6,
+      "rr": 6.0,
+      "strict_rr": 5.333333333333333,
+      "lat": 2.006586790084839,
+      "hit_at_5": 1.0,
+      "mrr": 1.0,
+      "strict_hit_at_5": 1.0,
+      "strict_mrr": 0.8888888888888888,
+      "avg_latency": 0.33443113168080646
+    }
+  },
+  "results": [
+    {
+      "query_id": "Q101",
+      "query": "双黄连口服液的功能主治是什么？",
+      "query_type": "子串药名干扰",
+      "retrieval_latency": 1.6003029346466064,
+      "doc_count": 5,
+      "retrieved_drugs": [
+        "双黄连口服液",
+        "双黄连口服液",
+        "双黄连口服液",
+        "双黄连口服液",
+        "双黄连口服液"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "药品概要",
+        "含量测定",
+        "鉴别",
+        "制法"
+      ],
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "双黄连口服液",
+          "section": "临床应用",
+          "score": null,
+          "content_preview": "【处方】金银花375g 黄苓375g 连翘750g 【功能与主治】疏风解表，清热解毒。用于外感风热所 致的感冒，症见发热、咳嗽、咽痛。 【用法与用量】口服。一次20mlC规格（1）、规格（2）〕或 l",
+          "drug_exact": true,
+          "section_ok": true
+        },
+        {
+          "rank": 2,
+          "drug_name": "双黄连口服液",
+          "section": "药品概要",
+          "score": null,
+          "content_preview": "药品名称：双黄连口服液 拼音：Shuanghuanglian Koufuye 分类：成方制剂和单味制剂",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 3,
+          "drug_name": "双黄连口服液",
+          "section": "含量测定",
+          "score": null,
+          "content_preview": "黄苓照高效液相色谱法（通则0512） 测定。 色谱条件与系统适用性试验以十八烷基硅烷键合 硅胶为填充剂；以甲醇-水-冰醋酸（50 : 50 : 1）为流动相； 检测波长为274nm。理论板数按黄苓昔峰",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 4,
+          "drug_name": "双黄连口服液",
+          "section": "鉴别",
+          "score": null,
+          "content_preview": "（1）取本品1ml,加75%乙醇5ml,摇匀，作为供 试品溶液。另取黄苓昔对照品、绿原酸对照品，分别加75% 乙醇制成每1ml含0. Img的溶液，作为对照品溶液。照薄层 色谱法（通则0502）试验，",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 5,
+          "drug_name": "双黄连口服液",
+          "section": "制法",
+          "score": null,
+          "content_preview": "以上三味，黄苓加水煎煮三次，第一次2小时， 第二、三次各1小时，合并煎液，滤过，滤液浓缩并在80笆时 加入2mol/L盐酸溶液适量调节pH值至1. 0〜2. 0,保温1小 时，静置12小时，滤过，沉淀",
+          "drug_exact": true,
+          "section_ok": false
+        }
+      ],
+      "first_hit_rank": 1,
+      "hit": true,
+      "evaluable": true,
+      "strict_first_hit_rank": 1,
+      "strict_hit": true,
+      "strict_miss_reason": ""
+    },
+    {
+      "query_id": "Q102",
+      "query": "复方丹参片的功能与主治",
+      "query_type": "子串药名干扰",
+      "retrieval_latency": 0.08518671989440918,
+      "doc_count": 5,
+      "retrieved_drugs": [
+        "复方丹参片",
+        "复方丹参片",
+        "复方丹参片",
+        "复方丹参片",
+        "复方丹参片"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "药品概要",
+        "含量测定-段",
+        "鉴别",
+        "制法"
+      ],
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "复方丹参片",
+          "section": "临床应用",
+          "score": null,
+          "content_preview": "【处方】丹参450g 三七141g 冰片8g 【性状】本品为糖衣片或薄膜衣片，除去包衣后显棕色 至棕褐色;气芳香，味微苦。 【检查】应符合片剂项下有关的各项规定（通则0101） 0 【功能与主治】活血",
+          "drug_exact": true,
+          "section_ok": true
+        },
+        {
+          "rank": 2,
+          "drug_name": "复方丹参片",
+          "section": "药品概要",
+          "score": null,
+          "content_preview": "药品名称：复方丹参片 分类：成方制剂和单味制剂 概述：Fufang Danshen Pian",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 3,
+          "drug_name": "复方丹参片",
+          "section": "含量测定-段",
+          "score": null,
+          "content_preview": "丹参丹参酮Ha照高效液相色谱法（通 则0512）测定。色谱条件与系统适用性试验以十八烷基硅烷键合硅胶 为填充剂；以甲醇-水（73 ： 27）为流动相；检测波长为270nmo 理论板数按丹参酮Ua峰计算",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 4,
+          "drug_name": "复方丹参片",
+          "section": "鉴别",
+          "score": null,
+          "content_preview": "（1）取本品，置显微镜下观察:树脂道碎片含黄 色分泌物（三七）。 （2）取本品5片〔规格（1）、规格（3）〕或2片〔规格（2）〕，糖 衣片除去糖衣，研碎，加乙醜10ml,超声处理5分钟，滤过，滤 液挥",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 5,
+          "drug_name": "复方丹参片",
+          "section": "制法",
+          "score": null,
+          "content_preview": "以上三味,丹参加乙醇加热回流1.5小时，提取 液滤过，滤液回收乙醇并浓缩至适量，备用；药渣加50%乙醇 加热回流L 5小时，提取液滤过，滤液回收乙醇并浓缩至适 量,备用；药渣加水煎煮2小时，煎液滤过，",
+          "drug_exact": true,
+          "section_ok": false
+        }
+      ],
+      "first_hit_rank": 1,
+      "hit": true,
+      "evaluable": true,
+      "strict_first_hit_rank": 1,
+      "strict_hit": true,
+      "strict_miss_reason": ""
+    },
+    {
+      "query_id": "Q103",
+      "query": "五味子糖浆的用法用量",
+      "query_type": "子串药名干扰",
+      "retrieval_latency": 0.07806849479675293,
+      "doc_count": 5,
+      "retrieved_drugs": [
+        "五味子糖浆",
+        "五味子糖浆",
+        "五味子糖浆",
+        "五味子糖浆",
+        "五味子糖浆"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "制法",
+        "药品概要",
+        "含量测定",
+        "含量测定"
+      ],
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "五味子糖浆",
+          "section": "临床应用",
+          "score": null,
+          "content_preview": "【处方】五味子300g 【性状】本品为棕黄色至棕红色的颗粒；味酸、甜。 【检查】应符合颗粒剂项下有关的各项规定（通则0104）。 【功能与主治】益气生津，补肾宁心。用于心肾不足所 致的失眠、多梦、头晕",
+          "drug_exact": true,
+          "section_ok": true
+        },
+        {
+          "rank": 2,
+          "drug_name": "五味子糖浆",
+          "section": "制法",
+          "score": null,
+          "content_preview": "取五味子粉碎成粗粉，取粗粉100g,用30%乙 醇作溶剂，浸渍72小时后，缓缓渗漉，收集漉液至相当于原 药材的二倍,滤过；另取蔗糖600g,制成糖浆，加入上述滤液 中，再加入苯甲酸钠及桔子香精适量，混",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 3,
+          "drug_name": "五味子糖浆",
+          "section": "药品概要",
+          "score": null,
+          "content_preview": "药品名称：五味子糖浆 分类：成方制剂和单味制剂 概述：Wuweizi Tangjiang",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 4,
+          "drug_name": "五味子糖浆",
+          "section": "含量测定",
+          "score": null,
+          "content_preview": "照高效液相色谱法（通则0512）测定。 色谱条件与系统适用性试验以十八烷基硅烷键合硅胶 为填充剂；以甲醇-水（60 : 40）为流动相；检测波长为250nmo 理论板数按五味子醇甲峰计算应不低于200",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 5,
+          "drug_name": "五味子糖浆",
+          "section": "含量测定",
+          "score": null,
+          "content_preview": "照高效液相色谱法（通则0512）测定. 色谱条件与系统适用性试验以十八烷基硅烷键合硅胶 为填充剂；以甲醇-水（60 : 40）为流动相；检测波长为250nm； 理论板数按五味子醇甲峰计算应不低于200",
+          "drug_exact": true,
+          "section_ok": false
+        }
+      ],
+      "first_hit_rank": 1,
+      "hit": true,
+      "evaluable": true,
+      "strict_first_hit_rank": 1,
+      "strict_hit": true,
+      "strict_miss_reason": ""
+    },
+    {
+      "query_id": "Q104",
+      "query": "黄连胶囊的注意事项",
+      "query_type": "子串药名干扰",
+      "retrieval_latency": 0.0750577449798584,
+      "doc_count": 5,
+      "retrieved_drugs": [
+        "黄连胶囊",
+        "黄连胶囊",
+        "黄连胶囊",
+        "黄连胶囊",
+        "双黄连胶囊"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "药品概要",
+        "鉴别",
+        "含量测定",
+        "制法"
+      ],
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "黄连胶囊",
+          "section": "临床应用",
+          "score": null,
+          "content_preview": "【处方】黄连250g 【制法】取黄连，粉碎成细粉，混匀，装入胶囊，制成 1000粒，即得。 【性状】本品为硬胶囊，内容物为黄褐色粉末；气微，味 极苦。 【检查】应符合胶囊剂项下有关的各项规定（通则 0",
+          "drug_exact": true,
+          "section_ok": true
+        },
+        {
+          "rank": 2,
+          "drug_name": "黄连胶囊",
+          "section": "药品概要",
+          "score": null,
+          "content_preview": "药品名称：黄连胶囊 拼音：Huanglian Jiaonang 分类：成方制剂和单味制剂",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 3,
+          "drug_name": "黄连胶囊",
+          "section": "鉴别",
+          "score": null,
+          "content_preview": "取本品内容物50mg,加甲醇5ml,超声处理15 分钟，滤过，取滤液作为供试品溶液。另取黄连对照药材，同 法制成对照药材溶液。再取盐酸小案碱对照品，加甲醇制成 每1ml含0. 5mg的溶液，作为对照品",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 4,
+          "drug_name": "黄连胶囊",
+          "section": "含量测定",
+          "score": null,
+          "content_preview": "照高效液相色谱法（通则0512）测定。 色谱条件与系统适用性试验以十八烷基硅烷键合硅胶 为填充剂；以乙睛-0. 05mol/L磷酸二氢钾溶液（用磷酸调pH 值至3.0X25 : 75）为流动相；检测波",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 5,
+          "drug_name": "双黄连胶囊",
+          "section": "制法",
+          "score": null,
+          "content_preview": "以上三味，黄苓加水煎煮三次，第一次2小时， 第二、三次每次1小时，合并煎液，滤过，滤液浓缩至相对密度 为1.05-1. 10（80°C）,于80°C时用2mol/L盐酸溶液调节pH 值至1.0〜2.0",
+          "drug_exact": false,
+          "section_ok": false
+        }
+      ],
+      "first_hit_rank": 1,
+      "hit": true,
+      "evaluable": true,
+      "strict_first_hit_rank": 1,
+      "strict_hit": true,
+      "strict_miss_reason": ""
+    },
+    {
+      "query_id": "Q105",
+      "query": "天麻祛风补片的功能主治",
+      "query_type": "子串药名干扰",
+      "retrieval_latency": 0.07862639427185059,
+      "doc_count": 5,
+      "retrieved_drugs": [
+        "天麻祛风补片",
+        "天麻祛风补片",
+        "天麻祛风补片",
+        "天麻祛风补片",
+        "天麻祛风补片"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "药品概要",
+        "含量测定",
+        "制法",
+        "鉴别"
+      ],
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "天麻祛风补片",
+          "section": "临床应用",
+          "score": null,
+          "content_preview": "【性状】本品为糖衣片，除去糖衣后显棕褐色至黑褐色； 味甜、苦、略麻。 【功能与主治】温肾养肝，袪风止痛。用于肝肾亏损、风 湿入络所致的痹病,症见头晕耳鸣、关节疼痛、腰膝瘦软、畏寒 肢冷、手足麻木0 【",
+          "drug_exact": true,
+          "section_ok": true
+        },
+        {
+          "rank": 2,
+          "drug_name": "天麻祛风补片",
+          "section": "药品概要",
+          "score": null,
+          "content_preview": "药品名称：天麻祛风补片 拼音：Tianma Qufeng Bupian 分类：成方制剂和单味制剂",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 3,
+          "drug_name": "天麻祛风补片",
+          "section": "含量测定",
+          "score": null,
+          "content_preview": "照高效液相色谱法（通则0512）测定。 色谱条件与系统适用性试验以十烷基硅烷键合硅胶 为填充剂；以甲醇-水（4 = 96）为流动相；检测波长为220nmo 理论板数按天麻素峰计算应不低于2000。 对",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 4,
+          "drug_name": "天麻祛风补片",
+          "section": "制法",
+          "score": null,
+          "content_preview": "以上十一味，天麻（姜汁制）、盐杜仲、茯苓粉碎 成粗粉；肉桂粉碎成细粉,过筛；当归、独活、羌活提取挥发油， 药渣与药液加入酒川牛膝、附片（黑顺片）（砂炒）、地黄、玄参， 加水煎煮三次，第一次3小时，第二",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 5,
+          "drug_name": "天麻祛风补片",
+          "section": "鉴别",
+          "score": null,
+          "content_preview": "（1）取本品，置显微镜下观察：不规则分枝状团 块无色，遇水合氯醛液溶化；菌丝无色或淡棕色，直径4〜6/m （茯苓）。厚壁细胞多角形或长多角形，直径70~180Mm,壁较 厚,微木化，纹孔明显（天麻）。",
+          "drug_exact": true,
+          "section_ok": false
+        }
+      ],
+      "first_hit_rank": 1,
+      "hit": true,
+      "evaluable": true,
+      "strict_first_hit_rank": 1,
+      "strict_hit": true,
+      "strict_miss_reason": ""
+    },
+    {
+      "query_id": "Q106",
+      "query": "复方丹参片的注意事项",
+      "query_type": "子串药名干扰",
+      "retrieval_latency": 0.08934450149536133,
+      "doc_count": 5,
+      "retrieved_drugs": [
+        "复方丹参片",
+        "复方丹参片",
+        "复方丹参片",
+        "复方丹参片",
+        "复方丹参片"
+      ],
+      "retrieved_sections": [
+        "药品概要",
+        "含量测定-段",
+        "临床应用",
+        "制法",
+        "鉴别"
+      ],
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "复方丹参片",
+          "section": "药品概要",
+          "score": null,
+          "content_preview": "药品名称：复方丹参片 分类：成方制剂和单味制剂 概述：Fufang Danshen Pian",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 2,
+          "drug_name": "复方丹参片",
+          "section": "含量测定-段",
+          "score": null,
+          "content_preview": "丹参丹参酮Ha照高效液相色谱法（通 则0512）测定。色谱条件与系统适用性试验以十八烷基硅烷键合硅胶 为填充剂；以甲醇-水（73 ： 27）为流动相；检测波长为270nmo 理论板数按丹参酮Ua峰计算",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 3,
+          "drug_name": "复方丹参片",
+          "section": "临床应用",
+          "score": null,
+          "content_preview": "【处方】丹参450g 三七141g 冰片8g 【性状】本品为糖衣片或薄膜衣片，除去包衣后显棕色 至棕褐色;气芳香，味微苦。 【检查】应符合片剂项下有关的各项规定（通则0101） 0 【功能与主治】活血",
+          "drug_exact": true,
+          "section_ok": true
+        },
+        {
+          "rank": 4,
+          "drug_name": "复方丹参片",
+          "section": "制法",
+          "score": null,
+          "content_preview": "以上三味,丹参加乙醇加热回流1.5小时，提取 液滤过，滤液回收乙醇并浓缩至适量，备用；药渣加50%乙醇 加热回流L 5小时，提取液滤过，滤液回收乙醇并浓缩至适 量,备用；药渣加水煎煮2小时，煎液滤过，",
+          "drug_exact": true,
+          "section_ok": false
+        },
+        {
+          "rank": 5,
+          "drug_name": "复方丹参片",
+          "section": "鉴别",
+          "score": null,
+          "content_preview": "（1）取本品，置显微镜下观察:树脂道碎片含黄 色分泌物（三七）。 （2）取本品5片〔规格（1）、规格（3）〕或2片〔规格（2）〕，糖 衣片除去糖衣，研碎，加乙醜10ml,超声处理5分钟，滤过，滤 液挥",
+          "drug_exact": true,
+          "section_ok": false
+        }
+      ],
+      "first_hit_rank": 1,
+      "hit": true,
+      "evaluable": true,
+      "strict_first_hit_rank": 3,
+      "strict_hit": true,
+      "strict_miss_reason": ""
+    }
+  ],
+  "criteria": {
+    "loose": "drug_name 双向子串匹配；expected_drugs 为空的题无条件命中（历史报告口径，保留以保持可比）",
+    "strict": "药品名精确（含该药饮片条目）+ 期望章节在 chunk 正文真实出现；分母仅含可评测题（expected_drugs 非空）"
+  }
+}

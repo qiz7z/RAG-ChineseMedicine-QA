@@ -1,0 +1,175 @@
+{
+  "eval_type": "generation",
+  "total_queries": 3,
+  "timestamp": "2026-09-22 01:35:12",
+  "retrieval": {
+    "hit_at_1": 0.0,
+    "hit_at_3": 0.0,
+    "hit_at_5": 0.0,
+    "mrr": 0.0,
+    "criteria": "loose：drug_name 双向子串匹配；expected_drugs 为空的题无条件命中（历史报告沿用的粗召回口径，保留以保持可比）"
+  },
+  "strict_retrieval": {
+    "hit_at_1": 0.0,
+    "hit_at_3": 0.0,
+    "hit_at_5": 0.0,
+    "mrr": 0.0,
+    "evaluable_queries": 0,
+    "unevaluable_queries": 0,
+    "criteria": "strict：药品名精确（含该药饮片条目）+ 期望章节在 chunk 正文真实出现；分母仅含可评测题（expected_drugs 非空）"
+  },
+  "generation": {
+    "avg_keyword_coverage": 0.6111,
+    "citation_rate": 1.0,
+    "consistency_issue_rate": 0.0,
+    "medical_disclaimer_rate": 1.0
+  },
+  "performance": {
+    "latency_p50": 6.466,
+    "latency_p95": 9.14,
+    "latency_p99": 9.14,
+    "avg_latency": 6.878,
+    "avg_retrieval_latency": 0.355,
+    "avg_llm_latency": 6.522
+  },
+  "by_type": {
+    "单药品单属性查询": {
+      "count": 3,
+      "avg_keyword_coverage": 0.6111,
+      "citation_rate": 1.0,
+      "consistency_issue_rate": 0.0,
+      "avg_latency": 6.878
+    }
+  },
+  "results": [
+    {
+      "query_id": "Q001",
+      "query": "人参的性味归经是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "人参-饮片",
+        "人参",
+        "人参总皂苷",
+        "人参叶",
+        "人参茎叶总皂苷"
+      ],
+      "retrieved_sections": [
+        "完整条目",
+        "药品概要",
+        "药品概要",
+        "药品概要",
+        "药品概要"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.786,
+      "answer": "根据《中国药典》（2020年版）一部收录的人参饮片标准：\n\n**性味归经**：甘、微苦，微温。归脾、肺、心、肾经。\n（来源：药典2020一部-人参-饮片-完整条目）\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 7,
+      "answer_keywords_total": 7,
+      "keyword_coverage": 1.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 5.028,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.786,
+        "prompt_building": 0.0,
+        "llm_generation": 4.241,
+        "post_processing": 0.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q002",
+      "query": "黄芪的功能主治是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "黄芪-饮片",
+        "黄芪颗粒",
+        "黄芪健胃膏",
+        "黄芪生脉颗粒",
+        "黄芪"
+      ],
+      "retrieved_sections": [
+        "完整条目",
+        "临床应用",
+        "临床应用",
+        "完整条目",
+        "药品概要"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.141,
+      "answer": "根据《中国药典》（2020年版）一部，**黄芪（饮片）**的功能与主治如下：\n\n**功能**：补气升阳，固表止汗，利水消肿，生津养血，行滞通痹，托毒排脓，敛疮生肌。\n\n**主治**：用于气虚乏力，食少便溏，中气下陷，久泻脱肛，便血崩漏，表虚自汗，气虚水肿，内热消渴，血虚萎黄，半身不遂，痹痛麻木，痈疽难溃，久溃不敛。\n\n（来源：药典2020一部-黄芪-饮片-完整条目）\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 5,
+      "answer_keywords_total": 6,
+      "keyword_coverage": 0.8333,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 6.466,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.141,
+        "prompt_building": 0.0,
+        "llm_generation": 6.325,
+        "post_processing": 0.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q003",
+      "query": "当归的用法用量是怎样的？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "当归龙荟丸",
+        "当归",
+        "当归补血口服液",
+        "当归养血丸",
+        "当归"
+      ],
+      "retrieved_sections": [
+        "完整条目",
+        "临床应用",
+        "临床应用",
+        "完整条目",
+        "药品概要"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 2,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.138,
+      "answer": "根据《中国药典》（2020年版）一部，**当归**的用法用量如下：\n\n**用法与用量**：6〜12g。\n\n（来源：药典2020一部-当归-饮片-临床应用）\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 2,
+      "keyword_coverage": 0.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 9.14,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.138,
+        "prompt_building": 0.0,
+        "llm_generation": 9.001,
+        "post_processing": 0.0
+      },
+      "top_k_details": []
+    }
+  ]
+}

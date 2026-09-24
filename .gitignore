@@ -44,8 +44,10 @@ models/bge-reranker-v2-m3/
 models/bge-large-zh-v1.5/model.safetensors
 models/bge-large-zh-v1.5/*.bin
 
-# Evaluation reports (regenerate via: python scripts/run/run_eval.py)
-data/eval/reports/
+# Evaluation reports —— **入库**（审计链：README/docs 里每个数字都应能在 reports/ 里找到来源；
+# 且 docs/04、docs/05 直接引用了具体报告文件名，不入库会变成死链）
+# 如需停止入库，取消下面一行注释：
+# data/eval/reports/
 
 # Logs
 *.log

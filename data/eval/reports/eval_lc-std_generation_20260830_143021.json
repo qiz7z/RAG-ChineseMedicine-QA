@@ -1,0 +1,69 @@
+{
+  "engine": "lc-std",
+  "total_queries": 3,
+  "timestamp": "2026-08-30 14:30:21",
+  "avg_keyword_coverage": 0.3333333333333333,
+  "citation_rate": 1.0,
+  "consistency_issue_rate": 0.0,
+  "latency_p50": 8.608630895614624,
+  "latency_p95": 12.384508609771729,
+  "latency_p99": 12.384508609771729,
+  "avg_latency": 9.643561363220215,
+  "by_type": {
+    "单药品单属性查询": {
+      "count": 3,
+      "cov": 1.0,
+      "cite": 3,
+      "issue": 0,
+      "lat": 28.930684089660645,
+      "avg_keyword_coverage": 0.3333333333333333,
+      "citation_rate": 1.0,
+      "consistency_issue_rate": 0.0,
+      "avg_latency": 9.643561363220215
+    }
+  },
+  "results": [
+    {
+      "query_id": "Q001",
+      "query": "人参的性味归经是什么？",
+      "query_type": "单药品单属性查询",
+      "answer": "[\"甘、微苦，微温。归脾、肺、心、肾经。\"](人参-饮片)\n\n**参考来源：**\n- [1] 药典2020一部-人参-饮片-完整条目\n- [2] 药典2020一部-人参茎叶总皂苷-特征图谱\n- [3] 药典2020一部-人参总皂苷-含量测定\n- [4] 药典2020一部-人参-药品概要\n- [5] 药典2020一部-人参茎叶总皂苷-制法\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 7,
+      "answer_keywords_total": 7,
+      "keyword_coverage": 1.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "consistency_issue_count": 0,
+      "latency": 12.384508609771729,
+      "retrieval_latency": 12.375998735427856
+    },
+    {
+      "query_id": "Q002",
+      "query": "黄芪的功能主治是什么？",
+      "query_type": "单药品单属性查询",
+      "answer": "根据提供的参考资料，药典中未收录黄芪的功能主治相关信息。\n\n参考资料1仅提供了黄芪的基原植物、采收加工等信息，未涉及功能主治内容。\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 6,
+      "keyword_coverage": 0.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "consistency_issue_count": 0,
+      "latency": 7.937544584274292,
+      "retrieval_latency": 7.93354606628418
+    },
+    {
+      "query_id": "Q003",
+      "query": "当归的用法用量是怎样的？",
+      "query_type": "单药品单属性查询",
+      "answer": "根据《中国药典》当归条目记载：\n\n【用法与用量】6〜12g（当归-临床应用）。\n\n具体用药请遵医嘱。\n\n**参考来源：**\n- [1] 药典2020一部-当归-临床应用\n- [2] 药典2020一部-当归补血口服液-临床应用\n- [3] 药典2020一部-当归调经颗粒-临床应用\n- [4] 药典2020一部-当归养血丸-完整条目\n- [5] 药典2020一部-当归龙荟丸-完整条目",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 2,
+      "keyword_coverage": 0.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "consistency_issue_count": 0,
+      "latency": 8.608630895614624,
+      "retrieval_latency": 8.606637001037598
+    }
+  ]
+}

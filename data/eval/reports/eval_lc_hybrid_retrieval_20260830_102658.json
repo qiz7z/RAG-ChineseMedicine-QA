@@ -1,0 +1,375 @@
+{
+  "eval_type": "retrieval",
+  "total_queries": 5,
+  "timestamp": "2026-08-30 10:16:43",
+  "retrieval": {
+    "hit_at_1": 1.0,
+    "hit_at_3": 1.0,
+    "hit_at_5": 1.0,
+    "mrr": 1.0
+  },
+  "generation": {
+    "avg_keyword_coverage": 0.0,
+    "citation_rate": 0.0,
+    "consistency_issue_rate": 0.0,
+    "medical_disclaimer_rate": 0.0
+  },
+  "performance": {
+    "latency_p50": 57.537,
+    "latency_p95": 267.013,
+    "latency_p99": 267.013,
+    "avg_latency": 123.146,
+    "avg_retrieval_latency": 123.146,
+    "avg_llm_latency": 0.0
+  },
+  "by_type": {
+    "单药品单属性查询": {
+      "count": 5,
+      "hit_at_5": 1.0,
+      "mrr": 1.0,
+      "avg_latency": 123.146
+    }
+  },
+  "results": [
+    {
+      "query_id": "Q001",
+      "query": "人参的性味归经是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "人参-饮片",
+        "人参茎叶总皂苷",
+        "人参总皂苷",
+        "人参",
+        "人参"
+      ],
+      "retrieved_sections": [
+        "完整条目",
+        "特征图谱",
+        "特征图谱",
+        "含量测定",
+        "鉴别"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "retrieval_latency": 57.537,
+      "answer": "",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 0,
+      "keyword_coverage": 0.0,
+      "has_citations": false,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 0.0,
+      "component_latency": {},
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "人参-饮片",
+          "section": "完整条目",
+          "score": 0.9666,
+          "content_preview": "【炮制】润透,切薄片，干燥，或用时粉碎、捣碎。 人参片本品呈圆形或类圆形薄片。外表皮灰黄色。切 面淡黄白色或类白色，显粉性，形成层环纹棕黄色，皮部有黄 棕色的点状树脂道及放射性裂隙。体轻,质脆。香气特"
+        },
+        {
+          "rank": 2,
+          "drug_name": "人参茎叶总皂苷",
+          "section": "特征图谱",
+          "score": 0.0091,
+          "content_preview": "照高效液相色谱法（通则0512）测定。 色谱条件与系统适用性试验以十八烷基硅烷键合硅胶 为填充剂（柱长为25cm,内径为4・6mm,粒径为5^m,载碳量 11%）;以乙腊为流动相A,以0. 1%磷酸溶"
+        },
+        {
+          "rank": 3,
+          "drug_name": "人参总皂苷",
+          "section": "特征图谱",
+          "score": 0.0081,
+          "content_preview": "照高效液相色谱法（通则0512）测定。 色谱条件与系统适用性试验 以十八烷基硅烷键合硅胶 为填充剂（柱长为25cm,内径为4.6mm,粒径为5卩m,载碳量 11%）;以乙月青为流动相A,以0. 1%磷"
+        },
+        {
+          "rank": 4,
+          "drug_name": "人参",
+          "section": "含量测定",
+          "score": 0.0067,
+          "content_preview": "照高效液相色谱法（通则0512）测定。 色谱条件与系统适用性试验 以十八烷基硅烷键合硅胶 为填充剂；以乙腊为流动相A,以水为流动相B,按下表中的 规定进行梯度洗脱;检测波长为2O3nm。理论板数按人参"
+        },
+        {
+          "rank": 5,
+          "drug_name": "人参",
+          "section": "鉴别",
+          "score": 0.0061,
+          "content_preview": "（1）本品横切面：木栓层为数列细胞。栓内层 窄。韧皮部外侧有裂隙，内侧薄壁细胞^#列较紧密,有树脂道 散在，内含黄色分泌物。形成层成环。木质部射线宽广，导管 单个散在或数个相聚，断续排列成放射状，导管"
+        }
+      ]
+    },
+    {
+      "query_id": "Q002",
+      "query": "黄芪的功能主治是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "黄芪",
+        "黄芪健胃膏",
+        "黄芪-饮片",
+        "黄芪颗粒",
+        "黄芪颗粒"
+      ],
+      "retrieved_sections": [
+        "药品概要",
+        "药品概要",
+        "完整条目",
+        "药品概要",
+        "临床应用"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "retrieval_latency": 57.009,
+      "answer": "",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 0,
+      "keyword_coverage": 0.0,
+      "has_citations": false,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 0.0,
+      "component_latency": {},
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "黄芪",
+          "section": "药品概要",
+          "score": 0.2973,
+          "content_preview": "药品名称：黄芪 拼音：Huangqi 拉丁名：ASTRAGALI RADIX 分类：药材和饮片 概述：本品为豆科植物蒙古 黄芷Astragalus membranaceus （Fisch. ） Bge"
+        },
+        {
+          "rank": 2,
+          "drug_name": "黄芪健胃膏",
+          "section": "药品概要",
+          "score": 0.2103,
+          "content_preview": "药品名称：黄芪健胃膏 拼音：Huangqi Jianwei Gao 分类：成方制剂和单味制剂"
+        },
+        {
+          "rank": 3,
+          "drug_name": "黄芪-饮片",
+          "section": "完整条目",
+          "score": 0.175,
+          "content_preview": "【炮制】除去杂质，大小分开，洗净，润透，切厚片，干燥。 【性状】本品呈类圆形或椭圆形的厚片，外表皮黄白色 至淡棕褐色，可见纵皱纹或纵洶。切面皮部黄白色，木部淡黄 色，有放射状纹理及裂隙，有的中心偶有枯"
+        },
+        {
+          "rank": 4,
+          "drug_name": "黄芪颗粒",
+          "section": "药品概要",
+          "score": 0.079,
+          "content_preview": "药品名称：黄芪颗粒 拼音：Huangqi Keli 分类：成方制剂和单味制剂"
+        },
+        {
+          "rank": 5,
+          "drug_name": "黄芪颗粒",
+          "section": "临床应用",
+          "score": 0.0689,
+          "content_preview": "【处方】黄芷1000g 【性状】本品为淡黄色至棕黄色的颗粒；味甜或味微甜、 苦（无蔗糖）。 【检查】应符合颗粒剂项下有关的各项规定（通则 0104）0 【功能与主治】补气固表，利尿，托毒排脓，生肌。用"
+        }
+      ]
+    },
+    {
+      "query_id": "Q003",
+      "query": "当归的用法用量是怎样的？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "当归",
+        "当归补血口服液",
+        "当归",
+        "当归调经颗粒",
+        "当归养血丸"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "临床应用",
+        "药品概要",
+        "制法",
+        "完整条目"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "retrieval_latency": 179.799,
+      "answer": "",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 0,
+      "keyword_coverage": 0.0,
+      "has_citations": false,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 0.0,
+      "component_latency": {},
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "当归",
+          "section": "临床应用",
+          "score": 0.8849,
+          "content_preview": "【浸出物】照醇溶性浸出物测定法（通则2201）项下的 热浸法测定，用70%乙醇作溶剂，不得少于45. 0%。 【炮制】当归除去杂质，洗净，润透，切薄片，晒干或低 温干燥。 【性状】本品形如当归片。切面"
+        },
+        {
+          "rank": 2,
+          "drug_name": "当归补血口服液",
+          "section": "临床应用",
+          "score": 0.8233,
+          "content_preview": "【处方】当归132g 黄芷330g 【性状】本品为棕黄色至黄棕色的液体；气香，味甜、 微辛。 【功能与主治】补养气血。用于气血两虚证。 【用法与用量】口服。一次10ml,—0 2次。 【规格】每支装1"
+        },
+        {
+          "rank": 3,
+          "drug_name": "当归",
+          "section": "药品概要",
+          "score": 0.2604,
+          "content_preview": "药品名称：当归 拼音：Danggui 分类：药材和饮片 概述：ANGELICAE SINENSIS RADIX 本品为伞形科植物当归Angelica sinensis （ Oliv. ） Diels "
+        },
+        {
+          "rank": 4,
+          "drug_name": "当归调经颗粒",
+          "section": "制法",
+          "score": 0.13,
+          "content_preview": "以上七味，川萼用70%乙醇为溶剂、白芍用 80%乙醇为溶剂进行渗漉，收集渗漉液；当归用蒸馅法提取挥 发油，备用，药渣与其余熟地黄等四味加水煎煮二次，合并煎 液，滤过，滤液浓缩至相对密度为1. 15〜1"
+        },
+        {
+          "rank": 5,
+          "drug_name": "当归养血丸",
+          "section": "完整条目",
+          "score": 0.1124,
+          "content_preview": "Danggui Yangxue Wan 【制法】以上十味，除阿胶外，当归等九味粉碎成细粉， 过筛,混匀。阿胶用适量水溶化，与炼蜜和匀。每loog粉末 用含炼蜜35〜45g的上述混合液泛丸，干燥，即得。"
+        }
+      ]
+    },
+    {
+      "query_id": "Q004",
+      "query": "黄连的性状是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "黄连胶囊",
+        "黄连",
+        "黄连",
+        "黄连",
+        "黄连胶囊"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "临床应用",
+        "药品概要",
+        "鉴别",
+        "鉴别"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "retrieval_latency": 267.013,
+      "answer": "",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 0,
+      "keyword_coverage": 0.0,
+      "has_citations": false,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 0.0,
+      "component_latency": {},
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "黄连胶囊",
+          "section": "临床应用",
+          "score": 0.8922,
+          "content_preview": "【处方】黄连250g 【制法】取黄连，粉碎成细粉，混匀，装入胶囊，制成 1000粒，即得。 【性状】本品为硬胶囊，内容物为黄褐色粉末；气微，味 极苦。 【检查】应符合胶囊剂项下有关的各项规定（通则 0"
+        },
+        {
+          "rank": 2,
+          "drug_name": "黄连",
+          "section": "临床应用",
+          "score": 0.886,
+          "content_preview": "【检查】水分 不得过14.0%（通则0832第二法）。 总灰分 不得过5. 0%（通则2302）。 【浸出物】照醇溶性浸出物测定法（通则2201）项下的 热浸法测定，用稀乙醇作溶剂，不得少于15.0%"
+        },
+        {
+          "rank": 3,
+          "drug_name": "黄连",
+          "section": "药品概要",
+          "score": 0.4475,
+          "content_preview": "药品名称：黄连 拼音：Huanglian 分类：药材和饮片 概述：COPTIDIS RHIZOMA 本品为毛莫科植物黄连Coptis chinensis Franch.、三角 口十黄连 Coptis "
+        },
+        {
+          "rank": 4,
+          "drug_name": "黄连",
+          "section": "鉴别",
+          "score": 0.3827,
+          "content_preview": "（1）本品横切面：味连木栓层为数列细胞，其 外有表皮，常脱落。皮层较宽，石细胞单个或成群散在。中柱 鞘纤维成束或伴有少数石细胞，均显黄色。维管束外韧型，环 列。木质部黄色，均木化，木纤维较发达。髓部均"
+        },
+        {
+          "rank": 5,
+          "drug_name": "黄连胶囊",
+          "section": "鉴别",
+          "score": 0.1268,
+          "content_preview": "取本品内容物50mg,加甲醇5ml,超声处理15 分钟，滤过，取滤液作为供试品溶液。另取黄连对照药材，同 法制成对照药材溶液。再取盐酸小案碱对照品，加甲醇制成 每1ml含0. 5mg的溶液，作为对照品"
+        }
+      ]
+    },
+    {
+      "query_id": "Q005",
+      "query": "甘草的来源是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "炙甘草",
+        "甘草浸膏",
+        "甘草",
+        "甘草",
+        "甘草"
+      ],
+      "retrieved_sections": [
+        "完整条目",
+        "完整条目",
+        "性状",
+        "药品概要",
+        "鉴别"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "retrieval_latency": 54.37,
+      "answer": "",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 0,
+      "keyword_coverage": 0.0,
+      "has_citations": false,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 0.0,
+      "component_latency": {},
+      "top_k_details": [
+        {
+          "rank": 1,
+          "drug_name": "炙甘草",
+          "section": "完整条目",
+          "score": 0.0725,
+          "content_preview": "本品为甘草的炮制加工品。 【炮制】取甘草片，照蜜炙法（通则0213）炒至黄色至深 黄色，不粘手时取出，晾凉。 【性状】本品呈类圆形或椭圆形切片。外表皮红棕色或 灰棕色，微有光泽。切面黄色至深黄色，形成"
+        },
+        {
+          "rank": 2,
+          "drug_name": "甘草浸膏",
+          "section": "完整条目",
+          "score": 0.0498,
+          "content_preview": "本品为甘草经加工制成的浸膏。 【制法】取甘草，润透，切片，加水煎煮三次，每次2小 时，合并煎液，放置过夜使沉淀，取上清液浓缩至稠膏状，取出 适量，照〔含量测定〕项下的方法，测定甘草酸含量，调节使符 合"
+        },
+        {
+          "rank": 3,
+          "drug_name": "甘草",
+          "section": "性状",
+          "score": 0.0459,
+          "content_preview": "甘草 根呈圆柱形，长25〜100cm,直径 0.6〜3.5cm。外皮松紧不一。表面红棕色或灰棕色，具显 著的纵皱纹、沟纹、皮孔及稀疏的细根痕。质坚实，断面略 显纤维性，黄白色，粉性，形成层环明显，射线"
+        },
+        {
+          "rank": 4,
+          "drug_name": "甘草",
+          "section": "药品概要",
+          "score": 0.0362,
+          "content_preview": "药品名称：甘草 拼音：Gancao 拉丁名：GLYCYRRHIZAE RADIX ET RHIZOMA 分类：药材和饮片 概述：本品为豆科植物甘草Glycyrrhiza uralensis Fisch"
+        },
+        {
+          "rank": 5,
+          "drug_name": "甘草",
+          "section": "鉴别",
+          "score": 0.0282,
+          "content_preview": "（1）本品横切面:木栓层为数列棕色细胞。栓内 层较窄。韧皮部射线宽广,多弯曲，常现裂隙;纤维多成束，非 木化或微木化，周围薄壁细胞常含草酸钙方晶；筛管群常因压 缩而变形。束内形成层明显。木质部射线宽3"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,2601 @@
+{
+  "eval_type": "generation",
+  "total_queries": 30,
+  "timestamp": "2026-09-22 07:44:41",
+  "retrieval": {
+    "hit_at_1": 0.0,
+    "hit_at_3": 0.0,
+    "hit_at_5": 0.0,
+    "mrr": 0.0,
+    "criteria": "loose：drug_name 双向子串匹配；expected_drugs 为空的题无条件命中（历史报告沿用的粗召回口径，保留以保持可比）"
+  },
+  "strict_retrieval": {
+    "hit_at_1": 0.0,
+    "hit_at_3": 0.0,
+    "hit_at_5": 0.0,
+    "mrr": 0.0,
+    "evaluable_queries": 0,
+    "unevaluable_queries": 0,
+    "out_of_scope_queries": 0,
+    "criteria": "strict：药品名精确（含该药饮片条目）+ 期望章节在 chunk 正文真实出现；分母仅含可评测题（expected_drugs 非空）；标了 out_of_scope 的题不计分"
+  },
+  "generation": {
+    "avg_keyword_coverage": 0.7128,
+    "citation_rate": 1.0,
+    "consistency_issue_rate": 0.0,
+    "medical_disclaimer_rate": 0.8667,
+    "grounding": {
+      "claims_total": 143,
+      "supported": 119,
+      "unsupported": 18,
+      "contradicted": 6,
+      "hallucination_rate": 0.1678,
+      "unsupported_rate": 0.1259,
+      "contradiction_rate": 0.042,
+      "citation_support_rate": 0.8322,
+      "grounded_answer_rate": 0.6923,
+      "judged_answers": 26,
+      "excluded_judge_errors": 4
+    }
+  },
+  "performance": {
+    "latency_p50": 6.138,
+    "latency_p95": 12.999,
+    "latency_p99": 32.188,
+    "avg_latency": 7.341,
+    "avg_retrieval_latency": 0.119,
+    "avg_llm_latency": 7.222
+  },
+  "by_type": {
+    "单药品单属性查询": {
+      "count": 25,
+      "avg_keyword_coverage": 0.6833,
+      "citation_rate": 1.0,
+      "consistency_issue_rate": 0.0,
+      "avg_latency": 7.312
+    },
+    "单药品多属性查询": {
+      "count": 5,
+      "avg_keyword_coverage": 0.86,
+      "citation_rate": 1.0,
+      "consistency_issue_rate": 0.0,
+      "avg_latency": 7.49
+    }
+  },
+  "results": [
+    {
+      "query_id": "Q001",
+      "query": "人参的性味归经是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "人参-饮片",
+        "人参",
+        "人参",
+        "人参叶",
+        "人参总皂苷"
+      ],
+      "retrieved_sections": [
+        "完整条目",
+        "药品概要",
+        "含量测定",
+        "药品概要",
+        "药品概要"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.88,
+      "answer": "根据药典记载，人参的性味归经为：\n\n> \"甘、微苦，微温。归脾、肺、心、肾经。\"\n> 来源：药典2020一部-人参-饮片-性味与归经",
+      "answer_keywords_hit": 7,
+      "answer_keywords_total": 7,
+      "keyword_coverage": 1.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 5.474,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.88,
+        "prompt_building": 0.0,
+        "llm_generation": 4.593,
+        "post_processing": 0.001
+      },
+      "grounding": {
+        "n_claims": 3,
+        "supported": 3,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典记载，人参的性味归经为",
+            "label": "supported",
+            "reason": "格式性语句，无实质内容，按规则4判supported。"
+          },
+          {
+            "index": 2,
+            "claim": "甘、微苦，微温",
+            "label": "supported",
+            "reason": "资料1明确记载「性味与归经」：甘、微苦，微温。"
+          },
+          {
+            "index": 3,
+            "claim": "归脾、肺、心、肾经",
+            "label": "supported",
+            "reason": "资料1明确记载「归脾、肺、心、肾经」。"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q002",
+      "query": "黄芪的功能主治是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "黄芪-饮片",
+        "黄芪健胃膏",
+        "黄芪颗粒",
+        "黄芪生脉颗粒",
+        "黄芪"
+      ],
+      "retrieved_sections": [
+        "完整条目",
+        "临床应用",
+        "临床应用",
+        "完整条目",
+        "药品概要"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.081,
+      "answer": "根据药典记载，黄芪的功能与主治为：\n\n> \"补气升阳，固表止汗，利水消肿，生津养血，行滞通痹，托毒排脓，敛疮生肌。用于气虚乏力，食少便澹，中气下陷，久泻脱肛，便血崩漏，表虚自汗，气虚水肿，内热消渴，血虚萎黄，半身不遂，痹痛麻木，痈疽难溃，久溃不敛。\"\n> 来源：药典2020一部-黄芪-饮片-功能与主治\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 5,
+      "answer_keywords_total": 6,
+      "keyword_coverage": 0.8333,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 8.422,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.081,
+        "prompt_building": 0.0,
+        "llm_generation": 8.341,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 3,
+        "supported": 3,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典记载，黄芪的功能与主治为",
+            "label": "supported",
+            "reason": "纯格式性论断，无实质内容，符合规则4判supported"
+          },
+          {
+            "index": 2,
+            "claim": "补气升阳，固表止汗，利水消肿，生津养血，行滞通痹，托毒排脓，敛疮生肌",
+            "label": "supported",
+            "reason": "与资料1【功能与主治】原文完全一致"
+          },
+          {
+            "index": 3,
+            "claim": "用于气虚乏力，食少便澹，中气下陷，久泻脱肛，便血崩漏，表虚自汗，气虚水肿，内热消渴，血虚萎黄，半身不遂，痹痛麻木，痈疽难溃，久溃不敛",
+            "label": "supported",
+            "reason": "与资料1【功能与主治】所涉主治原文完全一致"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q003",
+      "query": "当归的用法用量是怎样的？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "当归",
+        "当归养血丸",
+        "当归补血口服液",
+        "当归调经颗粒",
+        "当归"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "完整条目",
+        "临床应用",
+        "临床应用",
+        "药品概要"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.126,
+      "answer": "根据药典参考资料，当归的用法用量如下：\n\n**当归饮片**：\n> \"【用法与用量】6〜12g。\"\n> 来源：药典2020一部-当归-饮片-用法与用量\n\n**相关中成药制剂用法用量**：\n\n| 药品名称 | 用法与用量 | 规格 |\n|---------|-----------|------|\n| 当归养血丸 | 口服。一次9g，一日3次 | 每50丸重3g |\n| 当归补血口服液 | 口服。一次10ml，一日2次 | 每支装10ml |\n| 当归调经颗粒 | 口服。一次1袋，一日2〜3次 | 每袋装10g |\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 1,
+      "answer_keywords_total": 2,
+      "keyword_coverage": 0.5,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 12.999,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.126,
+        "prompt_building": 0.0,
+        "llm_generation": 12.873,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 3,
+        "supported": 3,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，当归的用法用量如下",
+            "label": "supported",
+            "reason": "纯格式性论断，引用自资料1标题"
+          },
+          {
+            "index": 2,
+            "claim": "当归饮片",
+            "label": "supported",
+            "reason": "资料5将当归归类为药材和饮片"
+          },
+          {
+            "index": 3,
+            "claim": "【用法与用量】6〜12g",
+            "label": "supported",
+            "reason": "资料1明确记载：用法与用量为6〜12g"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q004",
+      "query": "黄连的性状是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "黄连",
+        "黄连胶囊",
+        "黄连",
+        "黄连",
+        "黄连"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "临床应用",
+        "药品概要",
+        "鉴别",
+        "鉴别"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.074,
+      "answer": "根据药典参考资料，黄连的性状描述如下：\n\n**黄连饮片性状：**\n> \"本品形如黄连片，色泽加深。略有酒香气。\"\n> 来源：药典2020一部-黄连-饮片-性状\n\n> \"本品形如黄连片，表面棕黄色。有姜的辛辣味。\"\n> 来源：药典2020一部-黄连-饮片-性状\n\n> \"本品形如黄连片，表面棕黄色。有吴茱萸的辛辣香气。\"\n> 来源：药典2020一部-黄连-饮片-性状\n\n**黄连胶囊性状：**\n> \"本品为硬胶囊，内容物为黄褐色粉末；气微，味极苦。\"\n> 来源：药典2020一部-黄连胶囊-性状\n\n---\n**注意：** 药典参考资料中未收录黄连药材（生品）的性状描述，仅提供了黄连饮片及黄连胶囊的性状信息。",
+      "answer_keywords_hit": 1,
+      "answer_keywords_total": 3,
+      "keyword_coverage": 0.3333,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 4.55,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.074,
+        "prompt_building": 0.0,
+        "llm_generation": 4.475,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 5,
+        "supported": 4,
+        "unsupported": 0,
+        "contradicted": 1,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，黄连的性状描述如下",
+            "label": "supported",
+            "reason": "纯格式性语句，无实质内容，按规则4判定为supported"
+          },
+          {
+            "index": 2,
+            "claim": "黄连饮片性状",
+            "label": "supported",
+            "reason": "纯格式性语句，无实质内容，按规则4判定为supported"
+          },
+          {
+            "index": 3,
+            "claim": "本品形如黄连片，色泽加深",
+            "label": "supported",
+            "reason": "资料1原文：「本品形如黄连片，色泽加深」"
+          },
+          {
+            "index": 4,
+            "claim": "略有酒香气",
+            "label": "supported",
+            "reason": "资料1原文：「略有酒香气」"
+          },
+          {
+            "index": 5,
+            "claim": "的性状描述，仅提供了黄连饮片及黄连胶囊的性状信息",
+            "label": "contradicted",
+            "reason": "资料1还包含酒黄连、姜黄连、萸黄连三种炮制品的性状，不止饮片及胶囊"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": false,
+        "hallucination_rate": 0.2,
+        "citation_support_rate": 0.8
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q005",
+      "query": "甘草的来源是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "甘草",
+        "炙甘草",
+        "甘草浸膏",
+        "甘草流浸膏",
+        "甘草"
+      ],
+      "retrieved_sections": [
+        "药品概要",
+        "完整条目",
+        "完整条目",
+        "完整条目",
+        "性状"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.073,
+      "answer": "根据药典参考资料，甘草的来源为：\n\n> \"本品为豆科植物甘草 Glycyrrhiza uralensis Fisch.、胀果甘草 Glycyrrhiza inflata Bat.或光果甘草 Glycyrrhiza glabra L.的干燥根和根茎。\"\n> 来源：药典2020一部-甘草-药品概要\n\n春、秋二季采挖，除去须根，晒干。\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 3,
+      "answer_keywords_total": 3,
+      "keyword_coverage": 1.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 6.581,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.073,
+        "prompt_building": 0.0,
+        "llm_generation": 6.507,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 2,
+        "supported": 2,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，甘草的来源为",
+            "label": "supported",
+            "reason": "纯格式性论断，无实质内容，按规则4判定为supported"
+          },
+          {
+            "index": 2,
+            "claim": "本品为豆科植物甘草 Glycyrrhiza uralensis Fisch.、胀果甘草 Glycyrrhiza inflata Bat.或光果甘草 Glycyrrhiza glabra L.的干燥根和根茎",
+            "label": "supported",
+            "reason": "资料1原文：本品为豆科植物甘草Glycyrrhiza uralensis Fisch.、胀果甘草 Glycyrrhiza"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q006",
+      "query": "川芎的性味归经",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "川芎",
+        "川芎",
+        "川芎",
+        "川芎",
+        "川芎"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "药品概要",
+        "鉴别",
+        "性状",
+        "性状"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": false,
+      "strict_first_hit_rank": 0,
+      "strict_miss_reason": "drug_not_exact",
+      "retrieval_latency": 0.081,
+      "answer": "根据药典参考资料，川芎的性味归经为：\n\n> \"辛，温。归肝、胆、心包经。\"\n> 来源：药典2020一部-川芎-临床应用",
+      "answer_keywords_hit": 4,
+      "answer_keywords_total": 4,
+      "keyword_coverage": 1.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 32.188,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.081,
+        "prompt_building": 0.0,
+        "llm_generation": 32.107,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 2,
+        "supported": 2,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，川芎的性味归经为",
+            "label": "supported",
+            "reason": "纯格式性陈述，无实质内容，无矛盾。"
+          },
+          {
+            "index": 2,
+            "claim": "归肝、胆、心包经",
+            "label": "supported",
+            "reason": "资料1明确记载：归肝、胆、心包经。"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q007",
+      "query": "白芍的功能主治",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "白芍-饮片",
+        "白芍-饮片",
+        "白芍",
+        "白芍-饮片",
+        "白芍-饮片"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "药品概要",
+        "完整条目",
+        "含量测定",
+        "含量测定"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.088,
+      "answer": "根据药典参考资料，白芍的功能与主治为：\n\n> \"养血调经，敛阴止汗，柔肝止痛，平抑肝阳。用于血虚萎黄，月经不调，自汗，盗汗，胁痛，腹痛，四肢挛痛，头痛眩晕。\"\n> 来源：药典2020一部-白芍-饮片-功能与主治\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 5,
+      "answer_keywords_total": 5,
+      "keyword_coverage": 1.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 3.832,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.088,
+        "prompt_building": 0.0,
+        "llm_generation": 3.743,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 3,
+        "supported": 3,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，白芍的功能与主治为",
+            "label": "supported",
+            "reason": "纯格式性引入语句，无实质内容"
+          },
+          {
+            "index": 2,
+            "claim": "养血调经，敛阴止汗，柔肝止痛，平抑肝阳",
+            "label": "supported",
+            "reason": "资料1明确记载：养血调经，敛阴止汗，柔肝止痛，平抑肝阳"
+          },
+          {
+            "index": 3,
+            "claim": "用于血虚萎黄，月经不调，自汗，盗汗，胁痛，腹痛，四肢挛痛，头痛眩晕",
+            "label": "supported",
+            "reason": "资料1明确记载：用于血虚萎黄…头痛眩晕，逐字吻合"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q008",
+      "query": "茯苓的用法用量",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "茯苓",
+        "桂枝茯苓片",
+        "桂枝茯苓丸",
+        "桂枝茯苓胶囊",
+        "茯苓"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "临床应用",
+        "临床应用",
+        "临床应用",
+        "性状"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.103,
+      "answer": "根据药典参考资料，茯苓的用法用量如下：\n\n> \"【用法与用量】10〜15g。\"\n> 来源：药典2020一部-茯苓-临床应用\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 1,
+      "answer_keywords_total": 2,
+      "keyword_coverage": 0.5,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 2.929,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.103,
+        "prompt_building": 0.0,
+        "llm_generation": 2.825,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 2,
+        "supported": 2,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，茯苓的用法用量如下",
+            "label": "supported",
+            "reason": "属格式性无实质内容论断。"
+          },
+          {
+            "index": 2,
+            "claim": "【用法与用量】10〜15g",
+            "label": "supported",
+            "reason": "资料1茯苓条款中明确记载「用法与用量10〜15g」。"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q009",
+      "query": "麻黄的注意事项",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "麻黄",
+        "麻黄",
+        "麻黄",
+        "麻黄",
+        "麻黄"
+      ],
+      "retrieved_sections": [
+        "鉴别",
+        "药品概要",
+        "性状",
+        "临床应用",
+        "检查"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 4,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.084,
+      "answer": "根据药典参考资料，**未收录麻黄注意事项的相关信息**。\n\n参考资料中仅包含麻黄的鉴别、性状、功能与主治、用法与用量等内容，无关于注意事项的记载。\n\n---\n具体用药请遵医嘱。\n\n**参考来源：**\n- [1] 药典2020一部-麻黄-鉴别\n- [2] 药典2020一部-麻黄-药品概要\n- [3] 药典2020一部-麻黄-性状\n- [4] 药典2020一部-麻黄-临床应用\n- [5] 药典2020一部-麻黄-检查\n",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 4,
+      "keyword_coverage": 0.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 3.709,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.084,
+        "prompt_building": 0.0,
+        "llm_generation": 3.625,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 7,
+        "supported": 0,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "无法解析 JSON",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 0.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q010",
+      "query": "何首乌的贮藏方法",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "何首乌-饮片",
+        "制何首乌",
+        "何首乌",
+        "何首乌",
+        "何首乌"
+      ],
+      "retrieved_sections": [
+        "完整条目",
+        "临床应用",
+        "药品概要",
+        "鉴别",
+        "性状"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.094,
+      "answer": "根据药典参考资料，何首乌的贮藏方法为：\n\n> \"置干燥处，防蛀。\"\n> 来源：药典2020一部-何首乌-饮片-完整条目\n\n同时，**制何首乌**的贮藏要求相同：\n> \"置干燥处，防蛀。\"\n> 来源：药典2020一部-制何首乌-临床应用\n\n**贮藏要点归纳：**\n| 项目 | 贮藏条件 |\n|------|----------|\n| 生何首乌（饮片） | 置干燥处，防蛀 |\n| 制何首乌 | 置干燥处，防蛀 |\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 2,
+      "answer_keywords_total": 3,
+      "keyword_coverage": 0.6667,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 12.297,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.094,
+        "prompt_building": 0.0,
+        "llm_generation": 12.203,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 3,
+        "supported": 3,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，何首乌的贮藏方法为",
+            "label": "supported",
+            "reason": "属纯格式性陈述，无实质内容。"
+          },
+          {
+            "index": 2,
+            "claim": "置干燥处，防蛀",
+            "label": "supported",
+            "reason": "资料1（何首乌-饮片）明确记载：【贮藏】置干燥处，防蛀。"
+          },
+          {
+            "index": 3,
+            "claim": "制何首乌 置干燥处，防蛀",
+            "label": "supported",
+            "reason": "资料2（制何首乌）明确记载：【贮藏】置干燥处，防蛀。"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q011",
+      "query": "丹参的功能主治是什么？",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "丹参-饮片",
+        "丹参片",
+        "复方丹参喷雾剂",
+        "冠心丹参片",
+        "复方丹参片"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "完整条目",
+        "临床应用",
+        "完整条目",
+        "临床应用"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.097,
+      "answer": "根据药典参考资料，丹参的功能主治如下：\n\n---\n\n## 丹参（饮片）\n\n> **【功能与主治】** 活血祛瘀，通经止痛，清心除烦，凉血消痈。\n>\n> **【主治】** 用于胸痹心痛，脘腹胁痛，癥瘕积聚，热痹疼痛，心烦不眠，月经不调，痛经经闭，疮疡肿痛。\n\n来源：药典2020一部-丹参-饮片-临床应用\n\n---\n\n## 丹参制剂（含丹参的中成药）\n\n| 药品名称 | 功能 | 主治 |\n|---------|------|------|\n| 丹参片 | 活血化瘀 | 瘀血闭阻所致的胸痹，症见胸部疼痛、痛处固定、舌质紫暗；冠心病心绞痛见上述证候者 |\n| 复方丹参片/喷雾剂/颗粒 | 活血化瘀，理气止痛 | 气滞血瘀所致的胸痹，症见胸闷、心前区刺痛；冠心病心绞痛见上述证候者 |\n| 冠心丹参片 | 活血化瘀，理气止痛 | 气滞血瘀所致的胸闷、胸痹、心悸、气短；冠心病见上述证候者 |\n\n来源：药典2020一部-丹参制剂-相关条目\n\n---\n\n## 注意事项\n\n> 不宜与藜芦同用。\n> 来源：药典2020一部-丹参-饮片-临床应用\n\n---\n\n**具体用药请遵医嘱。**",
+      "answer_keywords_hit": 4,
+      "answer_keywords_total": 4,
+      "keyword_coverage": 1.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 10.592,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.097,
+        "prompt_building": 0.0,
+        "llm_generation": 10.495,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 10,
+        "supported": 8,
+        "unsupported": 1,
+        "contradicted": 1,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，丹参的功能主治如下",
+            "label": "supported",
+            "reason": "格式性开场白，无实质内容"
+          },
+          {
+            "index": 2,
+            "claim": "丹参（饮片）",
+            "label": "supported",
+            "reason": "资料1标题为丹参-饮片，论断仅标注药品名"
+          },
+          {
+            "index": 3,
+            "claim": "【功能与主治】 活血祛瘀，通经止痛，清心除烦，凉血消痈",
+            "label": "supported",
+            "reason": "资料1原文：活血祛瘀，通经止痛，清心除烦，凉血消痈"
+          },
+          {
+            "index": 4,
+            "claim": "【主治】 用于胸痹心痛，脘腹胁痛，癥瘕积聚，热痹疼痛，心烦不眠，月经不调，痛经经闭，疮疡肿痛",
+            "label": "supported",
+            "reason": "资料1原文逐字匹配，用于胸痹心痛、脘腹胁痛等症"
+          },
+          {
+            "index": 5,
+            "claim": "药品名称 功能 主治",
+            "label": "supported",
+            "reason": "纯格式性表头描述，无实质内容"
+          },
+          {
+            "index": 6,
+            "claim": "丹参片 活血化瘀 瘀血闭阻所致的胸痹，症见胸部疼痛、痛处固定、舌质紫暗",
+            "label": "supported",
+            "reason": "资料2原文：活血化瘀。用于瘀血闭阻所致的胸痹，症见胸部疼痛、痛处固定、舌质紫暗"
+          },
+          {
+            "index": 7,
+            "claim": "冠心病心绞痛见上述证候者",
+            "label": "unsupported",
+            "reason": "为论断6主治症状的续句，单独成句无完整实质信息，但未被资料否定"
+          },
+          {
+            "index": 8,
+            "claim": "复方丹参片/喷雾剂/颗粒 活血化瘀，理气止痛 气滞血瘀所致的胸痹，症见胸闷、心前区刺痛",
+            "label": "contradicted",
+            "reason": "资料3中风油丹参喷雾剂与复方丹参颗粒处方不同（各含冰片），论断将其混为同一药品未区分"
+          },
+          {
+            "index": 9,
+            "claim": "冠心丹参片 活血化瘀，理气止痛 气滞血瘀所致的胸闷、胸痹、心悸、气短",
+            "label": "supported",
+            "reason": "资料4原文逐字匹配：活血化瘀，理气止痛。用于气滞血瘀所致的胸闷、胸痹、心悸、气短"
+          },
+          {
+            "index": 10,
+            "claim": "冠心病见上述证候者",
+            "label": "supported",
+            "reason": "资料4原文：冠心病见上述证候者"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": false,
+        "hallucination_rate": 0.2,
+        "citation_support_rate": 0.8
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q012",
+      "query": "陈皮的性味归经",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "陈皮-饮片",
+        "陈皮",
+        "陈皮",
+        "陈皮",
+        "蛇胆陈皮胶囊"
+      ],
+      "retrieved_sections": [
+        "完整条目",
+        "药品概要",
+        "性状",
+        "含量测定",
+        "含量测定"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.095,
+      "answer": "根据药典参考资料，陈皮的性味归经为：\n\n> **【性味与归经】** 苦、辛，温。归肺、脾经。\n> 来源：药典2020一部-陈皮-饮片-完整条目\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 5,
+      "answer_keywords_total": 5,
+      "keyword_coverage": 1.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 6.603,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.095,
+        "prompt_building": 0.0,
+        "llm_generation": 6.507,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 3,
+        "supported": 3,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，陈皮的性味归经为",
+            "label": "supported",
+            "reason": "纯格式性、无实质内容的论断"
+          },
+          {
+            "index": 2,
+            "claim": "【性味与归经】 苦、辛，温",
+            "label": "supported",
+            "reason": "资料1记载【性味与归经】苦、辛，温。归肺、脾经"
+          },
+          {
+            "index": 3,
+            "claim": "归肺、脾经",
+            "label": "supported",
+            "reason": "资料1记载归经为归肺、脾经"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q013",
+      "query": "半夏的用法用量",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "半夏",
+        "法半夏",
+        "半夏",
+        "法半夏",
+        "清半夏"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "临床应用",
+        "药品概要",
+        "炮制",
+        "炮制"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.061,
+      "answer": "根据药典参考资料，半夏的用法用量如下：\n\n---\n\n## 半夏（生品）\n\n> **【用法与用量】** 内服一般炮制后使用，3〜9g。外用适量，磨汁涂或研末以酒调敷患处。\n> 来源：药典2020一部-半夏-临床应用\n\n---\n\n## 法半夏\n\n> **【用法与用量】** 3~9g。\n> 来源：药典2020一部-法半夏-临床应用\n\n---\n\n**用药注意：**\n- 生半夏有毒，内服宜慎，一般炮制后使用。\n- 不宜与川乌、制川乌、草乌、制草乌、附子同用。\n> 来源：药典2020一部-半夏-临床应用\n\n---\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 1,
+      "answer_keywords_total": 2,
+      "keyword_coverage": 0.5,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 4.078,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.061,
+        "prompt_building": 0.0,
+        "llm_generation": 4.016,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 4,
+        "supported": 4,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，半夏的用法用量如下",
+            "label": "supported",
+            "reason": "纯格式性论断，无实质内容，符合规则4判定为supported"
+          },
+          {
+            "index": 2,
+            "claim": "半夏（生品）",
+            "label": "supported",
+            "reason": "资料1提及生半夏及生品内服宜慎，有依据"
+          },
+          {
+            "index": 3,
+            "claim": "【用法与用量】 内服一般炮制后使用，3〜9g",
+            "label": "supported",
+            "reason": "资料1原文：内服一般炮制后使用，3〜9g"
+          },
+          {
+            "index": 4,
+            "claim": "外用适量，磨汁涂或研末以酒调敷患处",
+            "label": "supported",
+            "reason": "资料1原文：外用适量，磨汁涂或研末以酒调敷患处"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q014",
+      "query": "枸杞子的功能主治",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "枸杞子",
+        "枸杞子",
+        "枸杞子",
+        "枸杞子",
+        "枸杞子"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "药品概要",
+        "鉴别",
+        "含量测定",
+        "性状"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.095,
+      "answer": "根据药典参考资料，枸杞子的功能主治为：\n\n> **【功能与主治】** 滋补肝肾，益精明目。\n>\n> **【主治】** 用于虚劳精亏，腰膝酸痛，眩晕耳鸣，阳萎遗精，内热消渴，血虚萎黄，目昏不明。\n> 来源：药典2020一部-枸杞子-临床应用\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 4,
+      "answer_keywords_total": 4,
+      "keyword_coverage": 1.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 7.074,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.095,
+        "prompt_building": 0.0,
+        "llm_generation": 6.978,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 3,
+        "supported": 0,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "无法解析 JSON",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 0.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q015",
+      "query": "天麻的性味归经",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "天麻",
+        "强力天麻杜仲丸",
+        "全天麻胶囊",
+        "天麻祛风补片",
+        "天麻"
+      ],
+      "retrieved_sections": [
+        "药品概要",
+        "含量测定",
+        "含量测定",
+        "含量测定",
+        "含量测定"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": false,
+      "strict_first_hit_rank": 0,
+      "strict_miss_reason": "section_missing",
+      "retrieval_latency": 0.129,
+      "answer": "根据提供的药典参考资料，**天麻的性味归经信息未在资料中收录。**\n\n参考资料仅包含以下内容：\n- 天麻的来源与采收加工（兰科植物天麻的干燥块茎）\n- 含天麻制剂（强力天麻杜仲丸、全天麻胶囊、天麻祛风补片等）的含量测定方法\n\n**药典中未收录相关信息。**\n\n如需了解天麻的性味归经，建议查阅完整的《中国药典》天麻饮片条目或咨询专业药师。\n\n具体用药请遵医嘱。\n\n**参考来源：**\n- [1] 药典2020一部-天麻-药品概要\n- [2] 药典2020一部-强力天麻杜仲丸-含量测定\n- [3] 药典2020一部-全天麻胶囊-含量测定\n- [4] 药典2020一部-天麻祛风补片-含量测定\n- [5] 药典2020一部-天麻-含量测定\n",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 3,
+      "keyword_coverage": 0.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 6.138,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.129,
+        "prompt_building": 0.0,
+        "llm_generation": 6.009,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 11,
+        "supported": 9,
+        "unsupported": 2,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据提供的药典参考资料，天麻的性味归经信息未在资料中收录",
+            "label": "supported",
+            "reason": "资料1天麻药品概要中仅有来源和采收加工，无性味归经信息。"
+          },
+          {
+            "index": 2,
+            "claim": "参考资料仅包含以下内容",
+            "label": "supported",
+            "reason": "纯格式性陈述，无实质内容，按规则4判supported。"
+          },
+          {
+            "index": 3,
+            "claim": "天麻的来源与采收加工（兰科植物天麻的干燥块茎）",
+            "label": "supported",
+            "reason": "资料1明确记载：本品为兰科植物天麻的干燥块茎，立冬后至次年清明前采挖。"
+          },
+          {
+            "index": 4,
+            "claim": "含天麻制剂（强力天麻杜仲丸、全天麻胶囊、天麻祛风补片等）的含量测定方法",
+            "label": "supported",
+            "reason": "资料2、3、4分别记载了强力天麻杜仲丸、全天麻胶囊、天麻祛风补片的含量测定方法。"
+          },
+          {
+            "index": 5,
+            "claim": "药典中未收录相关信息",
+            "label": "unsupported",
+            "reason": "参考资料仅为本次检索片段，无法据此推断整个药典未收录该信息。"
+          },
+          {
+            "index": 6,
+            "claim": "如需了解天麻的性味归经，建议查阅完整的《中国药典》天麻饮片条目或咨询专业药师",
+            "label": "unsupported",
+            "reason": "参考资料中无此建议性内容，且超出参考资料范围无法验证。"
+          },
+          {
+            "index": 7,
+            "claim": "参考 药典2020一部-天麻-药品概要",
+            "label": "supported",
+            "reason": "纯格式性引用标注，无实质内容，按规则4判supported。"
+          },
+          {
+            "index": 8,
+            "claim": "[2] 药典2020一部-强力天麻杜仲丸-含量测定",
+            "label": "supported",
+            "reason": "纯格式性引用标注，对应资料2内容，按规则4判supported。"
+          },
+          {
+            "index": 9,
+            "claim": "[3] 药典2020一部-全天麻胶囊-含量测定",
+            "label": "supported",
+            "reason": "纯格式性引用标注，对应资料3内容，按规则4判supported。"
+          },
+          {
+            "index": 10,
+            "claim": "[4] 药典2020一部-天麻祛风补片-含量测定",
+            "label": "supported",
+            "reason": "纯格式性引用标注，对应资料4内容，按规则4判supported。"
+          },
+          {
+            "index": 11,
+            "claim": "[5] 药典2020一部-天麻-含量测定",
+            "label": "supported",
+            "reason": "纯格式性引用标注，对应资料5内容，按规则4判supported。"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": false,
+        "hallucination_rate": 0.1818,
+        "citation_support_rate": 0.8182
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q016",
+      "query": "麦冬的功能主治",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "麦冬",
+        "山麦冬-饮片",
+        "麦冬",
+        "麦冬",
+        "麦冬"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "完整条目",
+        "药品概要",
+        "性状",
+        "鉴别"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.1,
+      "answer": "根据药典参考资料，麦冬的功能主治为：\n\n> **【功能与主治】** 养阴生津，润肺清心。\n>\n> **【主治】** 用于肺燥干咳，阴虚痹嗽，喉痹咽痛，津伤口渴，内热消渴，心烦失眠，肠燥便秘。\n> 来源：药典2020一部-麦冬-临床应用\n\n---\n\n**附：用法用量**\n\n> **【用法与用量】** 6~12g。\n> 来源：药典2020一部-麦冬-临床应用\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 3,
+      "answer_keywords_total": 4,
+      "keyword_coverage": 0.75,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 3.32,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.1,
+        "prompt_building": 0.0,
+        "llm_generation": 3.22,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 4,
+        "supported": 0,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "无法解析 JSON",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 0.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q017",
+      "query": "金银花的用法用量",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "金银花",
+        "金银花露",
+        "金银花",
+        "金银花",
+        "金银花"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "临床应用",
+        "药品概要",
+        "性状",
+        "鉴别"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.073,
+      "answer": "根据药典参考资料，金银花的用法用量为：\n\n> **【用法与用量】** 6~15g。\n> 来源：药典2020一部-金银花-临床应用\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 1,
+      "answer_keywords_total": 2,
+      "keyword_coverage": 0.5,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 2.065,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.073,
+        "prompt_building": 0.0,
+        "llm_generation": 1.992,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 2,
+        "supported": 1,
+        "unsupported": 0,
+        "contradicted": 1,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，金银花的用法用量为",
+            "label": "supported",
+            "reason": "纯引导性陈述，无实质内容，判supported。"
+          },
+          {
+            "index": 2,
+            "claim": "【用法与用量】 615g",
+            "label": "contradicted",
+            "reason": "资料1记载为\"6~15g\"，论断写\"615g\"，数值不符。"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": false,
+        "hallucination_rate": 0.5,
+        "citation_support_rate": 0.5
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q018",
+      "query": "柴胡的注意事项",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "柴胡",
+        "柴胡口服液",
+        "小柴胡胶囊",
+        "小柴胡颗粒",
+        "柴胡"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "临床应用",
+        "临床应用",
+        "临床应用",
+        "鉴别"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.08,
+      "answer": "根据药典参考资料，柴胡及其制剂的注意事项如下：\n\n---\n\n## 一、柴胡（饮片）\n\n> **【注意】** \"大叶柴胡 Bupleurum longiradiatum Turcz.的干燥根茎,表面密生环节，有毒，不可当柴胡用。\"\n> 来源：药典2020一部-柴胡-临床应用\n\n---\n\n## 二、柴胡口服液\n\n> **【注意】** \"高血压、冠心病患者慎用或遵医嘱。\"\n> 来源：药典2020一部-柴胡口服液-临床应用\n\n---\n\n## 三、小柴胡胶囊/颗粒\n\n> **【注意】** \"风寒表证不宜使用。\"（或小柴胡颗粒：\"风寒表证者不宜使用。\"）\n> 来源：药典2020一部-小柴胡胶囊-临床应用；药典2020一部-小柴胡颗粒-临床应用\n\n---\n\n**总结归纳：**\n\n| 药品 | 注意事项 |\n|------|----------|\n| 柴胡（饮片） | 大叶柴胡有毒，不可当柴胡用 |\n| 柴胡口服液 | 高血压、冠心病患者慎用或遵医嘱 |\n| 小柴胡胶囊/颗粒 | 风寒表证不宜使用 |\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 0,
+      "answer_keywords_total": 2,
+      "keyword_coverage": 0.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 7.978,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.08,
+        "prompt_building": 0.0,
+        "llm_generation": 7.898,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 7,
+        "supported": 6,
+        "unsupported": 1,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，柴胡及其制剂的注意事项如下",
+            "label": "supported",
+            "reason": "纯格式性论断，无实质内容。"
+          },
+          {
+            "index": 2,
+            "claim": "一、柴胡（饮片）",
+            "label": "supported",
+            "reason": "纯格式性论断，无实质内容。"
+          },
+          {
+            "index": 3,
+            "claim": "【注意】 \"大叶柴胡 Bupleurum longiradiatum Turcz.的干燥根茎,表面密生环节，有毒，不可当柴胡用",
+            "label": "supported",
+            "reason": "资料1明确记载：大叶柴胡有毒，不可当柴胡用。"
+          },
+          {
+            "index": 4,
+            "claim": "风寒表证不宜使用",
+            "label": "unsupported",
+            "reason": "柴胡（饮片）资料中无此禁忌，仅小柴胡胶囊/颗粒有此说明。"
+          },
+          {
+            "index": 5,
+            "claim": "（或小柴胡颗粒：\"风寒表证者不宜使用",
+            "label": "supported",
+            "reason": "资料4明确记载：风寒表证者不宜使用。"
+          },
+          {
+            "index": 6,
+            "claim": "大叶柴胡有毒，不可当柴胡用",
+            "label": "supported",
+            "reason": "资料1明确记载：大叶柴胡有毒，不可当柴胡用。"
+          },
+          {
+            "index": 7,
+            "claim": "小柴胡胶囊/颗粒 风寒表证不宜使用",
+            "label": "supported",
+            "reason": "资料3和资料4均明确记载风寒表证不宜使用。"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": false,
+        "hallucination_rate": 0.1429,
+        "citation_support_rate": 0.8571
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q019",
+      "query": "地黄的性状特征",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "熟地黄",
+        "地黄",
+        "地黄",
+        "地黄",
+        "地黄"
+      ],
+      "retrieved_sections": [
+        "完整条目",
+        "药品概要",
+        "临床应用",
+        "含量测定",
+        "含量测定"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": false,
+      "strict_first_hit_rank": 0,
+      "strict_miss_reason": "section_missing",
+      "retrieval_latency": 0.095,
+      "answer": "根据提供的药典参考资料，**地黄的性状特征未在资料中收录**。\n\n---\n\n## 参考资料情况\n\n| 资料 | 内容 |\n|------|------|\n| 参考资料1 | 熟地黄性状（不规则块片、表面乌黑色、质柔软带韧性等） |\n| 参考资料2 | 地黄来源（玄参科植物地黄的新鲜或干燥块根） |\n| 参考资料3-5 | 生地黄/鲜地黄的性味归经、功能主治、含量测定等 |\n\n**备注：** 资料中仅收录了熟地黄（生地黄炮制品）的性状描述，未收录鲜地黄或生地黄的性状特征。\n\n> **【熟地黄性状】** \"本品为不规则的块片、碎块，大小、厚薄不一。表面乌黑色，有光泽，黏性大。质柔软而带韧性，不易折断，断面乌黑色，有光泽。气微，味甜。\"\n> 来源：药典2020一部-熟地黄-完整条目\n\n**药典中未收录地黄（鲜地黄/生地黄）的性状特征相关信息。**\n\n如需了解完整性状，建议查阅《中国药典》完整条目或咨询专业药师。",
+      "answer_keywords_hit": 1,
+      "answer_keywords_total": 3,
+      "keyword_coverage": 0.3333,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": false,
+      "generation_latency": 6.135,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.095,
+        "prompt_building": 0.0,
+        "llm_generation": 6.04,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 13,
+        "supported": 1,
+        "unsupported": 11,
+        "contradicted": 1,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据提供的药典参考资料，地黄的性状特征未在资料中收录",
+            "label": "contradicted",
+            "reason": "资料1已收录熟地黄性状，资料2亦提及生地黄来源及鲜/生地黄的区分"
+          },
+          {
+            "index": 2,
+            "claim": "参考资料情况",
+            "label": "supported",
+            "reason": "纯格式性说明，无实质内容"
+          },
+          {
+            "index": 3,
+            "claim": "资料 内容",
+            "label": "unsupported",
+            "reason": "论断空洞无实质内容，无法从资料中验证"
+          },
+          {
+            "index": 4,
+            "claim": "参考资料1 熟地黄性状（不规则块片、表面乌黑色、质柔软带韧性等）",
+            "label": "unsupported",
+            "reason": "未返回该条判定"
+          },
+          {
+            "index": 5,
+            "claim": "参考资料2 地黄来源（玄参科植物地黄的新鲜或干燥块根）",
+            "label": "unsupported",
+            "reason": "未返回该条判定"
+          },
+          {
+            "index": 6,
+            "claim": "参考资料3-5 生地黄/鲜地黄的性味归经、功能主治、含量测定等",
+            "label": "unsupported",
+            "reason": "未返回该条判定"
+          },
+          {
+            "index": 7,
+            "claim": "备注： 资料中仅收录了熟地黄（生地黄炮制品）的性状描述，未收录鲜地黄或生地黄的性状特征",
+            "label": "unsupported",
+            "reason": "未返回该条判定"
+          },
+          {
+            "index": 8,
+            "claim": "【熟地黄性状】 \"本品为不规则的块片、碎块，大小、厚薄不一",
+            "label": "unsupported",
+            "reason": "未返回该条判定"
+          },
+          {
+            "index": 9,
+            "claim": "表面乌黑色，有光泽，黏性大",
+            "label": "unsupported",
+            "reason": "未返回该条判定"
+          },
+          {
+            "index": 10,
+            "claim": "质柔软而带韧性，不易折断，断面乌黑色，有光泽",
+            "label": "unsupported",
+            "reason": "未返回该条判定"
+          },
+          {
+            "index": 11,
+            "claim": "气微，味甜",
+            "label": "unsupported",
+            "reason": "未返回该条判定"
+          },
+          {
+            "index": 12,
+            "claim": "的性状特征相关信息",
+            "label": "unsupported",
+            "reason": "未返回该条判定"
+          },
+          {
+            "index": 13,
+            "claim": "如需了解完整性状，建议查阅《中国药典》完整条目或咨询专业药师",
+            "label": "unsupported",
+            "reason": "未返回该条判定"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": false,
+        "hallucination_rate": 0.9231,
+        "citation_support_rate": 0.0769
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q020",
+      "query": "五味子的功能主治",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "五味子-饮片",
+        "五味子糖浆",
+        "南五味子",
+        "五味子",
+        "五味子-饮片"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "临床应用",
+        "临床应用",
+        "完整条目",
+        "药品概要"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.087,
+      "answer": "根据药典参考资料，五味子的功能主治为：\n\n> **【功能与主治】** \"收敛固涩，益气生津，补肾宁心。\"\n>\n> **【主治】** \"用于久嗽虚喘，梦遗滑精，遗尿尿频，久泻不止，自汗盗汗，津伤口渴，内热消渴，心悸失眠。\"\n> 来源：药典2020一部-五味子-饮片\n\n---\n\n**附：用法用量与贮藏**\n\n> **【用法与用量】** 2~6g。\n> **【贮藏】** 置通风干燥处，防霉。\n> 来源：药典2020一部-五味子-饮片\n\n---\n\n**备注：相关制剂**\n\n五味子糖浆的功能主治为：\n> \"益气生津，补肾宁心。用于心肾不足所致的失眠、多梦、头晕；神经衰弱症见上述证候者。\"\n> 来源：药典2020一部-五味子糖浆\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 4,
+      "answer_keywords_total": 4,
+      "keyword_coverage": 1.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 6.217,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.087,
+        "prompt_building": 0.0,
+        "llm_generation": 6.13,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 4,
+        "supported": 4,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，五味子的功能主治为",
+            "label": "supported",
+            "reason": "纯格式引入语，无实质内容，符合规则4判supported"
+          },
+          {
+            "index": 2,
+            "claim": "【功能与主治】 \"收敛固涩，益气生津，补肾宁心",
+            "label": "supported",
+            "reason": "资料1五味子-饮片原文：收敛固涩，益气生津，补肾宁心"
+          },
+          {
+            "index": 3,
+            "claim": "【主治】 \"用于久嗽虚喘，梦遗滑精，遗尿尿频，久泻不止，自汗盗汗，津伤口渴，内热消渴，心悸失眠",
+            "label": "supported",
+            "reason": "资料1五味子-饮片原文：用于久嗽虚喘，梦遗滑精……心悸失眠"
+          },
+          {
+            "index": 4,
+            "claim": "【贮藏】 置通风干燥处，防霉",
+            "label": "supported",
+            "reason": "资料1五味子-饮片原文：置通风干燥处，防霉"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q021",
+      "query": "山药的来源",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "山药-饮片",
+        "山药",
+        "黄山药",
+        "无比山药丸",
+        "山药-饮片"
+      ],
+      "retrieved_sections": [
+        "药品概要",
+        "完整条目",
+        "药品概要",
+        "药品概要",
+        "临床应用"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.095,
+      "answer": "根据药典参考资料，山药的来源为：\n\n> **【来源】** \"本品为薯蓣科植物薯蓣 Dioscorea opposita Thunb.的干燥根茎。\"\n> 来源：药典2020一部-山药-完整条目\n\n---\n\n**附：采收与加工**\n\n> 冬季茎叶枯萎后采挖，切去根头，洗净，除去外皮和须根，干燥，习称\"毛山药\"；或除去外皮，趁鲜切厚片，干燥，称为\"山药片\"。亦有选择肥大顺直的干燥山药，置清水中，浸至无干心，闷透，切齐两端，用木板搓成圆柱状，晒干，打光，习称\"光山药\"。\n> 来源：药典2020一部-山药-完整条目\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 2,
+      "answer_keywords_total": 2,
+      "keyword_coverage": 1.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 10.455,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.095,
+        "prompt_building": 0.0,
+        "llm_generation": 10.36,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 2,
+        "supported": 2,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，山药的来源为",
+            "label": "supported",
+            "reason": "纯格式性不完整句子，无实质内容，判supported"
+          },
+          {
+            "index": 2,
+            "claim": "【来源】 \"本品为薯蓣科植物薯蓣 Dioscorea opposita Thunb.的干燥根茎",
+            "label": "supported",
+            "reason": "资料2原文'本品为薯強科植物薯® Dioscorea opposita Thunb.的干燥根茎'，OCR有误但实质一致"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q022",
+      "query": "桔梗的性味归经",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "桔梗-饮片",
+        "桔梗",
+        "桔梗冬花片",
+        "桔梗冬花片",
+        "桔梗冬花片"
+      ],
+      "retrieved_sections": [
+        "完整条目",
+        "完整条目",
+        "含量测定",
+        "制法",
+        "临床应用"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.099,
+      "answer": "根据药典参考资料，桔梗的性味归经为：\n\n> **【性味与归经】** \"苦、辛，平。归肺经。\"\n> 来源：药典2020一部-桔梗-饮片\n\n---\n\n**附：功能主治与用法用量**\n\n> **【功能与主治】** \"宣肺，利咽，祛痰，排脓。用于咳嗽痰多，胸闷不畅，咽痛音哑，肺痈吐脓。\"\n> **【用法与用量】** \"3〜10g。\"\n> 来源：药典2020一部-桔梗-饮片\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 4,
+      "answer_keywords_total": 4,
+      "keyword_coverage": 1.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 3.959,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.099,
+        "prompt_building": 0.0,
+        "llm_generation": 3.86,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 5,
+        "supported": 5,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，桔梗的性味归经为",
+            "label": "supported",
+            "reason": "纯格式性引导语，无实质内容判断"
+          },
+          {
+            "index": 2,
+            "claim": "【性味与归经】 \"苦、辛，平",
+            "label": "supported",
+            "reason": "资料1明确记载【性味与归经】苦、辛，平。归肺经"
+          },
+          {
+            "index": 3,
+            "claim": "宣肺，利咽，祛痰，排脓",
+            "label": "supported",
+            "reason": "资料1明确记载【功能与主治】宣肺，利咽，祛痰，排脓"
+          },
+          {
+            "index": 4,
+            "claim": "用于咳嗽痰多，胸闷不畅，咽痛音哑，肺痈吐脓",
+            "label": "supported",
+            "reason": "资料1明确记载用于咳嗽痰多，胸闷不畅，咽痛音哑，肺痈吐脓"
+          },
+          {
+            "index": 5,
+            "claim": "【用法与用量】 \"3〜10g",
+            "label": "supported",
+            "reason": "资料1明确记载【用法与用量】3〜10g"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q023",
+      "query": "百合的功能主治",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "百合固金口服液",
+        "百合",
+        "百合",
+        "百合",
+        "百合"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "药品概要",
+        "炮制",
+        "鉴别",
+        "临床应用"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 5,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.08,
+      "answer": "根据药典参考资料，百合的功能主治为：\n\n> **【性味与归经】** \"甘，微寒。归心、肺经。\"\n>\n> **【功能与主治】** \"养阴润肺，止咳止血。用于阴虚燥咳，劳嗽咳血，虚烦惊悸，失眠多梦，精神恍惚。\"\n> 来源：药典2020一部-百合-临床应用\n\n---\n\n**附：用法用量与贮藏**\n\n> **【用法与用量】** 6〜12g。\n> **【贮藏】** 置通风干燥处。\n> 来源：药典2020一部-百合-临床应用\n\n---\n\n**相关制剂**\n\n百合固金口服液的功能主治为：\n> \"养阴润肺，化痰止咳。用于肺肾阴虚，燥咳少痰，痰中带血，咽干喉痛。\"\n> 来源：药典2020一部-百合固金口服液-临床应用\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 2,
+      "answer_keywords_total": 3,
+      "keyword_coverage": 0.6667,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 5.524,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.08,
+        "prompt_building": 0.0,
+        "llm_generation": 5.443,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 7,
+        "supported": 4,
+        "unsupported": 3,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，百合的功能主治为",
+            "label": "supported",
+            "reason": "纯格式引导语，无实质内容断言"
+          },
+          {
+            "index": 2,
+            "claim": "【性味与归经】 \"甘，微寒",
+            "label": "unsupported",
+            "reason": "参考资料未提及百合性味为甘、微寒"
+          },
+          {
+            "index": 3,
+            "claim": "归心、肺经",
+            "label": "unsupported",
+            "reason": "参考资料未提及百合归心、肺经"
+          },
+          {
+            "index": 4,
+            "claim": "【功能与主治】 \"养阴润肺，止咳止血",
+            "label": "unsupported",
+            "reason": "资料1仅载百合固金口服液功效，非百合药材本身；资料5亦未明确列出此功效"
+          },
+          {
+            "index": 5,
+            "claim": "用于阴虚燥咳，劳嗽咳血，虚烦惊悸，失眠多梦，精神恍惚",
+            "label": "supported",
+            "reason": "资料5记载：嗽咳血，虚烦惊悸，失眠多梦，精神恍惚"
+          },
+          {
+            "index": 6,
+            "claim": "6〜12g",
+            "label": "supported",
+            "reason": "资料5记载：用法与用量6〜12g"
+          },
+          {
+            "index": 7,
+            "claim": "【贮藏】 置通风干燥处",
+            "label": "supported",
+            "reason": "资料5记载：贮藏置通风干燥处"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": false,
+        "hallucination_rate": 0.4286,
+        "citation_support_rate": 0.5714
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q024",
+      "query": "决明子的用法用量",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "决明子",
+        "决明子",
+        "决明子",
+        "决明子",
+        "决明子"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "药品概要",
+        "性状",
+        "性状",
+        "含量测定"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.073,
+      "answer": "根据药典参考资料，决明子的用法用量为：\n\n> **【用法与用量】** \"9〜15g。用时捣碎。\"\n> 来源：药典2020一部-决明子-临床应用\n\n---\n\n**附：炮制方法**\n\n> **【炮制】** \"除去杂质，洗净，干燥。用时捣碎。\"\n>\n> **【炒决明子】** \"取净决明子，照清炒法(通则0213)炒至微鼓起、有香气。用时捣碎。\"\n> 来源：药典2020一部-决明子-饮片\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 1,
+      "answer_keywords_total": 2,
+      "keyword_coverage": 0.5,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 5.079,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.074,
+        "prompt_building": 0.0,
+        "llm_generation": 5.005,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 5,
+        "supported": 5,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，决明子的用法用量为",
+            "label": "supported",
+            "reason": "引语无实质内容，属纯格式性表述，记supported"
+          },
+          {
+            "index": 2,
+            "claim": "【用法与用量】 \"9〜15g",
+            "label": "supported",
+            "reason": "资料1明确记载【用法与用量】9〜15g"
+          },
+          {
+            "index": 3,
+            "claim": "用时捣碎",
+            "label": "supported",
+            "reason": "资料1和资料3均记载\"用时捣碎\""
+          },
+          {
+            "index": 4,
+            "claim": "除去杂质，洗净，干燥",
+            "label": "supported",
+            "reason": "资料1炮制项下原文记载\"除去杂质，洗净，干燥\""
+          },
+          {
+            "index": 5,
+            "claim": "【炒决明子】 \"取净决明子，照清炒法(通则0213)炒至微鼓起、有香气",
+            "label": "supported",
+            "reason": "资料3原文记载\"炒决明子取净决明子，照清炒法(通则0213)炒至微鼓起、有香气\""
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q025",
+      "query": "泽泻的性味归经",
+      "query_type": "单药品单属性查询",
+      "retrieved_drugs": [
+        "泽泻",
+        "泽泻",
+        "泽泻",
+        "泽泻",
+        "泽泻"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "药品概要",
+        "含量测定",
+        "鉴别",
+        "鉴别"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.101,
+      "answer": "根据药典参考资料，泽泻的性味归经为：\n\n> **【性味与归经】** \"甘、淡，寒。归肾、膀胱经。\"\n> 来源：药典2020一部-泽泻-临床应用\n\n---\n\n**附：功能主治与用法用量**\n\n> **【功能与主治】** \"利水渗湿，泄热，化浊降脂。用于小便不利，水肿胀满，泄泻尿少，痰饮眩晕，热淋涩痛，高脂血症。\"\n> **【用法与用量】** \"6〜10g。\"\n> 来源：药典2020一部-泽泻-临床应用\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 4,
+      "answer_keywords_total": 4,
+      "keyword_coverage": 1.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 4.595,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.101,
+        "prompt_building": 0.0,
+        "llm_generation": 4.493,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 6,
+        "supported": 6,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，泽泻的性味归经为",
+            "label": "supported",
+            "reason": "格式性论断，无实质内容"
+          },
+          {
+            "index": 2,
+            "claim": "【性味与归经】 \"甘、淡，寒",
+            "label": "supported",
+            "reason": "资料1原文：「【性味与归经】甘、淡，寒。」"
+          },
+          {
+            "index": 3,
+            "claim": "归肾、膀胱经",
+            "label": "supported",
+            "reason": "资料1原文：「归肾、膀胱经。」"
+          },
+          {
+            "index": 4,
+            "claim": "利水渗湿，泄热，化浊降脂",
+            "label": "supported",
+            "reason": "资料1原文：「利水渗湿，泄热，化浊降脂。」"
+          },
+          {
+            "index": 5,
+            "claim": "用于小便不利，水肿胀满，泄泻尿少，痰饮眩晕，热淋涩痛，高脂血症",
+            "label": "supported",
+            "reason": "资料1原文完整列出上述主治病症。"
+          },
+          {
+            "index": 6,
+            "claim": "【用法与用量】 \"6〜10g",
+            "label": "supported",
+            "reason": "资料1原文：「【用法与用量】6〜10g。」"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q026",
+      "query": "黄芪的性状和功能主治分别是什么？",
+      "query_type": "单药品多属性查询",
+      "retrieved_drugs": [
+        "黄芪-饮片",
+        "黄芪颗粒",
+        "黄芪健胃膏",
+        "炙黄芪",
+        "黄芪生脉颗粒"
+      ],
+      "retrieved_sections": [
+        "完整条目",
+        "临床应用",
+        "临床应用",
+        "完整条目",
+        "完整条目"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.095,
+      "answer": "根据药典参考资料，黄芪的性状和功能主治如下：\n\n---\n\n## 性状\n\n> **\"本品呈类圆形或椭圆形的厚片，外表皮黄白色至淡棕褐色，可见纵皱纹或纵沟。切面皮部黄白色，木部淡黄色，有放射状纹理及裂隙，有的中心偶有枯朽状，黑褐色或呈空洞。气微，味微甜，嚼之有豆腥味。\"**\n> 来源：药典2020一部-黄芪-饮片\n\n---\n\n## 功能主治\n\n> **\"补气升阳，固表止汗，利水消肿，生津养血，行滞通痹，托毒排脓，敛疮生肌。\"**\n>\n> **用于：**\n> - 气虚乏力，食少便溏\n> - 中气下陷，久泻脱肛，便血崩漏\n> - 表虚自汗\n> - 气虚水肿，内热消渴\n> - 血虚萎黄，半身不遂，痹痛麻木\n> - 痈疽难溃，久溃不敛\n>\n> 来源：药典2020一部-黄芪-饮片\n\n---\n\n## 附：用法用量\n\n> **【用法与用量】** \"9〜30g。\"\n> 来源：药典2020一部-黄芪-饮片\n\n---\n\n**相关制剂**：黄芪生脉颗粒的功能主治为\"益气滋阴，养心行滞。用于气阴两虚，血脉瘀阻引起的胸痹心痛，症见胸痛、胸闷、心悸、气短；冠心病、心绞痛见上述证候者。\"（来源：药典2020一部-黄芪生脉颗粒-完整条目）\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 3,
+      "answer_keywords_total": 4,
+      "keyword_coverage": 0.75,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 8.822,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.095,
+        "prompt_building": 0.0,
+        "llm_generation": 8.727,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 5,
+        "supported": 5,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，黄芪的性状和功能主治如下",
+            "label": "supported",
+            "reason": "格式性引入语，无实质内容，按规则4判supported"
+          },
+          {
+            "index": 2,
+            "claim": "本品呈类圆形或椭圆形的厚片，外表皮黄白色至淡棕褐色，可见纵皱纹或纵沟",
+            "label": "supported",
+            "reason": "资料1黄芪饮片【性状】原文：呈类圆形或椭圆形厚片，外表皮黄白色至淡棕褐色，可见纵皱纹或纵洶/沟"
+          },
+          {
+            "index": 3,
+            "claim": "切面皮部黄白色，木部淡黄色，有放射状纹理及裂隙，有的中心偶有枯朽状，黑褐色或呈空洞",
+            "label": "supported",
+            "reason": "资料1黄芪饮片【性状】原文：切面皮部黄白色，木部淡黄色，有放射状纹理及裂隙，有的中心偶有枯朽状，黑褐色或呈空洞"
+          },
+          {
+            "index": 4,
+            "claim": "气微，味微甜，嚼之有豆腥味",
+            "label": "supported",
+            "reason": "资料1黄芪饮片【性状】原文：气微，味微甜，嚼之有豆腥味"
+          },
+          {
+            "index": 5,
+            "claim": "9〜30g",
+            "label": "supported",
+            "reason": "资料1黄芪饮片【用法与用量】：9〜30g"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q027",
+      "query": "人参的性味归经和功能主治",
+      "query_type": "单药品多属性查询",
+      "retrieved_drugs": [
+        "人参-饮片",
+        "人参",
+        "人参",
+        "人参",
+        "人参叶"
+      ],
+      "retrieved_sections": [
+        "完整条目",
+        "药品概要",
+        "含量测定",
+        "鉴别",
+        "含量测定"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.101,
+      "answer": "根据药典参考资料，人参的性味归经和功能主治如下：\n\n---\n\n## 性味与归经\n\n> **【性味与归经】** \"甘、微苦，微温。归脾、肺、心、肾经。\"\n> 来源：药典2020一部-人参-饮片\n\n---\n\n## 功能与主治\n\n> **【功能与主治】** \"大补元气，复脉固脱，补脾益肺，生津养血，安神益智。用于体虚欲脱，肢冷脉微，脾虚食少，肺虚喘咳，津伤口渴，内热消渴，气血亏虚，久病虚羸，惊悸失眠，阳痿宫冷。\"\n> 来源：药典2020一部-人参-饮片\n\n---\n\n## 附：用法用量与注意事项\n\n> **【用法与用量】** \"3〜9g，另煎兑服；也可研粉吞服，一次 2g，一日2次。\"\n> **【注意】** \"不宜与藜芦、五灵脂同用。\"\n> 来源：药典2020一部-人参-饮片\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 4,
+      "answer_keywords_total": 4,
+      "keyword_coverage": 1.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 5.828,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.102,
+        "prompt_building": 0.0,
+        "llm_generation": 5.726,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 9,
+        "supported": 9,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，人参的性味归经和功能主治如下",
+            "label": "supported",
+            "reason": "资料1含性味归经及功能主治章节"
+          },
+          {
+            "index": 2,
+            "claim": "性味与归经",
+            "label": "supported",
+            "reason": "资料1设有【性味与归经】标题"
+          },
+          {
+            "index": 3,
+            "claim": "【性味与归经】 \"甘、微苦，微温",
+            "label": "supported",
+            "reason": "资料1载'甘、微苦，微温'"
+          },
+          {
+            "index": 4,
+            "claim": "归脾、肺、心、肾经",
+            "label": "supported",
+            "reason": "资料1载明归脾、肺、心、肾经"
+          },
+          {
+            "index": 5,
+            "claim": "大补元气，复脉固脱，补脾益肺，生津养血，安神益智",
+            "label": "supported",
+            "reason": "资料1功能主治原文一致"
+          },
+          {
+            "index": 6,
+            "claim": "用于体虚欲脱，肢冷脉微，脾虚食少，肺虚喘咳，津伤口渴，内热消渴，气血亏虚，久病虚羸，惊悸失眠，阳痿宫冷",
+            "label": "supported",
+            "reason": "资料1主治病症逐一吻合"
+          },
+          {
+            "index": 7,
+            "claim": "3〜9g，另煎兑服",
+            "label": "supported",
+            "reason": "资料1用法用量载3〜9g另煎兑服"
+          },
+          {
+            "index": 8,
+            "claim": "也可研粉吞服，一次 2g，一日2次",
+            "label": "supported",
+            "reason": "资料1注明研粉吞服一次2g一日2次"
+          },
+          {
+            "index": 9,
+            "claim": "【注意】 \"不宜与藜芦、五灵脂同用",
+            "label": "supported",
+            "reason": "资料1注意项明确记载"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q028",
+      "query": "当归的性味和用法用量",
+      "query_type": "单药品多属性查询",
+      "retrieved_drugs": [
+        "当归",
+        "当归养血丸",
+        "当归补血口服液",
+        "当归",
+        "当归"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "完整条目",
+        "临床应用",
+        "药品概要",
+        "性状"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.109,
+      "answer": "根据药典参考资料，当归的性味和用法用量如下：\n\n---\n\n## 性味与归经\n\n> **【性味与归经】** \"甘、辛，温。归肝、心、脾经。\"\n> 来源：药典2020一部-当归-临床应用\n\n---\n\n## 用法与用量\n\n> **【用法与用量】** \"6〜12g。\"\n> 来源：药典2020一部-当归-临床应用\n\n---\n\n## 附：功能主治\n\n> **【功能与主治】** \"补血活血，调经止痛，润肠通便。用于血虚萎黄，眩晕心悸，月经不调，经闭痛经，虚寒腹痛，风湿痹痛，跌扑损伤，痈疽疮疡，肠燥便秘。酒当归活血通经。用于经闭痛经，风湿痹痛，跌扑损伤。\"\n> 来源：药典2020一部-当归-临床应用\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 3,
+      "answer_keywords_total": 4,
+      "keyword_coverage": 0.75,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 5.368,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.109,
+        "prompt_building": 0.0,
+        "llm_generation": 5.258,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 9,
+        "supported": 9,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，当归的性味和用法用量如下",
+            "label": "supported",
+            "reason": "格式性引导句，无实质内容断言"
+          },
+          {
+            "index": 2,
+            "claim": "性味与归经",
+            "label": "supported",
+            "reason": "格式性标签，无实质内容断言"
+          },
+          {
+            "index": 3,
+            "claim": "【性味与归经】 \"甘、辛，温",
+            "label": "supported",
+            "reason": "资料1明确记载：性味与归经为甘、辛，温"
+          },
+          {
+            "index": 4,
+            "claim": "归肝、心、脾经",
+            "label": "supported",
+            "reason": "资料1明确记载：归肝、心、脾经"
+          },
+          {
+            "index": 5,
+            "claim": "6〜12g",
+            "label": "supported",
+            "reason": "资料1明确记载用法与用量为6〜12g"
+          },
+          {
+            "index": 6,
+            "claim": "补血活血，调经止痛，润肠通便",
+            "label": "supported",
+            "reason": "资料1功能与主治原文与此一致"
+          },
+          {
+            "index": 7,
+            "claim": "用于血虚萎黄，眩晕心悸，月经不调，经闭痛经，虚寒腹痛，风湿痹痛，跌扑损伤，痈疽疮疡，肠燥便秘",
+            "label": "supported",
+            "reason": "资料1主治病症原文与此完全一致"
+          },
+          {
+            "index": 8,
+            "claim": "酒当归活血通经",
+            "label": "supported",
+            "reason": "资料1明确记载酒当归活血通经"
+          },
+          {
+            "index": 9,
+            "claim": "用于经闭痛经，风湿痹痛，跌扑损伤",
+            "label": "supported",
+            "reason": "资料1酒当归主治原文与此一致"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 1.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q029",
+      "query": "黄连的性状、性味和功能主治",
+      "query_type": "单药品多属性查询",
+      "retrieved_drugs": [
+        "黄连",
+        "黄连胶囊",
+        "黄连",
+        "黄连",
+        "黄连"
+      ],
+      "retrieved_sections": [
+        "临床应用",
+        "临床应用",
+        "药品概要",
+        "鉴别",
+        "含量测定"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 1,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.115,
+      "answer": "根据药典参考资料，黄连的性状描述仅见于炮制品部分，药材本身的性状资料中未收录。\n\n---\n\n## 性味与归经\n\n> **【性味与归经】** \"苦，寒。归心、脾、胃、肝、胆、大肠经。\"\n> 来源：药典2020一部-黄连-临床应用\n\n---\n\n## 功能与主治\n\n> **【功能与主治】** \"清热燥湿，泻火解毒。用于湿热痞满，呕吐吞酸，泻痢，黄疸，高热神昏，心火亢盛，心烦不寐，心悸不宁，血热吐衄，目赤，牙痛，消渴，痈肿疔疮；外治湿疹，湿疮，耳道流脓。\"\n>\n> **各炮制品的主治特点：**\n> - 酒黄连善清上焦火热。用于目赤，口疮。\n> - 姜黄连清胃和胃止呕。用于寒热互结，湿热中阻，痞满呕吐。\n> - 萸黄连舒肝和胃止呕。用于肝胃不和，呕吐吞酸。\n> 来源：药典2020一部-黄连-临床应用\n\n---\n\n## 附：炮制品性状（仅供参考）\n\n> - **酒黄连**：\"本品形如黄连片，色泽加深。略有酒香气。\"\n> - **姜黄连**：\"本品形如黄连片，表面棕黄色。有姜的辛辣味。\"\n> - **萸黄连**：\"本品形如黄连片，表面棕黄色。有吴茱萸的辛辣香气。\"\n> 来源：药典2020一部-黄连-炮制\n\n> **【用法与用量】** \"2〜5g。外用适量。\"\n> 来源：药典2020一部-黄连-临床应用\n\n---\n\n注：药典参考资料中未收录黄连药材本身的性状描述，以上仅列炮制品性状供参考。\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 4,
+      "answer_keywords_total": 5,
+      "keyword_coverage": 0.8,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 8.001,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.115,
+        "prompt_building": 0.0,
+        "llm_generation": 7.886,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 22,
+        "supported": 0,
+        "unsupported": 0,
+        "contradicted": 0,
+        "judgements": [],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "无法解析 JSON",
+        "grounded": true,
+        "hallucination_rate": 0.0,
+        "citation_support_rate": 0.0
+      },
+      "top_k_details": []
+    },
+    {
+      "query_id": "Q030",
+      "query": "甘草的来源、性味和功能主治",
+      "query_type": "单药品多属性查询",
+      "retrieved_drugs": [
+        "炙甘草",
+        "甘草",
+        "甘草",
+        "甘草浸膏",
+        "甘草流浸膏"
+      ],
+      "retrieved_sections": [
+        "完整条目",
+        "临床应用",
+        "药品概要",
+        "完整条目",
+        "完整条目"
+      ],
+      "hit": true,
+      "first_hit_rank": 1,
+      "evaluable": true,
+      "strict_hit": true,
+      "strict_first_hit_rank": 2,
+      "strict_miss_reason": "",
+      "retrieval_latency": 0.1,
+      "answer": "根据药典参考资料，甘草的来源、性味和功能主治如下：\n\n---\n\n## 来源\n\n> \"本品为豆科植物**甘草**Glycyrrhiza uralensis Fisch.、**胀果甘草**Glycyrrhiza inflata Bat.或**光果甘草**Glycyrrhiza glabra L.的干燥根和根茎。春、秋二季采挖，除去须根，晒干。\"\n> 来源：药典2020一部-甘草-药品概要\n\n---\n\n## 性味与归经\n\n> **【性味与归经】** \"甘，平。归心、肺、脾、胃经。\"\n> 来源：药典2020一部-甘草-临床应用\n\n---\n\n## 功能与主治\n\n> **【功能与主治】** \"补脾益气，清热解毒，祛痰止咳，缓急止痛，调和诸药。\"\n>\n> **用于：**\n> - 脾胃虚弱，倦怠乏力，心悸气短\n> - 咳嗽痰多\n> - 脘腹、四肢挛急疼痛\n> - 痈肿疮毒\n> - 缓解药物毒性、烈性\n> 来源：药典2020一部-甘草-临床应用\n\n---\n\n## 附：用法用量与注意事项\n\n> **【用法与用量】** \"2〜10g。\"\n> **【注意】** \"不宜与海藻、京大戟、红大戟、甘遂、芫花同用。\"\n> 【贮藏】\"置通风干燥处，防蛀。\"\n> 来源：药典2020一部-甘草-临床应用\n\n---\n\n**相关制剂**：炙甘草（蜜炙品）性味归经相同，功能主治为\"补脾和胃，益气复脉。用于脾胃虚弱，倦怠乏力，心动悸，脉结代。\"（来源：药典2020一部-炙甘草-完整条目）\n\n具体用药请遵医嘱。",
+      "answer_keywords_hit": 3,
+      "answer_keywords_total": 3,
+      "keyword_coverage": 1.0,
+      "has_citations": true,
+      "has_consistency_issues": false,
+      "has_medical_disclaimer": true,
+      "generation_latency": 9.43,
+      "component_latency": {
+        "guard_check": 0.0,
+        "coreference_resolution": 0.0,
+        "retrieval": 0.1,
+        "prompt_building": 0.0,
+        "llm_generation": 9.329,
+        "post_processing": 0.0
+      },
+      "grounding": {
+        "n_claims": 15,
+        "supported": 13,
+        "unsupported": 0,
+        "contradicted": 2,
+        "judgements": [
+          {
+            "index": 1,
+            "claim": "根据药典参考资料，甘草的来源、性味和功能主治如下",
+            "label": "supported",
+            "reason": "纯格式性引导语，无实质内容。"
+          },
+          {
+            "index": 2,
+            "claim": "本品为豆科植物甘草Glycyrrhiza uralensis Fisch.、胀果甘草Glycyrrhiza inflata Bat.或光果甘草Glycyrrhiza glabra L.的干燥根和根茎",
+            "label": "supported",
+            "reason": "资料3原文：本品为豆科植物甘草…的干燥根和根茎。"
+          },
+          {
+            "index": 3,
+            "claim": "春、秋二季采挖，除去须根，晒干",
+            "label": "supported",
+            "reason": "资料3原文：春、秋二季采挖，除去须根,晒干。"
+          },
+          {
+            "index": 4,
+            "claim": "归心、肺、脾、胃经",
+            "label": "supported",
+            "reason": "资料2原文：归心、肺、脾、胃经。"
+          },
+          {
+            "index": 5,
+            "claim": "补脾益气，清热解毒，祛痰止咳，缓急止痛，调和诸药",
+            "label": "supported",
+            "reason": "资料2原文完整覆盖五项功效。"
+          },
+          {
+            "index": 6,
+            "claim": "- 脾胃虚弱，倦怠乏力，心悸气短",
+            "label": "supported",
+            "reason": "资料2原文：用于脾胃虚弱，倦怠乏力，心悸气短。"
+          },
+          {
+            "index": 7,
+            "claim": "- 咳嗽痰多",
+            "label": "supported",
+            "reason": "资料2原文：咳嗽痰多。"
+          },
+          {
+            "index": 8,
+            "claim": "- 脘腹、四肢挛急疼痛",
+            "label": "supported",
+            "reason": "资料2原文：脘腹、四肢挛急疼痛。"
+          },
+          {
+            "index": 9,
+            "claim": "- 痈肿疮毒",
+            "label": "supported",
+            "reason": "资料2原文：痈肿疮毒。"
+          },
+          {
+            "index": 10,
+            "claim": "- 缓解药物毒性、烈性",
+            "label": "supported",
+            "reason": "资料2原文：缓解药物毒性、烈性。"
+          },
+          {
+            "index": 11,
+            "claim": "2〜10g",
+            "label": "supported",
+            "reason": "资料2原文：用法与用量2〜10g。"
+          },
+          {
+            "index": 12,
+            "claim": "【注意】 \"不宜与海藻、京大戟、红大戟、甘遂、芫花同用",
+            "label": "supported",
+            "reason": "资料2原文完全一致。"
+          },
+          {
+            "index": 13,
+            "claim": "【贮藏】\"置通风干燥处，防蛀",
+            "label": "supported",
+            "reason": "资料2原文：置通风干燥处，防蛀。"
+          },
+          {
+            "index": 14,
+            "claim": "性味归经相同，功能主治为\"补脾和胃，益气复脉",
+            "label": "contradicted",
+            "reason": "该功效属于炙甘草（资料1），非甘草原药材。"
+          },
+          {
+            "index": 15,
+            "claim": "用于脾胃虚弱，倦怠乏力，心动悸，脉结代",
+            "label": "contradicted",
+            "reason": "适应症属炙甘草（资料1），非甘草原药材（资料2）。"
+          }
+        ],
+        "judge_model": "agnes-2.5-flash",
+        "judge_error": "",
+        "grounded": false,
+        "hallucination_rate": 0.1333,
+        "citation_support_rate": 0.8667
+      },
+      "top_k_details": []
+    }
+  ]
+}
