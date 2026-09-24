@@ -1,7 +1,7 @@
 {
   "name": "中国药典智能问答系统 - 标准评估测试集",
   "version": "1.0",
-  "description": "基于《中国药典》2020年版一部构建的 100 题标准测试集，覆盖 8 种问题类型",
+  "description": "基于《中国药典》2020年版一部构建的标准测试集：Q001-Q100 为基线集（与历史报告可比，用 --limit 100 复现），Q101-Q106 为 2026-09-22 新增的「子串药名干扰」盲区覆盖集（药名包含另一药名的成方制剂，语料中共 433 个这类条目；此类 bug 原先 0/100 题能覆盖） | 2026-09-22 起：11 道 out_of_scope 题（四部通则 10 道 + 集合型横向 1 道）两项口径均不计分；新增 6 道子串药名干扰 + 14 道 OCR 药名纠错",
   "metrics": {
     "recall_at_k": "前 K 条检索结果中包含正确答案的比例",
     "mrr": "Mean Reciprocal Rank，正确答案排名倒数的平均值",
@@ -9,112 +9,2086 @@
     "latency_p95": "95 分位延迟"
   },
   "queries": [
-    {"id": "Q001", "type": "单药品单属性查询", "query": "人参的性味归经是什么？", "expected_drugs": ["人参"], "expected_sections": ["性味与归经", "临床应用"], "expected_answer_keywords": ["甘", "微苦", "微温", "脾", "肺", "心", "肾"]},
-    {"id": "Q002", "type": "单药品单属性查询", "query": "黄芪的功能主治是什么？", "expected_drugs": ["黄芪"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["补气", "固表", "利尿", "托毒", "排脓", "敛疮"]},
-    {"id": "Q003", "type": "单药品单属性查询", "query": "当归的用法用量是怎样的？", "expected_drugs": ["当归"], "expected_sections": ["用法与用量", "临床应用"], "expected_answer_keywords": ["煎服", "6-12g"]},
-    {"id": "Q004", "type": "单药品单属性查询", "query": "黄连的性状是什么？", "expected_drugs": ["黄连"], "expected_sections": ["性状"], "expected_answer_keywords": ["根茎", "黄色", "结节"]},
-    {"id": "Q005", "type": "单药品单属性查询", "query": "甘草的来源是什么？", "expected_drugs": ["甘草"], "expected_sections": ["来源"], "expected_answer_keywords": ["豆科", "根", "根茎"]},
-    {"id": "Q006", "type": "单药品单属性查询", "query": "川芎的性味归经", "expected_drugs": ["川芎茶调丸"], "expected_sections": ["性味与归经", "临床应用"], "expected_answer_keywords": ["辛", "温", "肝", "胆"]},
-    {"id": "Q007", "type": "单药品单属性查询", "query": "白芍的功能主治", "expected_drugs": ["白芍"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["养血", "调经", "敛阴", "止汗", "柔肝"]},
-    {"id": "Q008", "type": "单药品单属性查询", "query": "茯苓的用法用量", "expected_drugs": ["茯苓"], "expected_sections": ["用法与用量", "临床应用"], "expected_answer_keywords": ["煎服", "10-15g"]},
-    {"id": "Q009", "type": "单药品单属性查询", "query": "麻黄的注意事项", "expected_drugs": ["麻黄"], "expected_sections": ["注意", "临床应用"], "expected_answer_keywords": ["高血压", "失眠", "孕妇", "慎用"]},
-    {"id": "Q010", "type": "单药品单属性查询", "query": "何首乌的贮藏方法", "expected_drugs": ["何首乌"], "expected_sections": ["贮藏"], "expected_answer_keywords": ["干燥", "防蛀", "防霉"]},
-    {"id": "Q011", "type": "单药品单属性查询", "query": "丹参的功能主治是什么？", "expected_drugs": ["丹参"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["活血", "祛瘀", "通经", "清心"]},
-    {"id": "Q012", "type": "单药品单属性查询", "query": "陈皮的性味归经", "expected_drugs": ["陈皮"], "expected_sections": ["性味与归经", "临床应用"], "expected_answer_keywords": ["苦", "辛", "温", "肺", "脾"]},
-    {"id": "Q013", "type": "单药品单属性查询", "query": "半夏的用法用量", "expected_drugs": ["半夏"], "expected_sections": ["用法与用量", "临床应用"], "expected_answer_keywords": ["煎服", "3-9g"]},
-    {"id": "Q014", "type": "单药品单属性查询", "query": "枸杞子的功能主治", "expected_drugs": ["枸杞子"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["滋补", "肝肾", "益精", "明目"]},
-    {"id": "Q015", "type": "单药品单属性查询", "query": "天麻的性味归经", "expected_drugs": ["天麻"], "expected_sections": ["性味与归经", "临床应用"], "expected_answer_keywords": ["甘", "平", "肝"]},
-    {"id": "Q016", "type": "单药品单属性查询", "query": "麦冬的功能主治", "expected_drugs": ["麦冬"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["养阴", "润肺", "益胃", "生津"]},
-    {"id": "Q017", "type": "单药品单属性查询", "query": "金银花的用法用量", "expected_drugs": ["金银花"], "expected_sections": ["用法与用量", "临床应用"], "expected_answer_keywords": ["煎服", "6-15g"]},
-    {"id": "Q018", "type": "单药品单属性查询", "query": "柴胡的注意事项", "expected_drugs": ["柴胡"], "expected_sections": ["注意", "临床应用"], "expected_answer_keywords": ["肝阳上亢", "阴虚"]},
-    {"id": "Q019", "type": "单药品单属性查询", "query": "地黄的性状特征", "expected_drugs": ["地黄"], "expected_sections": ["性状"], "expected_answer_keywords": ["根", "纺锤形", "棕黄色"]},
-    {"id": "Q020", "type": "单药品单属性查询", "query": "五味子的功能主治", "expected_drugs": ["五味子"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["收敛", "固涩", "益气", "生津"]},
-    {"id": "Q021", "type": "单药品单属性查询", "query": "山药的来源", "expected_drugs": ["山药"], "expected_sections": ["来源"], "expected_answer_keywords": ["薯蓣科", "根茎"]},
-    {"id": "Q022", "type": "单药品单属性查询", "query": "桔梗的性味归经", "expected_drugs": ["桔梗"], "expected_sections": ["性味与归经", "临床应用"], "expected_answer_keywords": ["苦", "辛", "平", "肺"]},
-    {"id": "Q023", "type": "单药品单属性查询", "query": "百合的功能主治", "expected_drugs": ["百合"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["养阴", "润肺", "清心"]},
-    {"id": "Q024", "type": "单药品单属性查询", "query": "决明子的用法用量", "expected_drugs": ["决明子"], "expected_sections": ["用法与用量", "临床应用"], "expected_answer_keywords": ["煎服", "9-15g"]},
-    {"id": "Q025", "type": "单药品单属性查询", "query": "泽泻的性味归经", "expected_drugs": ["泽泻"], "expected_sections": ["性味与归经", "临床应用"], "expected_answer_keywords": ["甘", "寒", "肾", "膀胱"]},
-
-    {"id": "Q026", "type": "单药品多属性查询", "query": "黄芪的性状和功能主治分别是什么？", "expected_drugs": ["黄芪"], "expected_sections": ["性状", "功能与主治", "临床应用"], "expected_answer_keywords": ["豆科", "根", "补气", "固表"]},
-    {"id": "Q027", "type": "单药品多属性查询", "query": "人参的性味归经和功能主治", "expected_drugs": ["人参"], "expected_sections": ["性味与归经", "功能与主治", "临床应用"], "expected_answer_keywords": ["甘", "微苦", "大补元气", "复脉"]},
-    {"id": "Q028", "type": "单药品多属性查询", "query": "当归的性味和用法用量", "expected_drugs": ["当归"], "expected_sections": ["性味与归经", "用法与用量", "临床应用"], "expected_answer_keywords": ["甘", "辛", "温", "煎服"]},
-    {"id": "Q029", "type": "单药品多属性查询", "query": "黄连的性状、性味和功能主治", "expected_drugs": ["黄连"], "expected_sections": ["性状", "性味与归经", "功能与主治", "临床应用"], "expected_answer_keywords": ["根茎", "黄色", "苦", "寒", "清热"]},
-    {"id": "Q030", "type": "单药品多属性查询", "query": "甘草的来源、性味和功能主治", "expected_drugs": ["甘草"], "expected_sections": ["来源", "性味与归经", "功能与主治", "临床应用"], "expected_answer_keywords": ["豆科", "甘", "补脾"]},
-    {"id": "Q031", "type": "单药品多属性查询", "query": "川芎的性状和功能主治是什么", "expected_drugs": ["川芎茶调丸"], "expected_sections": ["性状", "功能与主治", "临床应用"], "expected_answer_keywords": ["根茎", "活血", "行气"]},
-    {"id": "Q032", "type": "单药品多属性查询", "query": "白芍的来源、性味和用法用量", "expected_drugs": ["白芍"], "expected_sections": ["来源", "性味与归经", "用法与用量", "临床应用"], "expected_answer_keywords": ["毛茛科", "苦", "酸", "煎服"]},
-    {"id": "Q033", "type": "单药品多属性查询", "query": "丹参的性味归经和功能主治", "expected_drugs": ["丹参"], "expected_sections": ["性味与归经", "功能与主治", "临床应用"], "expected_answer_keywords": ["苦", "微寒", "活血", "祛瘀"]},
-    {"id": "Q034", "type": "单药品多属性查询", "query": "陈皮的来源、性味和功能主治", "expected_drugs": ["陈皮"], "expected_sections": ["来源", "性味与归经", "功能与主治", "临床应用"], "expected_answer_keywords": ["芸香科", "果皮", "理气"]},
-    {"id": "Q035", "type": "单药品多属性查询", "query": "天麻的性状和功能主治", "expected_drugs": ["天麻"], "expected_sections": ["性状", "功能与主治", "临床应用"], "expected_answer_keywords": ["块茎", "平肝", "息风"]},
-    {"id": "Q036", "type": "单药品多属性查询", "query": "枸杞子的来源和性味功能", "expected_drugs": ["枸杞子"], "expected_sections": ["来源", "性味与归经", "功能与主治", "临床应用"], "expected_answer_keywords": ["茄科", "果实", "甘", "滋补"]},
-    {"id": "Q037", "type": "单药品多属性查询", "query": "麦冬的性状、性味和功能", "expected_drugs": ["麦冬"], "expected_sections": ["性状", "性味与归经", "功能与主治", "临床应用"], "expected_answer_keywords": ["块根", "甘", "微苦", "养阴"]},
-    {"id": "Q038", "type": "单药品多属性查询", "query": "柴胡的来源和功能主治", "expected_drugs": ["柴胡"], "expected_sections": ["来源", "功能与主治", "临床应用"], "expected_answer_keywords": ["伞形科", "根", "疏散退热"]},
-    {"id": "Q039", "type": "单药品多属性查询", "query": "五味子的性状和功能主治", "expected_drugs": ["五味子"], "expected_sections": ["性状", "功能与主治", "临床应用"], "expected_answer_keywords": ["果实", "收敛", "固涩"]},
-    {"id": "Q040", "type": "单药品多属性查询", "query": "茯苓的来源、性状和用法用量", "expected_drugs": ["茯苓"], "expected_sections": ["来源", "性状", "用法与用量", "临床应用"], "expected_answer_keywords": ["多孔菌科", "菌核", "煎服"]},
-
-    {"id": "Q041", "type": "精确数值查询", "query": "人参含量测定中人参皂苷Rg1的限度是多少？", "expected_drugs": ["人参"], "expected_sections": ["含量测定"], "expected_answer_keywords": ["人参皂苷Rg1", "不得少于"]},
-    {"id": "Q042", "type": "精确数值查询", "query": "黄芪含量测定中黄芪甲苷的含量标准", "expected_drugs": ["黄芪"], "expected_sections": ["含量测定"], "expected_answer_keywords": ["黄芪甲苷", "不得少于"]},
-    {"id": "Q043", "type": "精确数值查询", "query": "黄连含量测定中盐酸小檗碱的限度", "expected_drugs": ["黄连"], "expected_sections": ["含量测定"], "expected_answer_keywords": ["小檗碱", "不得少于"]},
-    {"id": "Q044", "type": "精确数值查询", "query": "甘草含量测定中甘草酸的含量标准是多少", "expected_drugs": ["甘草"], "expected_sections": ["含量测定"], "expected_answer_keywords": ["甘草酸", "不得少于"]},
-    {"id": "Q045", "type": "精确数值查询", "query": "丹参含量测定中丹参酮的限度", "expected_drugs": ["丹参"], "expected_sections": ["含量测定"], "expected_answer_keywords": ["丹参酮", "不得少于"]},
-    {"id": "Q046", "type": "精确数值查询", "query": "金银花含量测定中绿原酸的含量标准", "expected_drugs": ["金银花"], "expected_sections": ["含量测定"], "expected_answer_keywords": ["绿原酸", "不得少于"]},
-    {"id": "Q047", "type": "精确数值查询", "query": "当归的用法用量具体是多少克", "expected_drugs": ["当归"], "expected_sections": ["用法与用量", "临床应用"], "expected_answer_keywords": ["6-12g"]},
-    {"id": "Q048", "type": "精确数值查询", "query": "人参的用法用量是多少克", "expected_drugs": ["人参"], "expected_sections": ["用法与用量", "临床应用"], "expected_answer_keywords": ["3-9g", "另煎"]},
-    {"id": "Q049", "type": "精确数值查询", "query": "黄芪的用法用量具体数值", "expected_drugs": ["黄芪"], "expected_sections": ["用法与用量", "临床应用"], "expected_answer_keywords": ["9-30g"]},
-    {"id": "Q050", "type": "精确数值查询", "query": "枸杞子的用法用量是多少", "expected_drugs": ["枸杞子"], "expected_sections": ["用法与用量", "临床应用"], "expected_answer_keywords": ["6-12g"]},
-    {"id": "Q051", "type": "精确数值查询", "query": "五味子含量测定中五味子醇甲的标准", "expected_drugs": ["五味子"], "expected_sections": ["含量测定"], "expected_answer_keywords": ["五味子醇甲", "不得少于"]},
-    {"id": "Q052", "type": "精确数值查询", "query": "麦冬含量测定中的指标成分", "expected_drugs": ["麦冬"], "expected_sections": ["含量测定"], "expected_answer_keywords": ["麦冬总皂苷"]},
-    {"id": "Q053", "type": "精确数值查询", "query": "柴胡含量测定中柴胡皂苷的含量", "expected_drugs": ["柴胡"], "expected_sections": ["含量测定"], "expected_answer_keywords": ["柴胡皂苷"]},
-    {"id": "Q054", "type": "精确数值查询", "query": "陈皮含量测定中橙皮苷的限度标准", "expected_drugs": ["陈皮"], "expected_sections": ["含量测定"], "expected_answer_keywords": ["橙皮苷", "不得少于"]},
-    {"id": "Q055", "type": "精确数值查询", "query": "桔梗的用法用量是多少克", "expected_drugs": ["桔梗"], "expected_sections": ["用法与用量", "临床应用"], "expected_answer_keywords": ["3-10g"]},
-
-    {"id": "Q056", "type": "跨品种比较查询", "query": "人参和西洋参在功能主治上有什么区别？", "expected_drugs": ["人参", "西洋参"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["人参", "西洋参", "大补元气", "补气养阴"]},
-    {"id": "Q057", "type": "跨品种比较查询", "query": "黄芪和白术的补气功效有什么不同", "expected_drugs": ["黄芪", "白术"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["黄芪", "白术", "补气", "固表", "健脾"]},
-    {"id": "Q058", "type": "跨品种比较查询", "query": "生地和熟地的功效区别", "expected_drugs": ["地黄"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["清热凉血", "滋阴补血"]},
-    {"id": "Q059", "type": "跨品种比较查询", "query": "赤芍和白芍的功效差异", "expected_drugs": ["赤芍", "白芍"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["赤芍", "白芍", "清热凉血", "养血"]},
-    {"id": "Q060", "type": "跨品种比较查询", "query": "黄连和黄芩的清热功效对比", "expected_drugs": ["黄连", "黄芩"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["黄连", "黄芩", "清热燥湿", "泻火"]},
-    {"id": "Q061", "type": "跨品种比较查询", "query": "丹参和川芎的活血作用比较", "expected_drugs": ["丹参", "川芎茶调丸"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["丹参", "川芎", "活血", "祛瘀", "行气"]},
-    {"id": "Q062", "type": "跨品种比较查询", "query": "陈皮和青皮的理气功效区别", "expected_drugs": ["陈皮"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["陈皮", "理气", "健脾"]},
-    {"id": "Q063", "type": "跨品种比较查询", "query": "茯苓和薏苡仁的利湿功效", "expected_drugs": ["茯苓"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["茯苓", "利水", "渗湿"]},
-    {"id": "Q064", "type": "跨品种比较查询", "query": "麻黄和桂枝的发汗解表功效", "expected_drugs": ["麻黄", "桂枝"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["麻黄", "桂枝", "发汗", "解表"]},
-    {"id": "Q065", "type": "跨品种比较查询", "query": "当归和白芍的养血功效比较", "expected_drugs": ["当归", "白芍"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["当归", "白芍", "补血", "养血"]},
-
-    {"id": "Q066", "type": "横向条件查询", "query": "哪些药材含有挥发油成分？", "expected_drugs": [], "expected_sections": ["性状", "鉴别", "含量测定"], "expected_answer_keywords": ["挥发油"]},
-    {"id": "Q067", "type": "横向条件查询", "query": "含有黄连素的药材有哪些", "expected_drugs": ["黄连"], "expected_sections": ["含量测定", "鉴别"], "expected_answer_keywords": ["小檗碱", "黄连"]},
-    {"id": "Q068", "type": "横向条件查询", "query": "哪些药材具有补气功效", "expected_drugs": ["人参", "黄芪", "白术", "甘草"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["补气"]},
-    {"id": "Q069", "type": "横向条件查询", "query": "哪些药材有清热解毒的功效", "expected_drugs": ["金银花", "连翘", "板蓝根"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["清热", "解毒"]},
-    {"id": "Q070", "type": "横向条件查询", "query": "性味甘温的药材有哪些", "expected_drugs": ["人参", "黄芪", "甘草"], "expected_sections": ["性味与归经", "临床应用"], "expected_answer_keywords": ["甘", "温"]},
-    {"id": "Q071", "type": "横向条件查询", "query": "归肺经的药材有哪些", "expected_drugs": ["人参", "黄芪", "麻黄"], "expected_sections": ["性味与归经", "临床应用"], "expected_answer_keywords": ["肺经"]},
-    {"id": "Q072", "type": "横向条件查询", "query": "具有活血化瘀功效的药材", "expected_drugs": ["丹参", "红花"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["活血", "化瘀"]},
-    {"id": "Q073", "type": "横向条件查询", "query": "有毒性的药材有哪些", "expected_drugs": ["附子", "半夏", "天南星"], "expected_sections": ["注意", "功能与主治", "临床应用"], "expected_answer_keywords": ["毒", "慎用", "禁忌"]},
-    {"id": "Q074", "type": "横向条件查询", "query": "可以安神的药材", "expected_drugs": ["酸枣仁", "远志", "柏子仁"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["安神"]},
-    {"id": "Q075", "type": "横向条件查询", "query": "具有利水渗湿作用的药材", "expected_drugs": ["茯苓", "泽泻"], "expected_sections": ["功能与主治", "临床应用"], "expected_answer_keywords": ["利水", "渗湿"]},
-
-    {"id": "Q076", "type": "方法通则查询", "query": "薄层色谱法的操作步骤是什么？", "expected_drugs": [], "expected_sections": ["鉴别", "含量测定"], "expected_answer_keywords": ["薄层色谱", "对照品", "展开"]},
-    {"id": "Q077", "type": "方法通则查询", "query": "高效液相色谱法的原理", "expected_drugs": [], "expected_sections": ["含量测定"], "expected_answer_keywords": ["高效液相色谱", "固定相", "流动相"]},
-    {"id": "Q078", "type": "方法通则查询", "query": "水分测定法有哪些方法", "expected_drugs": [], "expected_sections": ["检查"], "expected_answer_keywords": ["水分", "烘干", "甲苯"]},
-    {"id": "Q079", "type": "方法通则查询", "query": "灰分测定法的操作", "expected_drugs": [], "expected_sections": ["检查"], "expected_answer_keywords": ["灰分", "灼烧", "恒重"]},
-    {"id": "Q080", "type": "方法通则查询", "query": "浸出物测定法怎么做", "expected_drugs": [], "expected_sections": ["浸出物"], "expected_answer_keywords": ["浸出物", "溶剂", "滤过"]},
-    {"id": "Q081", "type": "方法通则查询", "query": "中药鉴别的常用方法", "expected_drugs": [], "expected_sections": ["鉴别"], "expected_answer_keywords": ["性状鉴别", "显微鉴别", "理化鉴别"]},
-    {"id": "Q082", "type": "方法通则查询", "query": "气相色谱法适用于什么检测", "expected_drugs": [], "expected_sections": ["含量测定", "鉴别"], "expected_answer_keywords": ["气相色谱", "挥发性"]},
-    {"id": "Q083", "type": "方法通则查询", "query": "重金属检查的方法", "expected_drugs": [], "expected_sections": ["检查"], "expected_answer_keywords": ["重金属", "铅", "镉"]},
-    {"id": "Q084", "type": "方法通则查询", "query": "紫外分光光度法的应用", "expected_drugs": [], "expected_sections": ["含量测定"], "expected_answer_keywords": ["紫外", "吸光度", "波长"]},
-    {"id": "Q085", "type": "方法通则查询", "query": "中药炮制的目的是什么", "expected_drugs": [], "expected_sections": ["炮制", "制法"], "expected_answer_keywords": ["炮制", "减毒", "增效"]},
-
-    {"id": "Q086", "type": "否定性问题", "query": "黄连有毒性吗？", "expected_drugs": ["黄连"], "expected_sections": ["注意", "功能与主治", "临床应用"], "expected_answer_keywords": ["苦寒", "脾胃"]},
-    {"id": "Q087", "type": "否定性问题", "query": "人参能随便吃吗", "expected_drugs": ["人参"], "expected_sections": ["注意", "功能与主治", "临床应用"], "expected_answer_keywords": ["实证", "热证", "不宜"]},
-    {"id": "Q088", "type": "否定性问题", "query": "黄芪有没有副作用", "expected_drugs": ["黄芪"], "expected_sections": ["注意", "功能与主治", "临床应用"], "expected_answer_keywords": ["阴虚", "阳亢"]},
-    {"id": "Q089", "type": "否定性问题", "query": "当归孕妇能用吗", "expected_drugs": ["当归"], "expected_sections": ["注意", "功能与主治", "临床应用"], "expected_answer_keywords": ["孕妇", "慎用", "禁忌"]},
-    {"id": "Q090", "type": "否定性问题", "query": "麻黄长期服用安全吗", "expected_drugs": ["麻黄"], "expected_sections": ["注意", "功能与主治", "临床应用"], "expected_answer_keywords": ["高血压", "失眠", "不宜久服"]},
-
-    {"id": "Q091", "type": "多轮对话", "query": "人参的性味归经是什么？", "follow_up": "那它的功能主治呢？", "expected_drugs": ["人参"], "expected_sections": ["性味与归经", "功能与主治", "临床应用"], "expected_answer_keywords": ["甘", "微苦", "大补元气"]},
-    {"id": "Q092", "type": "多轮对话", "query": "黄芪的功能主治有哪些？", "follow_up": "它的用法用量是多少？", "expected_drugs": ["黄芪"], "expected_sections": ["功能与主治", "用法与用量", "临床应用"], "expected_answer_keywords": ["补气", "9-30g"]},
-    {"id": "Q093", "type": "多轮对话", "query": "当归有什么功效？", "follow_up": "那它的注意事项呢？", "expected_drugs": ["当归"], "expected_sections": ["功能与主治", "注意", "临床应用"], "expected_answer_keywords": ["补血", "活血"]},
-    {"id": "Q094", "type": "多轮对话", "query": "黄连性味怎样？", "follow_up": "它可以治疗什么病？", "expected_drugs": ["黄连"], "expected_sections": ["性味与归经", "功能与主治", "临床应用"], "expected_answer_keywords": ["苦", "寒", "清热"]},
-    {"id": "Q095", "type": "多轮对话", "query": "甘草的来源是什么？", "follow_up": "它的功能主治呢？", "expected_drugs": ["甘草"], "expected_sections": ["来源", "功能与主治", "临床应用"], "expected_answer_keywords": ["豆科", "补脾"]},
-    {"id": "Q096", "type": "多轮对话", "query": "天麻能治什么病？", "follow_up": "它的用法用量是多少？", "expected_drugs": ["天麻"], "expected_sections": ["功能与主治", "用法与用量", "临床应用"], "expected_answer_keywords": ["平肝", "息风", "3-10g"]},
-    {"id": "Q097", "type": "多轮对话", "query": "丹参的性味归经", "follow_up": "那它有什么功效？", "expected_drugs": ["丹参"], "expected_sections": ["性味与归经", "功能与主治", "临床应用"], "expected_answer_keywords": ["苦", "微寒", "活血"]},
-    {"id": "Q098", "type": "多轮对话", "query": "枸杞子怎么用？", "follow_up": "它的性味是什么？", "expected_drugs": ["枸杞子"], "expected_sections": ["用法与用量", "性味与归经", "临床应用"], "expected_answer_keywords": ["6-12g", "甘", "平"]},
-    {"id": "Q099", "type": "多轮对话", "query": "柴胡能治什么？", "follow_up": "它有什么注意事项？", "expected_drugs": ["柴胡"], "expected_sections": ["功能与主治", "注意", "临床应用"], "expected_answer_keywords": ["疏散退热", "肝阳"]},
-    {"id": "Q100", "type": "多轮对话", "query": "陈皮的性味归经是什么？", "follow_up": "它的功能主治呢？", "expected_drugs": ["陈皮"], "expected_sections": ["性味与归经", "功能与主治", "临床应用"], "expected_answer_keywords": ["苦", "辛", "温", "理气"]}
-  ]
+    {
+      "id": "Q001",
+      "type": "单药品单属性查询",
+      "query": "人参的性味归经是什么？",
+      "expected_drugs": [
+        "人参"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "甘",
+        "微苦",
+        "微温",
+        "脾",
+        "肺",
+        "心",
+        "肾"
+      ]
+    },
+    {
+      "id": "Q002",
+      "type": "单药品单属性查询",
+      "query": "黄芪的功能主治是什么？",
+      "expected_drugs": [
+        "黄芪"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "补气",
+        "固表",
+        "利尿",
+        "托毒",
+        "排脓",
+        "敛疮"
+      ]
+    },
+    {
+      "id": "Q003",
+      "type": "单药品单属性查询",
+      "query": "当归的用法用量是怎样的？",
+      "expected_drugs": [
+        "当归"
+      ],
+      "expected_sections": [
+        "用法与用量",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "煎服",
+        "6-12g"
+      ]
+    },
+    {
+      "id": "Q004",
+      "type": "单药品单属性查询",
+      "query": "黄连的性状是什么？",
+      "expected_drugs": [
+        "黄连"
+      ],
+      "expected_sections": [
+        "性状"
+      ],
+      "expected_answer_keywords": [
+        "根茎",
+        "黄色",
+        "结节"
+      ]
+    },
+    {
+      "id": "Q005",
+      "type": "单药品单属性查询",
+      "query": "甘草的来源是什么？",
+      "expected_drugs": [
+        "甘草"
+      ],
+      "expected_sections": [
+        "来源"
+      ],
+      "expected_answer_keywords": [
+        "豆科",
+        "根",
+        "根茎"
+      ]
+    },
+    {
+      "id": "Q006",
+      "type": "单药品单属性查询",
+      "query": "川芎的性味归经",
+      "expected_drugs": [
+        "川芎茶调丸"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "辛",
+        "温",
+        "肝",
+        "胆"
+      ]
+    },
+    {
+      "id": "Q007",
+      "type": "单药品单属性查询",
+      "query": "白芍的功能主治",
+      "expected_drugs": [
+        "白芍"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "养血",
+        "调经",
+        "敛阴",
+        "止汗",
+        "柔肝"
+      ]
+    },
+    {
+      "id": "Q008",
+      "type": "单药品单属性查询",
+      "query": "茯苓的用法用量",
+      "expected_drugs": [
+        "茯苓"
+      ],
+      "expected_sections": [
+        "用法与用量",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "煎服",
+        "10-15g"
+      ]
+    },
+    {
+      "id": "Q009",
+      "type": "单药品单属性查询",
+      "query": "麻黄的注意事项",
+      "expected_drugs": [
+        "麻黄"
+      ],
+      "expected_sections": [
+        "注意",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "高血压",
+        "失眠",
+        "孕妇",
+        "慎用"
+      ]
+    },
+    {
+      "id": "Q010",
+      "type": "单药品单属性查询",
+      "query": "何首乌的贮藏方法",
+      "expected_drugs": [
+        "何首乌"
+      ],
+      "expected_sections": [
+        "贮藏"
+      ],
+      "expected_answer_keywords": [
+        "干燥",
+        "防蛀",
+        "防霉"
+      ]
+    },
+    {
+      "id": "Q011",
+      "type": "单药品单属性查询",
+      "query": "丹参的功能主治是什么？",
+      "expected_drugs": [
+        "丹参"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "活血",
+        "祛瘀",
+        "通经",
+        "清心"
+      ]
+    },
+    {
+      "id": "Q012",
+      "type": "单药品单属性查询",
+      "query": "陈皮的性味归经",
+      "expected_drugs": [
+        "陈皮"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "苦",
+        "辛",
+        "温",
+        "肺",
+        "脾"
+      ]
+    },
+    {
+      "id": "Q013",
+      "type": "单药品单属性查询",
+      "query": "半夏的用法用量",
+      "expected_drugs": [
+        "半夏"
+      ],
+      "expected_sections": [
+        "用法与用量",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "煎服",
+        "3-9g"
+      ]
+    },
+    {
+      "id": "Q014",
+      "type": "单药品单属性查询",
+      "query": "枸杞子的功能主治",
+      "expected_drugs": [
+        "枸杞子"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "滋补",
+        "肝肾",
+        "益精",
+        "明目"
+      ]
+    },
+    {
+      "id": "Q015",
+      "type": "单药品单属性查询",
+      "query": "天麻的性味归经",
+      "expected_drugs": [
+        "天麻"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "甘",
+        "平",
+        "肝"
+      ]
+    },
+    {
+      "id": "Q016",
+      "type": "单药品单属性查询",
+      "query": "麦冬的功能主治",
+      "expected_drugs": [
+        "麦冬"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "养阴",
+        "润肺",
+        "益胃",
+        "生津"
+      ]
+    },
+    {
+      "id": "Q017",
+      "type": "单药品单属性查询",
+      "query": "金银花的用法用量",
+      "expected_drugs": [
+        "金银花"
+      ],
+      "expected_sections": [
+        "用法与用量",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "煎服",
+        "6-15g"
+      ]
+    },
+    {
+      "id": "Q018",
+      "type": "单药品单属性查询",
+      "query": "柴胡的注意事项",
+      "expected_drugs": [
+        "柴胡"
+      ],
+      "expected_sections": [
+        "注意",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "肝阳上亢",
+        "阴虚"
+      ]
+    },
+    {
+      "id": "Q019",
+      "type": "单药品单属性查询",
+      "query": "地黄的性状特征",
+      "expected_drugs": [
+        "地黄"
+      ],
+      "expected_sections": [
+        "性状"
+      ],
+      "expected_answer_keywords": [
+        "根",
+        "纺锤形",
+        "棕黄色"
+      ]
+    },
+    {
+      "id": "Q020",
+      "type": "单药品单属性查询",
+      "query": "五味子的功能主治",
+      "expected_drugs": [
+        "五味子"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "收敛",
+        "固涩",
+        "益气",
+        "生津"
+      ]
+    },
+    {
+      "id": "Q021",
+      "type": "单药品单属性查询",
+      "query": "山药的来源",
+      "expected_drugs": [
+        "山药"
+      ],
+      "expected_sections": [
+        "来源"
+      ],
+      "expected_answer_keywords": [
+        "薯蓣科",
+        "根茎"
+      ]
+    },
+    {
+      "id": "Q022",
+      "type": "单药品单属性查询",
+      "query": "桔梗的性味归经",
+      "expected_drugs": [
+        "桔梗"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "苦",
+        "辛",
+        "平",
+        "肺"
+      ]
+    },
+    {
+      "id": "Q023",
+      "type": "单药品单属性查询",
+      "query": "百合的功能主治",
+      "expected_drugs": [
+        "百合"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "养阴",
+        "润肺",
+        "清心"
+      ]
+    },
+    {
+      "id": "Q024",
+      "type": "单药品单属性查询",
+      "query": "决明子的用法用量",
+      "expected_drugs": [
+        "决明子"
+      ],
+      "expected_sections": [
+        "用法与用量",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "煎服",
+        "9-15g"
+      ]
+    },
+    {
+      "id": "Q025",
+      "type": "单药品单属性查询",
+      "query": "泽泻的性味归经",
+      "expected_drugs": [
+        "泽泻"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "甘",
+        "寒",
+        "肾",
+        "膀胱"
+      ]
+    },
+    {
+      "id": "Q026",
+      "type": "单药品多属性查询",
+      "query": "黄芪的性状和功能主治分别是什么？",
+      "expected_drugs": [
+        "黄芪"
+      ],
+      "expected_sections": [
+        "性状",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "豆科",
+        "根",
+        "补气",
+        "固表"
+      ]
+    },
+    {
+      "id": "Q027",
+      "type": "单药品多属性查询",
+      "query": "人参的性味归经和功能主治",
+      "expected_drugs": [
+        "人参"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "甘",
+        "微苦",
+        "大补元气",
+        "复脉"
+      ]
+    },
+    {
+      "id": "Q028",
+      "type": "单药品多属性查询",
+      "query": "当归的性味和用法用量",
+      "expected_drugs": [
+        "当归"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "用法与用量",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "甘",
+        "辛",
+        "温",
+        "煎服"
+      ]
+    },
+    {
+      "id": "Q029",
+      "type": "单药品多属性查询",
+      "query": "黄连的性状、性味和功能主治",
+      "expected_drugs": [
+        "黄连"
+      ],
+      "expected_sections": [
+        "性状",
+        "性味与归经",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "根茎",
+        "黄色",
+        "苦",
+        "寒",
+        "清热"
+      ]
+    },
+    {
+      "id": "Q030",
+      "type": "单药品多属性查询",
+      "query": "甘草的来源、性味和功能主治",
+      "expected_drugs": [
+        "甘草"
+      ],
+      "expected_sections": [
+        "来源",
+        "性味与归经",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "豆科",
+        "甘",
+        "补脾"
+      ]
+    },
+    {
+      "id": "Q031",
+      "type": "单药品多属性查询",
+      "query": "川芎的性状和功能主治是什么",
+      "expected_drugs": [
+        "川芎茶调丸"
+      ],
+      "expected_sections": [
+        "性状",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "根茎",
+        "活血",
+        "行气"
+      ]
+    },
+    {
+      "id": "Q032",
+      "type": "单药品多属性查询",
+      "query": "白芍的来源、性味和用法用量",
+      "expected_drugs": [
+        "白芍"
+      ],
+      "expected_sections": [
+        "来源",
+        "性味与归经",
+        "用法与用量",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "毛茛科",
+        "苦",
+        "酸",
+        "煎服"
+      ]
+    },
+    {
+      "id": "Q033",
+      "type": "单药品多属性查询",
+      "query": "丹参的性味归经和功能主治",
+      "expected_drugs": [
+        "丹参"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "苦",
+        "微寒",
+        "活血",
+        "祛瘀"
+      ]
+    },
+    {
+      "id": "Q034",
+      "type": "单药品多属性查询",
+      "query": "陈皮的来源、性味和功能主治",
+      "expected_drugs": [
+        "陈皮"
+      ],
+      "expected_sections": [
+        "来源",
+        "性味与归经",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "芸香科",
+        "果皮",
+        "理气"
+      ]
+    },
+    {
+      "id": "Q035",
+      "type": "单药品多属性查询",
+      "query": "天麻的性状和功能主治",
+      "expected_drugs": [
+        "天麻"
+      ],
+      "expected_sections": [
+        "性状",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "块茎",
+        "平肝",
+        "息风"
+      ]
+    },
+    {
+      "id": "Q036",
+      "type": "单药品多属性查询",
+      "query": "枸杞子的来源和性味功能",
+      "expected_drugs": [
+        "枸杞子"
+      ],
+      "expected_sections": [
+        "来源",
+        "性味与归经",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "茄科",
+        "果实",
+        "甘",
+        "滋补"
+      ]
+    },
+    {
+      "id": "Q037",
+      "type": "单药品多属性查询",
+      "query": "麦冬的性状、性味和功能",
+      "expected_drugs": [
+        "麦冬"
+      ],
+      "expected_sections": [
+        "性状",
+        "性味与归经",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "块根",
+        "甘",
+        "微苦",
+        "养阴"
+      ]
+    },
+    {
+      "id": "Q038",
+      "type": "单药品多属性查询",
+      "query": "柴胡的来源和功能主治",
+      "expected_drugs": [
+        "柴胡"
+      ],
+      "expected_sections": [
+        "来源",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "伞形科",
+        "根",
+        "疏散退热"
+      ]
+    },
+    {
+      "id": "Q039",
+      "type": "单药品多属性查询",
+      "query": "五味子的性状和功能主治",
+      "expected_drugs": [
+        "五味子"
+      ],
+      "expected_sections": [
+        "性状",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "果实",
+        "收敛",
+        "固涩"
+      ]
+    },
+    {
+      "id": "Q040",
+      "type": "单药品多属性查询",
+      "query": "茯苓的来源、性状和用法用量",
+      "expected_drugs": [
+        "茯苓"
+      ],
+      "expected_sections": [
+        "来源",
+        "性状",
+        "用法与用量",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "多孔菌科",
+        "菌核",
+        "煎服"
+      ]
+    },
+    {
+      "id": "Q041",
+      "type": "精确数值查询",
+      "query": "人参含量测定中人参皂苷Rg1的限度是多少？",
+      "expected_drugs": [
+        "人参"
+      ],
+      "expected_sections": [
+        "含量测定"
+      ],
+      "expected_answer_keywords": [
+        "人参皂苷Rg1",
+        "不得少于"
+      ]
+    },
+    {
+      "id": "Q042",
+      "type": "精确数值查询",
+      "query": "黄芪含量测定中黄芪甲苷的含量标准",
+      "expected_drugs": [
+        "黄芪"
+      ],
+      "expected_sections": [
+        "含量测定"
+      ],
+      "expected_answer_keywords": [
+        "黄芪甲苷",
+        "不得少于"
+      ]
+    },
+    {
+      "id": "Q043",
+      "type": "精确数值查询",
+      "query": "黄连含量测定中盐酸小檗碱的限度",
+      "expected_drugs": [
+        "黄连"
+      ],
+      "expected_sections": [
+        "含量测定"
+      ],
+      "expected_answer_keywords": [
+        "小檗碱",
+        "不得少于"
+      ]
+    },
+    {
+      "id": "Q044",
+      "type": "精确数值查询",
+      "query": "甘草含量测定中甘草酸的含量标准是多少",
+      "expected_drugs": [
+        "甘草"
+      ],
+      "expected_sections": [
+        "含量测定"
+      ],
+      "expected_answer_keywords": [
+        "甘草酸",
+        "不得少于"
+      ]
+    },
+    {
+      "id": "Q045",
+      "type": "精确数值查询",
+      "query": "丹参含量测定中丹参酮的限度",
+      "expected_drugs": [
+        "丹参"
+      ],
+      "expected_sections": [
+        "含量测定"
+      ],
+      "expected_answer_keywords": [
+        "丹参酮",
+        "不得少于"
+      ]
+    },
+    {
+      "id": "Q046",
+      "type": "精确数值查询",
+      "query": "金银花含量测定中绿原酸的含量标准",
+      "expected_drugs": [
+        "金银花"
+      ],
+      "expected_sections": [
+        "含量测定"
+      ],
+      "expected_answer_keywords": [
+        "绿原酸",
+        "不得少于"
+      ]
+    },
+    {
+      "id": "Q047",
+      "type": "精确数值查询",
+      "query": "当归的用法用量具体是多少克",
+      "expected_drugs": [
+        "当归"
+      ],
+      "expected_sections": [
+        "用法与用量",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "6-12g"
+      ]
+    },
+    {
+      "id": "Q048",
+      "type": "精确数值查询",
+      "query": "人参的用法用量是多少克",
+      "expected_drugs": [
+        "人参"
+      ],
+      "expected_sections": [
+        "用法与用量",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "3-9g",
+        "另煎"
+      ]
+    },
+    {
+      "id": "Q049",
+      "type": "精确数值查询",
+      "query": "黄芪的用法用量具体数值",
+      "expected_drugs": [
+        "黄芪"
+      ],
+      "expected_sections": [
+        "用法与用量",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "9-30g"
+      ]
+    },
+    {
+      "id": "Q050",
+      "type": "精确数值查询",
+      "query": "枸杞子的用法用量是多少",
+      "expected_drugs": [
+        "枸杞子"
+      ],
+      "expected_sections": [
+        "用法与用量",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "6-12g"
+      ]
+    },
+    {
+      "id": "Q051",
+      "type": "精确数值查询",
+      "query": "五味子含量测定中五味子醇甲的标准",
+      "expected_drugs": [
+        "五味子"
+      ],
+      "expected_sections": [
+        "含量测定"
+      ],
+      "expected_answer_keywords": [
+        "五味子醇甲",
+        "不得少于"
+      ]
+    },
+    {
+      "id": "Q052",
+      "type": "精确数值查询",
+      "query": "麦冬含量测定中的指标成分",
+      "expected_drugs": [
+        "麦冬"
+      ],
+      "expected_sections": [
+        "含量测定"
+      ],
+      "expected_answer_keywords": [
+        "麦冬总皂苷"
+      ]
+    },
+    {
+      "id": "Q053",
+      "type": "精确数值查询",
+      "query": "柴胡含量测定中柴胡皂苷的含量",
+      "expected_drugs": [
+        "柴胡"
+      ],
+      "expected_sections": [
+        "含量测定"
+      ],
+      "expected_answer_keywords": [
+        "柴胡皂苷"
+      ]
+    },
+    {
+      "id": "Q054",
+      "type": "精确数值查询",
+      "query": "陈皮含量测定中橙皮苷的限度标准",
+      "expected_drugs": [
+        "陈皮"
+      ],
+      "expected_sections": [
+        "含量测定"
+      ],
+      "expected_answer_keywords": [
+        "橙皮苷",
+        "不得少于"
+      ]
+    },
+    {
+      "id": "Q055",
+      "type": "精确数值查询",
+      "query": "桔梗的用法用量是多少克",
+      "expected_drugs": [
+        "桔梗"
+      ],
+      "expected_sections": [
+        "用法与用量",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "3-10g"
+      ]
+    },
+    {
+      "id": "Q056",
+      "type": "跨品种比较查询",
+      "query": "人参和西洋参在功能主治上有什么区别？",
+      "expected_drugs": [
+        "人参",
+        "西洋参"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "人参",
+        "西洋参",
+        "大补元气",
+        "补气养阴"
+      ]
+    },
+    {
+      "id": "Q057",
+      "type": "跨品种比较查询",
+      "query": "黄芪和白术的补气功效有什么不同",
+      "expected_drugs": [
+        "黄芪",
+        "白术"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "黄芪",
+        "白术",
+        "补气",
+        "固表",
+        "健脾"
+      ]
+    },
+    {
+      "id": "Q058",
+      "type": "跨品种比较查询",
+      "query": "生地和熟地的功效区别",
+      "expected_drugs": [
+        "地黄"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "清热凉血",
+        "滋阴补血"
+      ]
+    },
+    {
+      "id": "Q059",
+      "type": "跨品种比较查询",
+      "query": "赤芍和白芍的功效差异",
+      "expected_drugs": [
+        "赤芍",
+        "白芍"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "赤芍",
+        "白芍",
+        "清热凉血",
+        "养血"
+      ]
+    },
+    {
+      "id": "Q060",
+      "type": "跨品种比较查询",
+      "query": "黄连和黄芩的清热功效对比",
+      "expected_drugs": [
+        "黄连",
+        "黄芩"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "黄连",
+        "黄芩",
+        "清热燥湿",
+        "泻火"
+      ]
+    },
+    {
+      "id": "Q061",
+      "type": "跨品种比较查询",
+      "query": "丹参和川芎的活血作用比较",
+      "expected_drugs": [
+        "丹参",
+        "川芎茶调丸"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "丹参",
+        "川芎",
+        "活血",
+        "祛瘀",
+        "行气"
+      ]
+    },
+    {
+      "id": "Q062",
+      "type": "跨品种比较查询",
+      "query": "陈皮和青皮的理气功效区别",
+      "expected_drugs": [
+        "陈皮"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "陈皮",
+        "理气",
+        "健脾"
+      ]
+    },
+    {
+      "id": "Q063",
+      "type": "跨品种比较查询",
+      "query": "茯苓和薏苡仁的利湿功效",
+      "expected_drugs": [
+        "茯苓"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "茯苓",
+        "利水",
+        "渗湿"
+      ]
+    },
+    {
+      "id": "Q064",
+      "type": "跨品种比较查询",
+      "query": "麻黄和桂枝的发汗解表功效",
+      "expected_drugs": [
+        "麻黄",
+        "桂枝"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "麻黄",
+        "桂枝",
+        "发汗",
+        "解表"
+      ]
+    },
+    {
+      "id": "Q065",
+      "type": "跨品种比较查询",
+      "query": "当归和白芍的养血功效比较",
+      "expected_drugs": [
+        "当归",
+        "白芍"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "当归",
+        "白芍",
+        "补血",
+        "养血"
+      ]
+    },
+    {
+      "id": "Q066",
+      "type": "横向条件查询",
+      "query": "哪些药材含有挥发油成分？",
+      "expected_drugs": [],
+      "expected_sections": [
+        "性状",
+        "鉴别",
+        "含量测定"
+      ],
+      "expected_answer_keywords": [
+        "挥发油"
+      ],
+      "out_of_scope": true,
+      "out_of_scope_reason": "集合型横向条件查询：expected_drugs 本应是药品集合（「哪些药材含挥发油」），用「命中任一药品」判分与题意不匹配，且原标注为空。"
+    },
+    {
+      "id": "Q067",
+      "type": "横向条件查询",
+      "query": "含有黄连素的药材有哪些",
+      "expected_drugs": [
+        "黄连"
+      ],
+      "expected_sections": [
+        "含量测定",
+        "鉴别"
+      ],
+      "expected_answer_keywords": [
+        "小檗碱",
+        "黄连"
+      ]
+    },
+    {
+      "id": "Q068",
+      "type": "横向条件查询",
+      "query": "哪些药材具有补气功效",
+      "expected_drugs": [
+        "人参",
+        "黄芪",
+        "白术",
+        "甘草"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "补气"
+      ]
+    },
+    {
+      "id": "Q069",
+      "type": "横向条件查询",
+      "query": "哪些药材有清热解毒的功效",
+      "expected_drugs": [
+        "金银花",
+        "连翘",
+        "板蓝根"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "清热",
+        "解毒"
+      ]
+    },
+    {
+      "id": "Q070",
+      "type": "横向条件查询",
+      "query": "性味甘温的药材有哪些",
+      "expected_drugs": [
+        "人参",
+        "黄芪",
+        "甘草"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "甘",
+        "温"
+      ]
+    },
+    {
+      "id": "Q071",
+      "type": "横向条件查询",
+      "query": "归肺经的药材有哪些",
+      "expected_drugs": [
+        "人参",
+        "黄芪",
+        "麻黄"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "肺经"
+      ]
+    },
+    {
+      "id": "Q072",
+      "type": "横向条件查询",
+      "query": "具有活血化瘀功效的药材",
+      "expected_drugs": [
+        "丹参",
+        "红花"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "活血",
+        "化瘀"
+      ]
+    },
+    {
+      "id": "Q073",
+      "type": "横向条件查询",
+      "query": "有毒性的药材有哪些",
+      "expected_drugs": [
+        "附子",
+        "半夏",
+        "天南星"
+      ],
+      "expected_sections": [
+        "注意",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "毒",
+        "慎用",
+        "禁忌"
+      ]
+    },
+    {
+      "id": "Q074",
+      "type": "横向条件查询",
+      "query": "可以安神的药材",
+      "expected_drugs": [
+        "酸枣仁",
+        "远志",
+        "柏子仁"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "安神"
+      ]
+    },
+    {
+      "id": "Q075",
+      "type": "横向条件查询",
+      "query": "具有利水渗湿作用的药材",
+      "expected_drugs": [
+        "茯苓",
+        "泽泻"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "利水",
+        "渗湿"
+      ]
+    },
+    {
+      "id": "Q076",
+      "type": "方法通则查询",
+      "query": "薄层色谱法的操作步骤是什么？",
+      "expected_drugs": [],
+      "expected_sections": [
+        "鉴别",
+        "含量测定"
+      ],
+      "expected_answer_keywords": [
+        "薄层色谱",
+        "对照品",
+        "展开"
+      ],
+      "out_of_scope": true,
+      "out_of_scope_reason": "方法通则查询：问的是《药典》**四部**通则正文（薄层色谱法/高效液相色谱法/水分测定法…），而检索语料只索引了**一部**，源里根本没有通则正文——不可评测。"
+    },
+    {
+      "id": "Q077",
+      "type": "方法通则查询",
+      "query": "高效液相色谱法的原理",
+      "expected_drugs": [],
+      "expected_sections": [
+        "含量测定"
+      ],
+      "expected_answer_keywords": [
+        "高效液相色谱",
+        "固定相",
+        "流动相"
+      ],
+      "out_of_scope": true,
+      "out_of_scope_reason": "方法通则查询：问的是《药典》**四部**通则正文（薄层色谱法/高效液相色谱法/水分测定法…），而检索语料只索引了**一部**，源里根本没有通则正文——不可评测。"
+    },
+    {
+      "id": "Q078",
+      "type": "方法通则查询",
+      "query": "水分测定法有哪些方法",
+      "expected_drugs": [],
+      "expected_sections": [
+        "检查"
+      ],
+      "expected_answer_keywords": [
+        "水分",
+        "烘干",
+        "甲苯"
+      ],
+      "out_of_scope": true,
+      "out_of_scope_reason": "方法通则查询：问的是《药典》**四部**通则正文（薄层色谱法/高效液相色谱法/水分测定法…），而检索语料只索引了**一部**，源里根本没有通则正文——不可评测。"
+    },
+    {
+      "id": "Q079",
+      "type": "方法通则查询",
+      "query": "灰分测定法的操作",
+      "expected_drugs": [],
+      "expected_sections": [
+        "检查"
+      ],
+      "expected_answer_keywords": [
+        "灰分",
+        "灼烧",
+        "恒重"
+      ],
+      "out_of_scope": true,
+      "out_of_scope_reason": "方法通则查询：问的是《药典》**四部**通则正文（薄层色谱法/高效液相色谱法/水分测定法…），而检索语料只索引了**一部**，源里根本没有通则正文——不可评测。"
+    },
+    {
+      "id": "Q080",
+      "type": "方法通则查询",
+      "query": "浸出物测定法怎么做",
+      "expected_drugs": [],
+      "expected_sections": [
+        "浸出物"
+      ],
+      "expected_answer_keywords": [
+        "浸出物",
+        "溶剂",
+        "滤过"
+      ],
+      "out_of_scope": true,
+      "out_of_scope_reason": "方法通则查询：问的是《药典》**四部**通则正文（薄层色谱法/高效液相色谱法/水分测定法…），而检索语料只索引了**一部**，源里根本没有通则正文——不可评测。"
+    },
+    {
+      "id": "Q081",
+      "type": "方法通则查询",
+      "query": "中药鉴别的常用方法",
+      "expected_drugs": [],
+      "expected_sections": [
+        "鉴别"
+      ],
+      "expected_answer_keywords": [
+        "性状鉴别",
+        "显微鉴别",
+        "理化鉴别"
+      ],
+      "out_of_scope": true,
+      "out_of_scope_reason": "方法通则查询：问的是《药典》**四部**通则正文（薄层色谱法/高效液相色谱法/水分测定法…），而检索语料只索引了**一部**，源里根本没有通则正文——不可评测。"
+    },
+    {
+      "id": "Q082",
+      "type": "方法通则查询",
+      "query": "气相色谱法适用于什么检测",
+      "expected_drugs": [],
+      "expected_sections": [
+        "含量测定",
+        "鉴别"
+      ],
+      "expected_answer_keywords": [
+        "气相色谱",
+        "挥发性"
+      ],
+      "out_of_scope": true,
+      "out_of_scope_reason": "方法通则查询：问的是《药典》**四部**通则正文（薄层色谱法/高效液相色谱法/水分测定法…），而检索语料只索引了**一部**，源里根本没有通则正文——不可评测。"
+    },
+    {
+      "id": "Q083",
+      "type": "方法通则查询",
+      "query": "重金属检查的方法",
+      "expected_drugs": [],
+      "expected_sections": [
+        "检查"
+      ],
+      "expected_answer_keywords": [
+        "重金属",
+        "铅",
+        "镉"
+      ],
+      "out_of_scope": true,
+      "out_of_scope_reason": "方法通则查询：问的是《药典》**四部**通则正文（薄层色谱法/高效液相色谱法/水分测定法…），而检索语料只索引了**一部**，源里根本没有通则正文——不可评测。"
+    },
+    {
+      "id": "Q084",
+      "type": "方法通则查询",
+      "query": "紫外分光光度法的应用",
+      "expected_drugs": [],
+      "expected_sections": [
+        "含量测定"
+      ],
+      "expected_answer_keywords": [
+        "紫外",
+        "吸光度",
+        "波长"
+      ],
+      "out_of_scope": true,
+      "out_of_scope_reason": "方法通则查询：问的是《药典》**四部**通则正文（薄层色谱法/高效液相色谱法/水分测定法…），而检索语料只索引了**一部**，源里根本没有通则正文——不可评测。"
+    },
+    {
+      "id": "Q085",
+      "type": "方法通则查询",
+      "query": "中药炮制的目的是什么",
+      "expected_drugs": [],
+      "expected_sections": [
+        "炮制",
+        "制法"
+      ],
+      "expected_answer_keywords": [
+        "炮制",
+        "减毒",
+        "增效"
+      ],
+      "out_of_scope": true,
+      "out_of_scope_reason": "方法通则查询：问的是《药典》**四部**通则正文（薄层色谱法/高效液相色谱法/水分测定法…），而检索语料只索引了**一部**，源里根本没有通则正文——不可评测。"
+    },
+    {
+      "id": "Q086",
+      "type": "否定性问题",
+      "query": "黄连有毒性吗？",
+      "expected_drugs": [
+        "黄连"
+      ],
+      "expected_sections": [
+        "注意",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "苦寒",
+        "脾胃"
+      ]
+    },
+    {
+      "id": "Q087",
+      "type": "否定性问题",
+      "query": "人参能随便吃吗",
+      "expected_drugs": [
+        "人参"
+      ],
+      "expected_sections": [
+        "注意",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "实证",
+        "热证",
+        "不宜"
+      ]
+    },
+    {
+      "id": "Q088",
+      "type": "否定性问题",
+      "query": "黄芪有没有副作用",
+      "expected_drugs": [
+        "黄芪"
+      ],
+      "expected_sections": [
+        "注意",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "阴虚",
+        "阳亢"
+      ]
+    },
+    {
+      "id": "Q089",
+      "type": "否定性问题",
+      "query": "当归孕妇能用吗",
+      "expected_drugs": [
+        "当归"
+      ],
+      "expected_sections": [
+        "注意",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "孕妇",
+        "慎用",
+        "禁忌"
+      ]
+    },
+    {
+      "id": "Q090",
+      "type": "否定性问题",
+      "query": "麻黄长期服用安全吗",
+      "expected_drugs": [
+        "麻黄"
+      ],
+      "expected_sections": [
+        "注意",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "高血压",
+        "失眠",
+        "不宜久服"
+      ]
+    },
+    {
+      "id": "Q091",
+      "type": "多轮对话",
+      "query": "人参的性味归经是什么？",
+      "follow_up": "那它的功能主治呢？",
+      "expected_drugs": [
+        "人参"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "甘",
+        "微苦",
+        "大补元气"
+      ]
+    },
+    {
+      "id": "Q092",
+      "type": "多轮对话",
+      "query": "黄芪的功能主治有哪些？",
+      "follow_up": "它的用法用量是多少？",
+      "expected_drugs": [
+        "黄芪"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "用法与用量",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "补气",
+        "9-30g"
+      ]
+    },
+    {
+      "id": "Q093",
+      "type": "多轮对话",
+      "query": "当归有什么功效？",
+      "follow_up": "那它的注意事项呢？",
+      "expected_drugs": [
+        "当归"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "注意",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "补血",
+        "活血"
+      ]
+    },
+    {
+      "id": "Q094",
+      "type": "多轮对话",
+      "query": "黄连性味怎样？",
+      "follow_up": "它可以治疗什么病？",
+      "expected_drugs": [
+        "黄连"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "苦",
+        "寒",
+        "清热"
+      ]
+    },
+    {
+      "id": "Q095",
+      "type": "多轮对话",
+      "query": "甘草的来源是什么？",
+      "follow_up": "它的功能主治呢？",
+      "expected_drugs": [
+        "甘草"
+      ],
+      "expected_sections": [
+        "来源",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "豆科",
+        "补脾"
+      ]
+    },
+    {
+      "id": "Q096",
+      "type": "多轮对话",
+      "query": "天麻能治什么病？",
+      "follow_up": "它的用法用量是多少？",
+      "expected_drugs": [
+        "天麻"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "用法与用量",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "平肝",
+        "息风",
+        "3-10g"
+      ]
+    },
+    {
+      "id": "Q097",
+      "type": "多轮对话",
+      "query": "丹参的性味归经",
+      "follow_up": "那它有什么功效？",
+      "expected_drugs": [
+        "丹参"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "苦",
+        "微寒",
+        "活血"
+      ]
+    },
+    {
+      "id": "Q098",
+      "type": "多轮对话",
+      "query": "枸杞子怎么用？",
+      "follow_up": "它的性味是什么？",
+      "expected_drugs": [
+        "枸杞子"
+      ],
+      "expected_sections": [
+        "用法与用量",
+        "性味与归经",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "6-12g",
+        "甘",
+        "平"
+      ]
+    },
+    {
+      "id": "Q099",
+      "type": "多轮对话",
+      "query": "柴胡能治什么？",
+      "follow_up": "它有什么注意事项？",
+      "expected_drugs": [
+        "柴胡"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "注意",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "疏散退热",
+        "肝阳"
+      ]
+    },
+    {
+      "id": "Q100",
+      "type": "多轮对话",
+      "query": "陈皮的性味归经是什么？",
+      "follow_up": "它的功能主治呢？",
+      "expected_drugs": [
+        "陈皮"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "功能与主治",
+        "临床应用"
+      ],
+      "expected_answer_keywords": [
+        "苦",
+        "辛",
+        "温",
+        "理气"
+      ]
+    },
+    {
+      "id": "Q101",
+      "type": "子串药名干扰",
+      "note": "药名含「黄连」：双向子串扩展会把黄连/黄连胶囊拉进过滤集",
+      "query": "双黄连口服液的功能主治是什么？",
+      "expected_drugs": [
+        "双黄连口服液"
+      ],
+      "expected_sections": [
+        "功能与主治"
+      ],
+      "expected_answer_keywords": [
+        "疏风解表",
+        "清热解毒",
+        "外感风热"
+      ]
+    },
+    {
+      "id": "Q102",
+      "type": "子串药名干扰",
+      "note": "药名含「丹参」",
+      "query": "复方丹参片的功能与主治",
+      "expected_drugs": [
+        "复方丹参片"
+      ],
+      "expected_sections": [
+        "功能与主治"
+      ],
+      "expected_answer_keywords": [
+        "活血化瘀",
+        "理气止痛",
+        "胸痹"
+      ]
+    },
+    {
+      "id": "Q103",
+      "type": "子串药名干扰",
+      "note": "药名含「五味子」；同时覆盖剂量范围的波浪线判分（源文 5〜10ml）",
+      "query": "五味子糖浆的用法用量",
+      "expected_drugs": [
+        "五味子糖浆"
+      ],
+      "expected_sections": [
+        "用法与用量"
+      ],
+      "expected_answer_keywords": [
+        "口服",
+        "5-10ml"
+      ]
+    },
+    {
+      "id": "Q104",
+      "type": "子串药名干扰",
+      "note": "药名含「黄连」",
+      "query": "黄连胶囊的注意事项",
+      "expected_drugs": [
+        "黄连胶囊"
+      ],
+      "expected_sections": [
+        "注意"
+      ],
+      "expected_answer_keywords": [
+        "脾胃虚寒",
+        "忌辛辣"
+      ]
+    },
+    {
+      "id": "Q105",
+      "type": "子串药名干扰",
+      "note": "药名含「天麻」",
+      "query": "天麻祛风补片的功能主治",
+      "expected_drugs": [
+        "天麻祛风补片"
+      ],
+      "expected_sections": [
+        "功能与主治"
+      ],
+      "expected_answer_keywords": [
+        "温肾养肝",
+        "关节疼痛"
+      ]
+    },
+    {
+      "id": "Q106",
+      "type": "子串药名干扰",
+      "note": "药名含「丹参」",
+      "query": "复方丹参片的注意事项",
+      "expected_drugs": [
+        "复方丹参片"
+      ],
+      "expected_sections": [
+        "注意"
+      ],
+      "expected_answer_keywords": [
+        "孕妇慎用"
+      ]
+    },
+    {
+      "id": "Q107",
+      "type": "OCR 药名纠错",
+      "note": "OCR 药名纠错：修复前索引里该药写作「桑根」，用户按正确名「桑椹」搜不到",
+      "query": "桑椹的性味归经和功能主治是什么？",
+      "expected_drugs": [
+        "桑椹"
+      ],
+      "expected_sections": [
+        "性味与归经",
+        "功能与主治"
+      ],
+      "expected_answer_keywords": [
+        "甘",
+        "酸",
+        "寒",
+        "滋阴补血",
+        "生津润燥"
+      ]
+    },
+    {
+      "id": "Q108",
+      "type": "OCR 药名纠错",
+      "note": "OCR 药名纠错：修复前索引里该药写作「白矛根」，用户按正确名「白茅根」搜不到",
+      "query": "白茅根的功能主治是什么？",
+      "expected_drugs": [
+        "白茅根"
+      ],
+      "expected_sections": [
+        "功能与主治"
+      ],
+      "expected_answer_keywords": [
+        "凉血止血",
+        "清热利尿",
+        "血热吐血"
+      ]
+    },
+    {
+      "id": "Q109",
+      "type": "OCR 药名纠错",
+      "note": "OCR 药名纠错：修复前索引里该药写作「肉女蓉」，用户按正确名「肉苁蓉」搜不到",
+      "query": "肉苁蓉的性味归经是什么？",
+      "expected_drugs": [
+        "肉苁蓉"
+      ],
+      "expected_sections": [
+        "性味与归经"
+      ],
+      "expected_answer_keywords": [
+        "甘",
+        "咸",
+        "温",
+        "肾",
+        "大肠"
+      ]
+    },
+    {
+      "id": "Q110",
+      "type": "OCR 药名纠错",
+      "note": "OCR 药名纠错：修复前索引里该药写作「蔥麻子」，用户按正确名「蓖麻子」搜不到",
+      "query": "蓖麻子的功能主治和用法用量",
+      "expected_drugs": [
+        "蓖麻子"
+      ],
+      "expected_sections": [
+        "功能与主治",
+        "用法与用量"
+      ],
+      "expected_answer_keywords": [
+        "泻下通滞",
+        "消肿拔毒",
+        "2-5g"
+      ]
+    },
+    {
+      "id": "Q111",
+      "type": "OCR 药名纠错",
+      "note": "OCR 药名纠错：修复前索引里该药写作「策巨（原文含 <w:tab/>）」，用户按正确名「菊苣」搜不到",
+      "query": "菊苣的性状是什么？",
+      "expected_drugs": [
+        "菊苣"
+      ],
+      "expected_sections": [
+        "性状"
+      ],
+      "expected_answer_keywords": [
+        "毛菊苣",
+        "圆柱形",
+        "中空"
+      ]
+    },
+    {
+      "id": "Q112",
+      "type": "OCR 药名纠错",
+      "note": "OCR 药名纠错：修复前索引里该药写作「广霍香」，用户按正确名「广藿香」搜不到",
+      "query": "广藿香的性状特征",
+      "expected_drugs": [
+        "广藿香"
+      ],
+      "expected_sections": [
+        "性状"
+      ],
+      "expected_answer_keywords": [
+        "方柱形",
+        "柔毛",
+        "对生"
+      ]
+    },
+    {
+      "id": "Q113",
+      "type": "OCR 药名纠错",
+      "note": "OCR 药名纠错：修复前索引里该药写作「莱殖子」，用户按正确名「莱菔子」搜不到",
+      "query": "莱菔子的性状是什么？",
+      "expected_drugs": [
+        "莱菔子"
+      ],
+      "expected_sections": [
+        "性状"
+      ],
+      "expected_answer_keywords": [
+        "卵圆形",
+        "种脐",
+        "黄棕色"
+      ]
+    },
+    {
+      "id": "Q114",
+      "type": "OCR 药名纠错",
+      "note": "OCR 药名纠错：修复前索引里该药写作「上荆皮」，用户按正确名「土荆皮」搜不到",
+      "query": "土荆皮的性状特征",
+      "expected_drugs": [
+        "土荆皮"
+      ],
+      "expected_sections": [
+        "性状"
+      ],
+      "expected_answer_keywords": [
+        "根皮",
+        "鳞片状剥落",
+        "红棕色"
+      ]
+    },
+    {
+      "id": "Q115",
+      "type": "OCR 药名纠错",
+      "note": "OCR 药名纠错：修复前索引里该药写作「英实」，用户按正确名「芡实」搜不到",
+      "query": "芡实的性状是什么？",
+      "expected_drugs": [
+        "芡实"
+      ],
+      "expected_sections": [
+        "性状"
+      ],
+      "expected_answer_keywords": [
+        "类球形",
+        "内种皮",
+        "种脐"
+      ]
+    },
+    {
+      "id": "Q116",
+      "type": "OCR 药名纠错",
+      "note": "OCR 药名纠错：修复前索引里该药写作「蛤的」，用户按正确名「蛤蚧」搜不到",
+      "query": "蛤蚧的性状特征",
+      "expected_drugs": [
+        "蛤蚧"
+      ],
+      "expected_sections": [
+        "性状"
+      ],
+      "expected_answer_keywords": [
+        "扁片状",
+        "头颈部"
+      ]
+    },
+    {
+      "id": "Q117",
+      "type": "OCR 药名纠错",
+      "note": "OCR 药名纠错：修复前索引里该药写作「菠英」，用户按正确名「菝葜」搜不到",
+      "query": "菝葜的性状",
+      "expected_drugs": [
+        "菝葜"
+      ],
+      "expected_sections": [
+        "性状"
+      ],
+      "expected_answer_keywords": [
+        "块状",
+        "茎基痕",
+        "须根"
+      ]
+    },
+    {
+      "id": "Q118",
+      "type": "OCR 药名纠错",
+      "note": "OCR 药名纠错：修复前索引里该药写作「薪寞」，用户按正确名「菥蓂」搜不到",
+      "query": "菥蓂的性状",
+      "expected_drugs": [
+        "菥蓂"
+      ],
+      "expected_sections": [
+        "性状"
+      ],
+      "expected_answer_keywords": [
+        "圆柱形",
+        "纵棱",
+        "披针形"
+      ]
+    },
+    {
+      "id": "Q119",
+      "type": "OCR 药名纠错",
+      "note": "对照组，非 OCR 纠错：茜草本来就是正确药名。加它是因为同批把 `S草` 更正为「蓍草」——而 `S草` 拼音也是 Shicao，一度被误标成「茜草」，导致库里出现两个「茜草」。本题守住「茜草仍能正确检索」，防止再次误并。",
+      "query": "茜草的功能主治是什么？",
+      "expected_drugs": [
+        "茜草"
+      ],
+      "expected_sections": [
+        "功能与主治"
+      ],
+      "expected_answer_keywords": [
+        "凉血",
+        "祛瘀",
+        "止血",
+        "通经"
+      ]
+    },
+    {
+      "id": "Q120",
+      "type": "OCR 药名纠错",
+      "note": "OCR 药名纠错：修复前索引里该药写作「般石膏」，用户按正确名「煅石膏」搜不到",
+      "query": "煅石膏的功能主治是什么？",
+      "expected_drugs": [
+        "煅石膏"
+      ],
+      "expected_sections": [
+        "功能与主治"
+      ],
+      "expected_answer_keywords": [
+        "收湿",
+        "生肌",
+        "敛疮",
+        "止血"
+      ]
+    }
+  ],
+  "notes": "标了 out_of_scope 的题由评测器统一剔除（src/eval/evaluator.py 与 langchain_app/eval.py 同步实现），原因是它们没有药品级期望、无法用本套判分口径衡量；保留题目本身是为了记录「系统不覆盖这些意图」。"
 }
