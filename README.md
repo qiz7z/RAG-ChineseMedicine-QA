@@ -134,16 +134,18 @@ api.chat() → service.answer()
 - **会话历史统一经** `ChatService._ensure_history`——同步与流式的历史行为一致，流式也不再丢多轮；
 - `chains.py` 只剩"给我问题、给你答案"，可被独立测试：`langchain_app/tests/test_service_consistency.py` 用假模型计数钉住"守卫只跑一次"。
 
-### 一次请求经过哪几层（启动脚本 → api → service → chain）
+### 一次请求经过哪几层（run_lc_api → uvicorn → api → service → chain）
 
-上面那些角色，从"开门"到"出菜"对应四个文件：
+从"开店"到"出菜"一共五个角色（其中 **uvicorn 是第三方服务器**，不在本项目代码里）：
 
-| # | 文件 | 餐厅角色 | 只负责 | **不**负责 |
-|---|------|---------|--------|-----------|
-| ① | `scripts/run/run_lc_api.py` | 开店的人 | 修控制台编码、设 `sys.path`、检查 API Key、解析 `--host/--port`，然后交给 uvicorn | 不参与任何一单生意 |
-| ② | `langchain_app/api.py` | 点单窗口（HTTP 层） | 路由、Pydantic 校验（不合法回 422）、异常转 500、SSE 流式包装 | 不写业务逻辑 |
-| ③ | `langchain_app/service.py` | 前台 | 认人（`session_id`）、守卫、会话历史、参数覆盖、响应字段 | 不做菜 |
-| ④ | `langchain_app/chains.py` | 后厨 | 改写 → 检索 → 生成 → 后处理 | 不认人、不判断 |
+| # | 角色 / 文件 | 餐厅角色 | 只负责 | **不**负责 |
+|---|------------|---------|--------|-----------|
+| ① | `scripts/run/run_lc_api.py` | **开店的人** | 修控制台编码、设 `sys.path`、检查 API Key、解析 `--host/--port`，然后交给 uvicorn | 不参与任何一单生意 |
+| ② | **uvicorn**（第三方） | **大门** | 监听 8001 端口、把 HTTP 请求交给 `app` | 不懂业务 |
+| ③ | `langchain_app/api.py` | **点单窗口 + 菜单** | 路由、Pydantic 校验（不合法回 422）、异常转 500、SSE 流式包装 | 不写业务逻辑 |
+| ④ | `langchain_app/service.py` | **前台** | 认人（`session_id`）、守卫、会话历史、参数覆盖、响应字段 | 不做菜 |
+| ⑤ | `langchain_app/chains.py` | **后厨** | 改写 → 检索 → 生成 → 后处理 | 不认人、不判断 |
+| — | `data/vectorstore/`（FAISS / BM25 / SQLite） | 食材仓库 | 提供检索原料（由 `build_index.py` 备货） | 不参与判断，且**懒加载**（见文末） |
 
 一次问答的完整旅程：
 
@@ -160,6 +162,16 @@ api.chat() → service.answer()
    └─ 回程               dict → ChatResponse(Pydantic) → JSON → 浏览器
 ```
 
+**少了谁会怎样**（这套划分不是装饰，各自缺一都会出具体问题）：
+
+| 少了谁 | 现象 |
+|---|---|
+| 不执行 `run_lc_api.py` | **店没开**：端口无监听，请求直接 `Connection refused` |
+| `api.py` 里没有对应路由 | **门开了但没窗口**：`/` 能访问，`/api/v1/chat` 返回 **404** |
+| `service.py` | 客人被直接塞给后厨：没人认人、记账、判断该不该接待 |
+| `chains.py` | 没人做菜 |
+| `data/vectorstore/` 缺索引 | 后厨没食材（`scripts/build/build_index.py` 负责备货） |
+
 **为什么"怎么跑"要单独一个文件？** `api.py` 里没有 `uvicorn.run`、也没有 `if __name__ == "__main__"`——它只是一份"应用定义"（长什么样）；`run_lc_api.py` 负责"怎么跑起来"（监听哪个地址、是否热重载）。这是后端的常规分层。
 
 **为什么业务逻辑不能写进 `api.py`？** 三条都是实测过的：
@@ -175,7 +187,11 @@ api.chat() → service.answer()
 | `scripts/run/run_api.py` | 8000 | `src/api/main.py::app` | 手撕版 |
 | `scripts/run/run_lc_api.py` | 8001 | `langchain_app/api.py::app` | LangChain 标准版 |
 
-> **冷启动注意**：索引与模型是**懒加载**——进程起来很快，"第一个请求"才加载（约 10-20 秒），之后所有请求复用同一实例（`api.py::get_service` 的单例）。
+> **冷启动注意**：索引与模型是**懒加载**——进程起来很快（实测秒级），"第一个请求"才去搬食材（约 10-20 秒），之后所有请求复用同一实例（`api.py::get_service` 的单例）。
+>
+> **打烊后（Ctrl+C）的状态**：会话历史与守卫信任名单**在进程内存里** → 重启即全部消失；索引/切片/元数据**在磁盘上** → 完好，只是首个请求要重新加载进内存。
+
+生产环境要把会话换成 Redis 才可靠——`src/api/session.py` 的注释预留了这条路径，**目前尚未实现**（也正因如此，简历里不建议写"会话持久化"）。
 
 ---
 
