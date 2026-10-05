@@ -4,14 +4,18 @@
 ======================================
 本项目 LangChain 版的"粘合层"。整条链由官方 Runnable 组合而成：
 
-  RunnableBranch(守卫短路)
-    → [多轮] 历史感知问题改写（condense question）
+  [多轮] 历史感知问题改写（condense question）
     → PharmacopoeiaRetriever（Ensemble RRF + CrossEncoder 重排）
     → RAG_PROMPT | ChatOpenAI | StrOutputParser()
     → 引用标注节点
   外层 RunnableWithMessageHistory 注入按 session_id 隔离的对话历史。
 
-链的输出为 dict：{answer, citations, sources, resolved_query, guard_rejected}。
+**链是无状态的纯流程：只负责"问题 → 答案"，不做守卫、不判会话。**
+守卫（含会话级信任通道）由 service.ChatService._guard 统一做一次，同步与流式共用。
+早先链里还有一道 `_guard_step`（调本模块的 check_guard），使同步路径的守卫跑两遍，
+且链里那遍不认信任通道（缺陷 23，已移除）——检查站只留在"前台"（service）。
+
+链的输出为 dict：{answer, citations, sources, resolved_query, retrieval_latency}。
 流式路径见 service.answer_stream（复用本模块的构建块，逐步 yield）。
 """
 import sys
@@ -22,7 +26,7 @@ from typing import List
 APP_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(APP_DIR))
 
-from langchain_core.runnables import RunnableBranch, RunnableLambda, RunnablePassthrough
+from langchain_core.runnables import RunnableLambda
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_core.chat_history import InMemoryChatMessageHistory
 from langchain_core.output_parsers import StrOutputParser
@@ -30,7 +34,7 @@ from langchain_core.output_parsers import StrOutputParser
 from llm import build_chat_model
 from retrievers import build_hybrid_retriever
 from guard import keyword_guard, llm_guard
-from prompts import RAG_PROMPT, CONDENSE_PROMPT, GUARD_REJECTION, NO_RESULT_ANSWER
+from prompts import RAG_PROMPT, CONDENSE_PROMPT, NO_RESULT_ANSWER
 from postprocess import postprocess, format_docs, docs_to_sources
 
 
@@ -38,11 +42,21 @@ from postprocess import postprocess, format_docs, docs_to_sources
 # 构建块（声明式链与流式路径共用，保证两条路径行为一致）
 # ============================================================
 
-def check_guard(llm, question: str) -> bool:
-    """两层守卫：关键词快通道 →（词表无法判定时）LLM 语义判定"""
+def check_guard(llm, question: str, trusted: bool = False) -> bool:
+    """两层守卫：关键词快通道 →（词表无法判定时）LLM 语义判定
+
+    Args:
+        trusted: 该会话**此前已通过过守卫**（追问场景）。此时：
+                 - 词表命中"无关" → 仍然拒绝（信任不等于放行任何话）
+                 - 词表判不出（ambiguous） → **跳过 LLM 判定**，省一次调用
+                 这就是"会话级信任通道"，由 service 持有 `_guard_trusted` 决定是否传 True。
+
+    只此一份实现：链不再自带守卫（缺陷 23 已移除链里的 `_guard_step`），
+    避免"同步路径守卫跑两遍、且链里那遍不认信任通道"。
+    """
     ok, reason = keyword_guard(question)
     if reason == "ambiguous":
-        return llm_guard(llm, question)
+        return True if trusted else llm_guard(llm, question)
     return ok
 
 
@@ -71,25 +85,18 @@ def retrieval_step(retriever):
     return RunnableLambda(_run)
 
 
-def _rejection_output(question: str) -> dict:
-    return {
-        "answer": GUARD_REJECTION,
-        "citations": [],
-        "consistency_issues": [],
-        "sources": [],
-        "resolved_query": question,
-        "guard_rejected": True,
-    }
-
-
 def _no_result_output(resolved: str) -> dict:
+    """检索为空时的统一输出。
+
+    注意：这里**不再有 `guard_rejected`**——拒答已完全归 service（前台）负责，
+    链只产出"答得出"或"资料里没有"两种结果。
+    """
     return {
         "answer": NO_RESULT_ANSWER,
         "citations": [],
         "consistency_issues": [],
         "sources": [],
         "resolved_query": resolved,
-        "guard_rejected": False,
     }
 
 
@@ -138,22 +145,12 @@ def build_chat_chain(retriever=None, llm=None):
             "consistency_issues": pp["consistency_issues"],
             "sources": docs_to_sources(docs),
             "resolved_query": resolved,
-            "guard_rejected": False,
             "retrieval_latency": time.time() - t0,
         }
 
-    def _guard_step(state: dict) -> dict:
-        if not check_guard(llm, state["question"]):
-            return _rejection_output(state["question"])
-        return state
-
-    # 守卫短路：已输出拒绝结果 → 原样通过；否则进 RAG 核心
-    core_branch = RunnableBranch(
-        (lambda s: s.get("guard_rejected"), RunnablePassthrough()),
-        RunnableLambda(_core),
-    )
-
-    session_chain = RunnableLambda(_guard_step) | core_branch
+    # 链 = 纯流程。守卫与拒答由 service 在调用本链**之前**完成（缺陷 23），
+    # 所以这里不再有 _guard_step / 守卫短路分支。
+    session_chain = RunnableLambda(_core)
 
     _histories: dict = {}
 

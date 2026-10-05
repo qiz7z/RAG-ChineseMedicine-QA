@@ -149,7 +149,7 @@ def chat_stream(request: ChatRequest):
                 if "rejected" in event:
                     yield "data: " + json.dumps(
                         {"content": event["content"], "rejected": True,
-                         "session_id": request.session_id or ""},
+                         "session_id": event.get("session_id") or request.session_id or ""},
                         ensure_ascii=False,
                     ) + "\n\n"
                     return
@@ -159,8 +159,11 @@ def chat_stream(request: ChatRequest):
                     ) + "\n\n"
                 if "metadata" in event:
                     meta = event["metadata"]
+                    # 回传**服务端实际使用**的 session_id（请求未带时由服务生成），
+                    # 否则客户端拿不到会话号、无法续接多轮（缺陷 24）
                     yield "data: " + json.dumps(
-                        {"done": True, "session_id": request.session_id or "", **meta},
+                        {"done": True, **meta,
+                         "session_id": meta.get("session_id") or request.session_id or ""},
                         ensure_ascii=False,
                     ) + "\n\n"
         except Exception as e:
