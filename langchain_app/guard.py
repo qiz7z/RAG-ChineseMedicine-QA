@@ -3,8 +3,9 @@
 领域守卫（标准版）
 ==================
 两层过滤：关键词快通道（0ms）→ LLM 语义判定。
-独立实现（关键词表与主项目同源），通过一个普通函数暴露，供 LCEL
-链的 RunnableBranch 条件与 API 服务层共用。
+独立实现（关键词表与主项目同源），通过普通函数暴露，**只由 service 层调用**
+（`ChatService._guard` → `chains.check_guard`，含会话信任通道）。
+链里已不含守卫（缺陷 23：曾导致同步路径守卫跑两遍），故本模块不再与任何 Runnable 绑定。
 """
 import re
 import logging

@@ -33,7 +33,9 @@ def main():
     args = parser.parse_args()
 
     # 检查 API Key（langchain_app/config.py 会自动加载项目根目录 .env）
-    from config import LLM_API_KEY
+    # 取 LLM_MODEL / LLM_BASE_URL 是为了打印**实际生效值**（含 .env 覆盖），
+    # 而不是 os.environ 的兜底值——两处不一致过（见 docs/13 的经验）。
+    from config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
     if not LLM_API_KEY:
         print("=" * 60)
         print("❌ 错误: 未设置 LONGCAT_API_KEY！")
@@ -54,10 +56,11 @@ def main():
     print(f"  API 文档: http://{args.host}:{args.port}/docs")
     print("  引擎: LangChain 1.x 标准组件")
     print("        FAISS + BM25Retriever -> Ensemble(RRF) -> CrossEncoder 重排")
-    print("        LCEL 主链 + RunnableBranch 守卫 + 会话记忆")
-    print(f"  LLM 模型: {os.environ.get('LONGCAT_MODEL', 'LongCat-2.0')}")
+    print("        编排: service 层守卫/会话 + LCEL 主链（链为纯流程，不含守卫）")
+    print(f"  LLM 模型: {LLM_MODEL}  （{LLM_BASE_URL}）")
     print("=" * 60)
-    print("\n正在初始化索引与模型（首次启动需要 10-20 秒）...\n")
+    print("\n索引与模型为懒加载：进程先起来，「第一个请求」才加载（约 10-20 秒），")
+    print("之后所有请求复用同一实例（单例，见 langchain_app/api.py::get_service）。\n")
 
     import uvicorn
     uvicorn.run(

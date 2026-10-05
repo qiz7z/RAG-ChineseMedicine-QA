@@ -18,7 +18,7 @@
 | 多路融合 | `langchain_classic.retrievers.EnsembleRetriever` | **内置 RRF**，两路 weights 0.5/0.5 |
 | 重排 | `HuggingFaceCrossEncoder`（bge-reranker-v2-m3）+ 自实现 `BgeRerankerCompressor` | 该版本组合缺 `CrossEncoderReranker` 类，按标准 `BaseDocumentCompressor` 接口实现 30 行 |
 | 生成 | `ChatOpenAI`（OpenAI 兼容端点） | LCEL：`prompt \| llm \| StrOutputParser()` |
-| 守卫 | `RunnableBranch` 短路 + 关键词快通道 + LLM 语义兜底 | 词表与主项目同源 |
+| 守卫 | `ChatService._guard` + 关键词快通道 + LLM 语义兜底 | 词表与主项目同源；**链为纯流程、守卫不在链内**（缺陷 23 前曾在链里再判一遍） |
 | 多轮 | `RunnableWithMessageHistory` + condense-question 改写 | per-session `InMemoryChatMessageHistory`，天然隔离 |
 | 提示词 | `ChatPromptTemplate` + `MessagesPlaceholder` | 规则与主项目同源 |
 | 元数据过滤 | `vectorstore.as_retriever(search_kwargs={"filter": fn})` + BM25 结果后过滤 | `PharmacopoeiaRetriever`（自定义 BaseRetriever，查询级动态过滤） |
@@ -27,15 +27,17 @@
 
 ```python
 RunnableWithMessageHistory(                      # 按 session_id 注入对话历史
-    RunnableLambda(guard_step)                   # 关键词 + LLM 语义守卫
-    | RunnableBranch(                            # 守卫短路
-        (lambda s: s["guard_rejected"], RunnablePassthrough()),
-        RunnableLambda(_core),                   # RAG 核心 ↓
-      ),
+    RunnableLambda(_core),                       # 纯流程：无守卫、不判会话
     get_session_history,
     input_messages_key="question",
     history_messages_key="chat_history",
+    output_messages_key="answer",                # 链输出为 dict，按 key 自动存 AI 回复
 )
+
+# 守卫在 service 层（ChatService._guard），**在调用链之前**执行：
+#   词表快通道 →（判不出时）LLM 语义判定；会话首轮通过后追问跳过 LLM（信任通道）
+#   不通过 → 直接返回拒答，不进检索、不进生成（零算力）
+# 链里不再有 guard_step / RunnableBranch（缺陷 23：守卫曾在两处各判一遍）
 
 # _core 内部：
 #   condense-question 改写(多轮) → retriever.invoke → RAG_PROMPT | llm | parser

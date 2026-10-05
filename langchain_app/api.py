@@ -51,7 +51,7 @@ app = FastAPI(
 基于 LangChain 1.x 标准组件搭建的《中国药典》RAG 问答系统（完全独立实现）：
 
 - 检索：FAISS + BM25Retriever → EnsembleRetriever(RRF) → CrossEncoder 重排
-- 生成：LCEL 声明式链 + RunnableBranch 守卫 + RunnableWithMessageHistory 会话记忆
+- 生成：LCEL 声明式链（纯流程）+ RunnableWithMessageHistory 会话记忆；守卫与会话治理在 service 层
 - 端点与主项目同构，可无缝切换
     """,
     version="2.0.0-lc",

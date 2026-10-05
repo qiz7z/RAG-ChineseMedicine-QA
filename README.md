@@ -134,6 +134,49 @@ api.chat() → service.answer()
 - **会话历史统一经** `ChatService._ensure_history`——同步与流式的历史行为一致，流式也不再丢多轮；
 - `chains.py` 只剩"给我问题、给你答案"，可被独立测试：`langchain_app/tests/test_service_consistency.py` 用假模型计数钉住"守卫只跑一次"。
 
+### 一次请求经过哪几层（启动脚本 → api → service → chain）
+
+上面那些角色，从"开门"到"出菜"对应四个文件：
+
+| # | 文件 | 餐厅角色 | 只负责 | **不**负责 |
+|---|------|---------|--------|-----------|
+| ① | `scripts/run/run_lc_api.py` | 开店的人 | 修控制台编码、设 `sys.path`、检查 API Key、解析 `--host/--port`，然后交给 uvicorn | 不参与任何一单生意 |
+| ② | `langchain_app/api.py` | 点单窗口（HTTP 层） | 路由、Pydantic 校验（不合法回 422）、异常转 500、SSE 流式包装 | 不写业务逻辑 |
+| ③ | `langchain_app/service.py` | 前台 | 认人（`session_id`）、守卫、会话历史、参数覆盖、响应字段 | 不做菜 |
+| ④ | `langchain_app/chains.py` | 后厨 | 改写 → 检索 → 生成 → 后处理 | 不认人、不判断 |
+
+一次问答的完整旅程：
+
+```
+浏览器  POST http://localhost:8001/api/v1/chat  {"question": "人参的性味"}
+   │
+   ├─ uvicorn            监听 8001，把请求交给 app（第三方 ASGI 服务器，不是本项目代码）
+   ├─ api.py::chat()     校验请求体 → 取单例服务 get_service() → 调 svc.answer()
+   │                     · 格式不合法 → 422      · 业务异常 → 500
+   ├─ service.answer()   ① _guard() 判断接不接（不接 → 直接回拒答，零检索零生成）
+   │                     ② self.chain.invoke() → 交给后厨
+   │                     ③ 贴单：session_id / latency / dialogue_turn
+   ├─ chains.py          改写 → 检索 → 生成 → 后处理（引用 + 数值校验）
+   └─ 回程               dict → ChatResponse(Pydantic) → JSON → 浏览器
+```
+
+**为什么"怎么跑"要单独一个文件？** `api.py` 里没有 `uvicorn.run`、也没有 `if __name__ == "__main__"`——它只是一份"应用定义"（长什么样）；`run_lc_api.py` 负责"怎么跑起来"（监听哪个地址、是否热重载）。这是后端的常规分层。
+
+**为什么业务逻辑不能写进 `api.py`？** 三条都是实测过的：
+
+1. **口径会分裂** —— 评测脚本 `run_eval_lc.py` 直接用 `ChatService`、不走 HTTP。守卫若写在 `api.py`，**评测就跑不到它**，出现"评测口径 ≠ 生产口径"；
+2. **换协议要重写** —— 加 WebSocket / gRPC 时业务逻辑得再复制一遍；
+3. **不好测** —— `langchain_app/tests/test_service_consistency.py` 的 11 项测试**完全不碰 HTTP**，构造 `ChatService` + 假模型即可秒级验证。
+
+**两套引擎的入口**（可同时开着做同口径对拍）：
+
+| 入口 | 端口 | 应用 | 引擎 |
+|---|---|---|---|
+| `scripts/run/run_api.py` | 8000 | `src/api/main.py::app` | 手撕版 |
+| `scripts/run/run_lc_api.py` | 8001 | `langchain_app/api.py::app` | LangChain 标准版 |
+
+> **冷启动注意**：索引与模型是**懒加载**——进程起来很快，"第一个请求"才加载（约 10-20 秒），之后所有请求复用同一实例（`api.py::get_service` 的单例）。
+
 ---
 
 ## 项目结构
@@ -954,7 +997,8 @@ python -m pytest langchain_app/tests/ -v
 |---|---|
 | 检索融合 | `FAISS` + `BM25Retriever` → `EnsembleRetriever`（内置 RRF） |
 | 重排（可选） | `HuggingFaceCrossEncoder` + `BaseDocumentCompressor` |
-| 主链 | LCEL 声明式 + `RunnableBranch` 守卫短路 + `RunnableWithMessageHistory` 会话记忆 |
+| 主链 | LCEL 声明式（**链为纯流程、不含守卫**）+ `RunnableWithMessageHistory` 会话记忆 |
+| 编排（守卫/会话） | `ChatService._guard`（含会话信任通道）+ `ChatService._ensure_history` —— 缺陷 23/24 后守卫与历史均收口在 `service.py` |
 | 提示词 | `ChatPromptTemplate` + `MessagesPlaceholder`（多轮 condense-question 改写） |
 
 **运行方式**：
