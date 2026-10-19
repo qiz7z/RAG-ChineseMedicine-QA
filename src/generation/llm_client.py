@@ -2,29 +2,28 @@
 """
 LLM 客户端
 ===========
-封装美团 LongCat 2.0 API（OpenAI 兼容接口）的调用逻辑。
+封装任意 OpenAI 兼容接口的调用逻辑，端点与模型均由 .env 配置。
 
 功能：
   - 统一的 chat completion 接口
   - 自动重试（指数退避）
   - 流式输出支持
   - 超时控制
-  - API Key 校验
+  - API Key / 端点 / 模型名校验
 
-LongCat 2.0 API 信息：
-  - 接入端点: https://api.longcat.chat/openai
-  - 模型名称: LongCat-2.0
-  - 兼容 OpenAI API 规范
-  - 上下文长度: 1M tokens，最大输出 128K tokens
+配置项（项目根目录 .env）：
+  - LLM_BASE_URL: OpenAI 兼容端点，例如 https://your-host/v1
+  - LLM_MODEL:    模型名称，例如 agnes-2.5-flash
+  - LLM_API_KEY:  API Key
 """
 import time
 import logging
 from typing import List, Dict, Optional, Generator
 
 from config import (
-    LONGCAT_API_KEY,
-    LONGCAT_BASE_URL,
-    LONGCAT_MODEL,
+    LLM_API_KEY,
+    LLM_BASE_URL,
+    LLM_MODEL,
     LLM_TEMPERATURE,
     LLM_MAX_TOKENS,
     LLM_TOP_P,
@@ -37,9 +36,9 @@ logger = logging.getLogger(__name__)
 
 class LLMClient:
     """
-    LongCat 2.0 LLM 客户端。
+    通用 LLM 客户端。
 
-    使用 OpenAI SDK 调用 LongCat API，兼容 OpenAI 接口格式。
+    使用 OpenAI SDK 调用任意 OpenAI 兼容端点。
 
     使用方式：
         client = LLMClient()
@@ -55,19 +54,27 @@ class LLMClient:
     ):
         """
         Args:
-            api_key: API Key，默认从 config 读取（环境变量 LONGCAT_API_KEY）
-            base_url: API 端点，默认从 config 读取
-            model: 模型名称，默认从 config 读取
+            api_key: API Key，默认从 config 读取（环境变量 LLM_API_KEY）
+            base_url: API 端点，默认从 config 读取（环境变量 LLM_BASE_URL）
+            model: 模型名称，默认从 config 读取（环境变量 LLM_MODEL）
         """
-        self.api_key = api_key or LONGCAT_API_KEY
-        self.base_url = base_url or LONGCAT_BASE_URL
-        self.model = model or LONGCAT_MODEL
+        self.api_key = api_key or LLM_API_KEY
+        self.base_url = base_url or LLM_BASE_URL
+        self.model = model or LLM_MODEL
 
         if not self.api_key:
             raise ValueError(
-                "LongCat API Key 未设置！请设置环境变量 LONGCAT_API_KEY，\n"
-                "或通过 LLMClient(api_key='your_key') 传入。\n"
-                "获取 API Key: https://longcat.chat/platform/api_keys"
+                "LLM API Key 未设置！请在项目根目录 .env 中配置 LLM_API_KEY，\n"
+                "或通过 LLMClient(api_key='your_key') 传入。"
+            )
+        if not self.base_url:
+            raise ValueError(
+                "LLM 端点未配置！请在项目根目录 .env 中设置 LLM_BASE_URL，\n"
+                "取值为任意 OpenAI 兼容端点（例如 https://your-host/v1）。"
+            )
+        if not self.model:
+            raise ValueError(
+                "LLM 模型名未配置！请在项目根目录 .env 中设置 LLM_MODEL。"
             )
 
         # 延迟导入 OpenAI SDK（避免未安装时影响其他模块）

@@ -11,12 +11,11 @@
   4. 各阶段耗时分析
 
 用法:
-  # 先设置 API Key 环境变量
-  set LONGCAT_API_KEY=your_api_key_here
+  # 先在项目根目录 .env 配置 LLM_API_KEY / LLM_BASE_URL / LLM_MODEL
   python scripts/test/test_generation.py
 
-  # 或在 PowerShell 中
-  $env:LONGCAT_API_KEY="your_api_key_here"
+  # 也可用环境变量覆盖（PowerShell）
+  $env:LLM_API_KEY="your_api_key_here"
   python scripts/test/test_generation.py
 """
 import sys
@@ -34,21 +33,29 @@ sys.path.insert(0, str(PROJECT_ROOT / 'src'))
 
 
 def check_api_key():
-    """检查 API Key 是否设置"""
-    api_key = os.environ.get("LONGCAT_API_KEY", "")
-    if not api_key:
+    """检查 LLM 配置是否完整（导入 config 时会自动加载项目根目录 .env）"""
+    try:
+        from config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
+    except ImportError:
+        LLM_API_KEY = LLM_BASE_URL = LLM_MODEL = ""
+    missing = [
+        name for name, val in (
+            ("LLM_API_KEY", LLM_API_KEY),
+            ("LLM_BASE_URL", LLM_BASE_URL),
+            ("LLM_MODEL", LLM_MODEL),
+        ) if not val
+    ]
+    if missing:
         print("=" * 60)
-        print("❌ 错误: 未设置 LONGCAT_API_KEY 环境变量！")
+        print(f"❌ 错误: LLM 配置缺失: {', '.join(missing)}")
         print("=" * 60)
-        print("\n请设置美团 LongCat API Key 后再运行：")
-        print("\n  CMD:")
-        print('    set LONGCAT_API_KEY=your_api_key_here')
-        print("\n  PowerShell:")
-        print('    $env:LONGCAT_API_KEY="your_api_key_here"')
-        print("\n获取 API Key: https://longcat.chat/platform/api_keys")
+        print("\n请在项目根目录 .env 中补齐（任意 OpenAI 兼容服务均可）：")
+        print("  LLM_API_KEY=your_api_key_here")
+        print("  LLM_BASE_URL=https://your-host/v1")
+        print("  LLM_MODEL=your-model-name")
         print()
         sys.exit(1)
-    return api_key
+    return LLM_API_KEY
 
 
 def main():
@@ -58,7 +65,7 @@ def main():
 
     print("=" * 60)
     print("  药典 RAG 系统 - 生成引擎测试（阶段四）")
-    print("  LLM: 美团 LongCat 2.0")
+    print(f"  LLM: {os.environ.get('LLM_MODEL') or os.environ.get('LONGCAT_MODEL') or '未配置'}")
     print("=" * 60)
 
     # 初始化生成引擎

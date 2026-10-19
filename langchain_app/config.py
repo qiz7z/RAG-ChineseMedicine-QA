@@ -86,11 +86,11 @@ _rag_device_env = os.environ.get("RAG_DEVICE", "").strip().lower()
 RAG_DEVICE = None if _rag_device_env in ("", "auto") else _rag_device_env
 
 # ------------------------------------------------------------
-# LLM（OpenAI 兼容接口；变量名沿用 LONGCAT_* 以与主项目共用 .env）
+# LLM（任意 OpenAI 兼容接口；与主项目共用 .env，兼容旧变量名 LONGCAT_*）
 # ------------------------------------------------------------
-LLM_API_KEY = os.environ.get("LONGCAT_API_KEY", "")
-LLM_BASE_URL = os.environ.get("LONGCAT_BASE_URL", "https://api.longcat.chat/openai")
-LLM_MODEL = os.environ.get("LONGCAT_MODEL", "LongCat-2.0")
+LLM_API_KEY = os.environ.get("LLM_API_KEY") or os.environ.get("LONGCAT_API_KEY", "")
+LLM_BASE_URL = os.environ.get("LLM_BASE_URL") or os.environ.get("LONGCAT_BASE_URL", "")
+LLM_MODEL = os.environ.get("LLM_MODEL") or os.environ.get("LONGCAT_MODEL", "")
 LLM_TEMPERATURE = float(os.environ.get("LLM_TEMPERATURE", "0.3"))
 LLM_MAX_TOKENS = int(os.environ.get("LLM_MAX_TOKENS", "2048"))
 

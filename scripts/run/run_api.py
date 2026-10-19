@@ -7,8 +7,10 @@ API 服务启动脚本
 用法:
   python scripts/run/run_api.py [--host 0.0.0.0] [--port 8000] [--reload]
 
-环境变量:
-  LONGCAT_API_KEY    - 美团 LongCat API Key（必需）
+环境变量（也可写在项目根目录 .env）:
+  LLM_API_KEY        - LLM API Key（必需）
+  LLM_BASE_URL       - OpenAI 兼容端点
+  LLM_MODEL          - 模型名称
 """
 import sys
 import io
@@ -31,19 +33,23 @@ def main():
     parser.add_argument("--reload", action="store_true", help="开发模式（热重载）")
     args = parser.parse_args()
 
-    # 检查 API Key（环境变量或 config.py 默认值）
-    from config import LONGCAT_API_KEY
-    api_key = os.environ.get("LONGCAT_API_KEY", "") or LONGCAT_API_KEY
-    if not api_key:
+    # 检查 LLM 配置（导入 config 时自动加载项目根目录 .env）
+    from config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
+    missing = [
+        name for name, val in (
+            ("LLM_API_KEY", LLM_API_KEY),
+            ("LLM_BASE_URL", LLM_BASE_URL),
+            ("LLM_MODEL", LLM_MODEL),
+        ) if not val
+    ]
+    if missing:
         print("=" * 60)
-        print("❌ 错误: 未设置 LONGCAT_API_KEY！")
+        print(f"❌ 错误: LLM 配置缺失: {', '.join(missing)}")
         print("=" * 60)
-        print("\n请通过以下任一方式设置美团 LongCat API Key：")
-        print("\n  方式一 — 环境变量 (PowerShell):")
-        print('    $env:LONGCAT_API_KEY="your_api_key_here"')
-        print("\n  方式二 — 项目根目录 .env 文件（推荐，已被 git 忽略）:")
-        print("    创建 .env 文件，写入一行: LONGCAT_API_KEY=your_api_key_here")
-        print("\n获取 API Key: https://longcat.chat/platform/api_keys")
+        print("\n请在项目根目录 .env 中补齐（任意 OpenAI 兼容服务均可）：")
+        print("  LLM_API_KEY=your_api_key_here")
+        print("  LLM_BASE_URL=https://your-host/v1")
+        print("  LLM_MODEL=your-model-name")
         print()
         sys.exit(1)
 
@@ -53,7 +59,7 @@ def main():
     print("=" * 60)
     print(f"  监听地址: http://{args.host}:{args.port}")
     print(f"  API 文档: http://{args.host}:{args.port}/docs")
-    print(f"  LLM 模型: {os.environ.get('LONGCAT_MODEL', 'LongCat-2.0')}")
+    print(f"  LLM 模型: {LLM_MODEL or '未配置'}")
     print("=" * 60)
     print("\n正在初始化模型和索引（首次启动需要 10-15 秒）...\n")
 

@@ -2,7 +2,7 @@
 
 基于《中国药典》2020 年版一部构建的端到端 RAG（检索增强生成）系统，覆盖从原始文档解析到智能问答的完整流水线。
 
-系统从 54,442 段原始 Word 文档中提取 **2,421 个药品条目**、生成 **12,955 个语义切片**，通过向量检索 + BM25 + RRF 融合 + 元数据过滤 + 章节感知召回的混合检索架构，实现 **严格口径 Hit@5 = 88.42%（手撕版）/ 87.37%（LangChain 标准版）** 的检索准确率（[口径与结果详见评估小节](#评估结果)），并集成大模型（LongCat / 任意 OpenAI 兼容端点）提供专业问答服务。项目包含**手写实现**与 **LangChain 标准版**两套完全独立引擎，可并行运行、对比评估。
+系统从 54,442 段原始 Word 文档中提取 **2,421 个药品条目**、生成 **12,955 个语义切片**，通过向量检索 + BM25 + RRF 融合 + 元数据过滤 + 章节感知召回的混合检索架构，实现 **严格口径 Hit@5 = 88.42%（手撕版）/ 87.37%（LangChain 标准版）** 的检索准确率（[口径与结果详见评估小节](#评估结果)），并集成任意 OpenAI 兼容大模型提供专业问答服务。项目包含**手写实现**与 **LangChain 标准版**两套完全独立引擎，可并行运行、对比评估。
 
 ---
 
@@ -35,7 +35,7 @@ flowchart TD
     P --> Q["⑤ RRF 融合 k=60<br>→ top30 候选"]
     Q --> R["⑥ 重排 CrossEncoder<br>提召回但降首选 · 默认关闭"]
     R --> S["⑦ Prompt 组装<br>System 规则 + 参考资料 + 对话历史"]
-    S --> T["⑧ LLM 生成<br>LongCat / 任意 OpenAI 兼容端点"]
+    S --> T["⑧ LLM 生成<br>OpenAI 兼容端点"]
     T --> U["⑨ 后处理<br>引用标注 · 数值一致性校验<br>标记 8.3% 回答含数值风险 · 用药安全提醒"]
     U --> V["回答 + 引用来源<br>SSE 流式输出"]
 
@@ -362,7 +362,7 @@ Chinese-Medicine/
 |------|------|
 | **DialogueManager** | 多轮对话管理，通过 LLM 将"它"→"人参"进行指代消解 |
 | **Prompt 模板** | System Prompt 限定只基于药典原文回答，不编造信息 |
-| **LLMClient** | 调用 OpenAI 兼容端点（当前 `.env` 配置：Agnes APIHub / `agnes-2.5-flash`；变量名沿用 `LONGCAT_*`） |
+| **LLMClient** | 调用 OpenAI 兼容端点（端点 / 模型 / Key 由 `.env` 的 `LLM_*` 配置，见 [docs/06](docs/06_LLM提供商配置.md)） |
 | **PostProcessor** | 引用标注 + 一致性校验（防幻觉）+ 格式美化 + 用药安全提醒 |
 
 ### 4. API 与 Web UI
@@ -604,18 +604,13 @@ conda activate llm
 # 安装依赖
 pip install -r requirements.txt
 
-# 设置 LLM API Key（生成引擎需要）
-# ⚠️ 变量名沿用 LONGCAT_*，但实际端点/模型由项目根目录 .env 决定
-#    （当前配置：Agnes AI APIHub / agnes-2.5-flash，见 .env 与 docs/06）
-# PowerShell:
-$env:LONGCAT_API_KEY="your_api_key_here"
-# CMD:
-set LONGCAT_API_KEY=your_api_key_here
+# 配置 LLM（生成引擎需要）：写入项目根目录 .env
+# LLM_BASE_URL=https://your-host/v1
+# LLM_MODEL=your-model-name
+# LLM_API_KEY=your_api_key_here
 ```
 
-获取 API Key：**默认配置用 [Agnes AI APIHub](https://apihub.agnes-ai.com)**（免费模型 `agnes-2.5-flash`）；
-如需切回美团 LongCat，改 `.env` 的 `LONGCAT_BASE_URL` / `LONGCAT_MODEL` 两行即可，
-Key 从 [LongCat 开放平台](https://longcat.chat/platform/api_keys) 获取——任何 OpenAI 兼容端点均可，无需改代码。
+端点、模型、Key 全部由 `.env` 决定：任何 OpenAI 兼容服务（云端 API 或本地 vLLM / Ollama）均可接入，无需改代码，详见 [docs/06](docs/06_LLM提供商配置.md)。
 
 ### 一键运行
 
@@ -702,7 +697,7 @@ python -m pytest langchain_app/tests/ -v
 | 向量检索 | FAISS | IndexFlatIP 精确内积检索 |
 | 关键词检索 | rank-bm25 + jieba | 中文分词 + BM25Okapi |
 | 重排模型 | BAAI/bge-reranker-v2-m3 | CrossEncoder 跨语言重排（消融：`strict@5` 升、`strict@1` 降、延迟 ×4，默认关闭；见表 1） |
-| LLM | 可配置 OpenAI 兼容端点 | LongCat 2.0 / Agnes 等，.env 一行切换（见 docs/06） |
+| LLM | 可配置 OpenAI 兼容端点 | 任意 OpenAI 兼容服务，`.env` 一行切换（见 docs/06） |
 | LangChain 引擎 | LangChain 1.x 标准组件 | EnsembleRetriever(RRF) / LCEL / RunnableWithMessageHistory（独立实现） |
 | API 框架 | FastAPI + Uvicorn | 异步高性能 + 自动文档 |
 | Web UI | Streamlit | 数据应用可视化 |
@@ -786,7 +781,7 @@ python -m pytest langchain_app/tests/ -v
 - [检索策略优化](docs/03_检索策略优化.md) — 多药品过滤 + BM25 后过滤 + 过滤器扩展
 - [最终评估报告](docs/04_最终评估报告.md) — 100 题测试集详细评估结果
 - [LangChain 对比实验](docs/05_LangChain对比实验.md) — 手撕版 vs LangChain vs 纯标准组件三方对比
-- [LLM 提供商配置](docs/06_LLM提供商配置.md) — .env 切换 LLM 端点（LongCat / Agnes 等）
+- [LLM 提供商配置](docs/06_LLM提供商配置.md) — `.env` 切换任意 OpenAI 兼容端点
 - [LangChain 标准版架构](docs/07_LangChain标准版架构.md) — 完全独立实现 + 消融实验
 - [检索缺陷修复与口径澄清](docs/08_检索缺陷修复与口径澄清.md) — ★ loose/strict 口径说明 + 检索缺陷修复前后实测
 - [ETL 串块与条目丢失修复](docs/09_ETL串块与条目丢失修复.md) — ★ 跨药品串块根因与修复（+41 个药品）

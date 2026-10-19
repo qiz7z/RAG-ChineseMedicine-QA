@@ -17,11 +17,19 @@ from config import (
 
 
 def build_chat_model(temperature: float = None, max_tokens: int = None) -> ChatOpenAI:
-    """构建 LLM 实例（LongCat / Agnes 等 OpenAI 兼容端点）"""
+    """构建 LLM 实例（任意 OpenAI 兼容端点，由 .env 配置）"""
     if not LLM_API_KEY:
         raise RuntimeError(
-            "LLM API Key 未设置！请设置环境变量 LONGCAT_API_KEY "
-            "或在项目根目录 .env 中配置。"
+            "LLM API Key 未设置！请在项目根目录 .env 中配置 LLM_API_KEY。"
+        )
+    if not LLM_BASE_URL:
+        raise RuntimeError(
+            "LLM 端点未配置！请在项目根目录 .env 中设置 LLM_BASE_URL"
+            "（任意 OpenAI 兼容端点，例如 https://your-host/v1）。"
+        )
+    if not LLM_MODEL:
+        raise RuntimeError(
+            "LLM 模型名未配置！请在项目根目录 .env 中设置 LLM_MODEL。"
         )
     return ChatOpenAI(
         model=LLM_MODEL,

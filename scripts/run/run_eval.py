@@ -20,8 +20,8 @@
   # 指定问题类型
   python scripts/run/run_eval.py --mode retrieval --type "单药品单属性查询"
 
-环境变量:
-  LONGCAT_API_KEY   - 美团 LongCat API Key（生成评估必需）
+环境变量（也可写在项目根目录 .env）:
+  LLM_API_KEY       - LLM API Key（生成评估必需）
 """
 import sys
 import io
@@ -286,11 +286,11 @@ def run_generation_eval(test_queries, grounding: bool = True, crosscheck: bool =
     from generation.generator import Generator
     from eval.evaluator import GenerationEvaluator
 
-    # 检查 API Key
-    api_key = os.environ.get("LONGCAT_API_KEY", "")
-    if not api_key:
-        print("[ERROR] 生成评估需要 LONGCAT_API_KEY 环境变量！")
-        print("  PowerShell: $env:LONGCAT_API_KEY=\"your_api_key\"")
+    # 检查 API Key（导入 generation 时已自动加载项目根目录 .env）
+    from config import LLM_API_KEY
+    if not LLM_API_KEY:
+        print("[ERROR] 生成评估需要 LLM API Key！")
+        print("  请在项目根目录 .env 中配置 LLM_API_KEY")
         sys.exit(1)
 
     print()

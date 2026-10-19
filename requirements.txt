@@ -10,7 +10,7 @@ numpy>=1.24.0                  # 向量运算
 torch>=2.0.0                   # PyTorch（sentence-transformers 依赖）
 
 # === 阶段四：生成引擎 ===
-openai>=1.0.0                  # OpenAI SDK（用于调用 LongCat 2.0 API，OpenAI 兼容接口）
+openai>=1.0.0                  # OpenAI SDK（调用任意 OpenAI 兼容接口）
 
 # === 阶段五：API 服务 ===
 fastapi>=0.100.0               # Web API 框架（异步高性能，自动生成 OpenAPI 文档）

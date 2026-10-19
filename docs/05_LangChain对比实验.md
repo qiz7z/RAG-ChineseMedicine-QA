@@ -21,7 +21,7 @@
 | 查询解析/过滤 | QueryParser + SQLite 元数据过滤 | 复用手撕版组件 | 无 |
 | 融合 | rrf_fusion (k=60) | 复用 | 无 |
 | 重排 | BGE-Reranker-v2-m3 | 复用 | 无 |
-| LLM 调用 | 自封装 OpenAI 兼容客户端 | `langchain_openai.ChatOpenAI`（LongCat 2.0） | 同左 |
+| LLM 调用 | 自封装 OpenAI 兼容客户端 | `langchain_openai.ChatOpenAI`（OpenAI 兼容端点） | 同左 |
 | 生成管线 | 手写 Generator 流程 | LCEL（`to_lc_messages \| model \| StrOutputParser()`） | 同左 |
 | 会话状态 | 全局单例共享（有并发串写风险） | **按 session_id 隔离**（每会话独立 DialogueManager + GuardChecker） | 同左 |
 | Prompt / 后处理 / 守卫 | — | 与手撕版共用同一实现（保证生成侧行为一致） | 同左 |
@@ -105,7 +105,7 @@ python scripts/run/run_eval.py --mode retrieval          # 手撕版
 python scripts/run/run_eval_lc.py --variant hybrid --mode retrieval
 python scripts/run/run_eval_lc.py --variant standard --mode retrieval
 
-# 3. 生成评估（需要 LongCat 额度）
+# 3. 生成评估（需要 LLM 可用额度）
 python scripts/run/run_eval.py --mode generation
 python scripts/run/run_eval_lc.py --variant hybrid --mode generation
 

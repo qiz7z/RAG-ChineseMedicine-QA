@@ -7,8 +7,10 @@
 用法:
   python scripts/run/run_all.py
 
-环境变量:
-  LONGCAT_API_KEY   - 美团 LongCat API Key（必需）
+环境变量（也可写在项目根目录 .env）:
+  LLM_API_KEY       - LLM API Key（必需）
+  LLM_BASE_URL      - OpenAI 兼容端点
+  LLM_MODEL         - 模型名称
   API_BASE_URL      - API 地址（默认 http://127.0.0.1:8000）
   API_PORT          - API 端口（默认 8000）
   UI_PORT           - Web UI 端口（默认 8501）
@@ -50,35 +52,40 @@ def print_banner():
     print(f"  API 服务: http://localhost:{API_PORT}")
     print(f"  API 文档: http://localhost:{API_PORT}/docs")
     print(f"  Web UI:  http://localhost:{UI_PORT}")
-    print(f"  LLM 模型: {os.environ.get('LONGCAT_MODEL', 'LongCat-2.0')}")
+    try:
+        from config import LLM_MODEL as _model
+    except ImportError:
+        _model = ""
+    print(f"  LLM 模型: {_model or '未配置'}")
     print("=" * 60)
     print()
 
 
 def check_api_key():
-    """检查 API Key 是否设置（环境变量或 config.py 默认值）"""
+    """检查 LLM 配置是否完整（环境变量或项目根目录 .env）"""
     sys.path.insert(0, str(PROJECT_ROOT / 'src'))
     try:
-        from config import LONGCAT_API_KEY
+        from config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
     except ImportError:
-        LONGCAT_API_KEY = ""
-    api_key = os.environ.get("LONGCAT_API_KEY", "") or LONGCAT_API_KEY
-    if not api_key:
-        print("[ERROR] 未设置 LONGCAT_API_KEY！")
+        LLM_API_KEY = LLM_BASE_URL = LLM_MODEL = ""
+    missing = [
+        name for name, val in (
+            ("LLM_API_KEY", LLM_API_KEY),
+            ("LLM_BASE_URL", LLM_BASE_URL),
+            ("LLM_MODEL", LLM_MODEL),
+        ) if not val
+    ]
+    if missing:
+        print(f"[ERROR] LLM 配置缺失: {', '.join(missing)}")
         print()
-        print("请通过以下任一方式设置美团 LongCat API Key：")
+        print("请在项目根目录 .env 中补齐（任意 OpenAI 兼容服务均可）：")
         print()
-        print("  方式一 — 环境变量:")
-        print("    PowerShell:")
-        print('      $env:LONGCAT_API_KEY="your_api_key_here"')
-        print()
-        print("  方式二 — 项目根目录 .env 文件（推荐，已被 git 忽略）:")
-        print("    创建 .env 文件，写入一行: LONGCAT_API_KEY=your_api_key_here")
-        print()
-        print("获取 API Key: https://longcat.chat/platform/api_keys")
+        print("  LLM_API_KEY=your_api_key_here")
+        print("  LLM_BASE_URL=https://your-host/v1")
+        print("  LLM_MODEL=your-model-name")
         print()
         sys.exit(1)
-    print("[OK] LONGCAT_API_KEY 已设置")
+    print("[OK] LLM 配置已就绪")
 
 
 def check_indexes():
@@ -254,11 +261,11 @@ def cleanup(signum=None, frame=None):
 
 
 def main():
-    print_banner()
-
-    # 前置检查
+    # 前置检查（同时加载 .env，确保横幅里的模型名是实际配置值）
     check_api_key()
     check_indexes()
+
+    print_banner()
 
     # 注册信号处理（Ctrl+C 优雅退出）
     signal.signal(signal.SIGINT, cleanup)

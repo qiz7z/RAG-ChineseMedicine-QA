@@ -116,12 +116,19 @@ WINDOW_SIZE = 500           # 滑动窗口大小
 # 生成引擎配置（阶段四）
 # ============================================================
 
-# --- LLM 模型配置（美团 LongCat 2.0，OpenAI 兼容接口）---
+# --- LLM 模型配置（任意 OpenAI 兼容接口）---
 # API Key 从环境变量或项目根目录 .env 文件读取（.env 已被 git 忽略），
-# 不要把真实 Key 写进任何 .py 文件。获取 Key: https://longcat.chat/platform/api_keys
-LONGCAT_API_KEY = os.environ.get("LONGCAT_API_KEY", "your_api_key_here")
-LONGCAT_BASE_URL = os.environ.get("LONGCAT_BASE_URL", "https://api.longcat.chat/openai")
-LONGCAT_MODEL = os.environ.get("LONGCAT_MODEL", "LongCat-2.0")
+# 不要把真实 Key 写进任何 .py 文件。
+# 推荐变量名：LLM_API_KEY / LLM_BASE_URL / LLM_MODEL；
+# 旧变量名 LONGCAT_* 仍兼容（作为回退）。
+LLM_API_KEY = os.environ.get("LLM_API_KEY") or os.environ.get("LONGCAT_API_KEY", "")
+LLM_BASE_URL = os.environ.get("LLM_BASE_URL") or os.environ.get("LONGCAT_BASE_URL", "")
+LLM_MODEL = os.environ.get("LLM_MODEL") or os.environ.get("LONGCAT_MODEL", "")
+
+# 兼容别名
+LONGCAT_API_KEY = LLM_API_KEY
+LONGCAT_BASE_URL = LLM_BASE_URL
+LONGCAT_MODEL = LLM_MODEL
 
 # 生成参数
 LLM_TEMPERATURE = 0.3               # 低温度保证回答的准确性和稳定性

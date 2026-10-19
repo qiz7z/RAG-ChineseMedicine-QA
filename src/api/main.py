@@ -100,13 +100,12 @@ app = FastAPI(
 
 ## 技术架构
 - 检索：FAISS 向量检索 + BM25 关键词检索 + RRF 融合 + BGE 重排
-- 生成：美团 LongCat 2.0 大语言模型
+- 生成：任意 OpenAI 兼容大语言模型（端点与模型由 .env 配置）
 - 后处理：引用标注 + 一致性校验 + 用药安全提醒
     """,
     version="1.0.0",
     contact={
         "name": "Chinese Medicine RAG",
-        "url": "https://github.com/meituan-longcat",
     },
 )
 

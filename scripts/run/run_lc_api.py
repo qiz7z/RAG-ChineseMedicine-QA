@@ -38,14 +38,12 @@ def main():
     from config import LLM_API_KEY, LLM_BASE_URL, LLM_MODEL
     if not LLM_API_KEY:
         print("=" * 60)
-        print("❌ 错误: 未设置 LONGCAT_API_KEY！")
+        print("❌ 错误: 未设置 LLM_API_KEY！")
         print("=" * 60)
-        print("\n请通过以下任一方式设置 LLM API Key：")
-        print("\n  方式一 — 环境变量 (PowerShell):")
-        print('    $env:LONGCAT_API_KEY="your_api_key_here"')
-        print("\n  方式二 — 项目根目录 .env 文件（推荐，已被 git 忽略）:")
-        print("    创建 .env 文件，写入一行: LONGCAT_API_KEY=your_api_key_here")
-        print("\n获取 API Key: https://longcat.chat/platform/api_keys")
+        print("\n请在项目根目录 .env 中配置（任意 OpenAI 兼容服务均可）：")
+        print("  LLM_API_KEY=your_api_key_here")
+        print("  LLM_BASE_URL=https://your-host/v1")
+        print("  LLM_MODEL=your-model-name")
         print()
         sys.exit(1)
 
