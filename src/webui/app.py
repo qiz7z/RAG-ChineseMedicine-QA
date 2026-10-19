@@ -19,6 +19,7 @@
 import sys
 import os
 import time
+import uuid
 from pathlib import Path
 
 import streamlit as st
@@ -26,10 +27,13 @@ import streamlit as st
 # 确保 src 目录在 Python 路径中
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from webui.styles import GLOBAL_CSS, COLORS
+from webui.styles import GLOBAL_CSS
 from webui.api_client import APIClient
 from webui.components import (
+    ICONS,
     render_header,
+    render_hero,
+    render_status_card,
     render_source_card,
     render_citations,
     render_disclaimer,
@@ -39,15 +43,33 @@ from webui.components import (
     render_empty_state,
     render_drug_badge,
     render_consistency_warning,
+    render_feature_card,
+    render_user_message,
+    render_assistant_meta,
 )
 
 # ============================================================
 # 页面配置
 # ============================================================
 
+# 静态资源目录（SVG 头像/图标）
+ASSETS_DIR = Path(__file__).resolve().parent / "assets"
+LOGO_SVG = ASSETS_DIR / "logo.svg"
+AVATAR_AI_SVG = ASSETS_DIR / "avatar-ai.svg"
+AVATAR_USER_SVG = ASSETS_DIR / "avatar-user.svg"
+
+
+def _svg_data_uri(path: Path) -> str:
+    """读取 SVG 文件并转为 base64 data URI（用于 HTML <img>，规避静态服务问题）"""
+    import base64
+    return "data:image/svg+xml;base64," + base64.b64encode(path.read_bytes()).decode()
+
+
+LOGO_DATA_URI = _svg_data_uri(LOGO_SVG)
+
 st.set_page_config(
     page_title="中国药典智能问答系统",
-    page_icon="🌿",
+    page_icon=str(LOGO_SVG),
     layout="wide",
     initial_sidebar_state="expanded",
     menu_items={
@@ -81,6 +103,88 @@ def init_session_state():
         st.session_state.current_page = "智能问答"
     if "show_sources" not in st.session_state:
         st.session_state.show_sources = {}  # {msg_index: bool} 控制每条消息的来源展开
+    if "started" not in st.session_state:
+        st.session_state.started = False  # 是否已进入对话（用于控制欢迎区）
+    if "conversations" not in st.session_state:
+        st.session_state.conversations = []
+    if "active_key" not in st.session_state:
+        st.session_state.active_key = None
+    if not st.session_state.conversations:
+        _new_conversation()
+
+
+def _new_conversation():
+    """新建本地会话并切换过去；后端会话在首次提问时懒创建"""
+    conv = {
+        "key": f"c_{uuid.uuid4().hex[:6]}",
+        "session_id": None,
+        "title": "新会话",
+        "messages": [],
+    }
+    st.session_state.conversations.insert(0, conv)
+    st.session_state.active_key = conv["key"]
+    st.session_state.messages = conv["messages"]
+    st.session_state.session_id = None
+    st.session_state.show_sources = {}
+    st.session_state.started = False
+
+
+def get_active_conversation():
+    """返回当前会话 dict（不存在则 None）"""
+    key = st.session_state.get("active_key")
+    for conv in st.session_state.conversations:
+        if conv["key"] == key:
+            return conv
+    return None
+
+
+def _switch_conversation(key: str):
+    """切换到指定会话，恢复其消息与后端 session"""
+    for conv in st.session_state.conversations:
+        if conv["key"] == key:
+            st.session_state.active_key = key
+            st.session_state.messages = conv["messages"]
+            st.session_state.session_id = conv["session_id"]
+            st.session_state.show_sources = {}
+            st.session_state.started = bool(conv["messages"])
+            return
+
+
+def _delete_conversation(conv: dict):
+    """删除会话（后端 + 本地），必要时回退到其他会话"""
+    if conv.get("session_id"):
+        try:
+            api.delete_session(conv["session_id"])
+        except Exception:
+            pass
+    st.session_state.conversations = [
+        c for c in st.session_state.conversations if c["key"] != conv["key"]
+    ]
+    if st.session_state.get("active_key") == conv["key"]:
+        if st.session_state.conversations:
+            _switch_conversation(st.session_state.conversations[0]["key"])
+        else:
+            _new_conversation()
+
+
+def _mark_started(*_args):
+    """chat_input 提交回调：在脚本重跑前标记进入对话，欢迎区当帧即消失"""
+    st.session_state.started = True
+
+
+def _home_submit(*args):
+    """
+    首页内联输入框的提交回调。
+
+    首页与对话页用的是两个不同位置的 chat_input，重跑后组件实例不同，
+    值会丢失，因此在回调里先把内容写入 pending_question 再交给对话页。
+    """
+    st.session_state.started = True
+    value = args[0] if args else None
+    if not isinstance(value, str):
+        value = st.session_state.get("home_chat_input")
+    if isinstance(value, str) and value.strip():
+        st.session_state.pending_question = value.strip()
 
 
 init_session_state()
@@ -93,71 +197,78 @@ api = get_api_client()
 
 with st.sidebar:
     st.markdown(
-        f"""
-        <div style="text-align: center; padding: 1rem 0;">
-            <div style="font-size: 2.5rem; line-height: 1;">🌿</div>
-            <h2 style="margin: 0.5rem 0 0 0; color: {COLORS['primary_dark']};">中国药典</h2>
-            <p style="color: {COLORS['text_secondary']}; font-size: 0.85rem; margin: 0.25rem 0;">
-                智能问答系统 v1.0
-            </p>
-        </div>
-        """,
+        f'<div class="sidebar-brand">'
+        f'<img class="sidebar-logo" src="{LOGO_DATA_URI}" alt="中国药典智能问答系统" />'
+        f'<div class="sidebar-title">中国药典</div>'
+        f'<div class="sidebar-sub">智能问答系统 · v1.0</div>'
+        f'</div>',
         unsafe_allow_html=True,
     )
 
     st.markdown("---")
 
-    # 页面导航
-    page = st.radio(
-        "功能导航",
-        ["智能问答", "检索查询", "药品浏览", "系统统计", "关于系统"],
-        label_visibility="collapsed",
-    )
-    st.session_state.current_page = page
+    # 页面导航（按钮式：不依赖 radio 的内部 DOM，选中态完全可控）
+    NAV_ITEMS = ["智能问答", "检索查询", "药品浏览", "系统统计", "关于系统"]
+    NAV_KEYS = {
+        "智能问答": "nav_chat",
+        "检索查询": "nav_search",
+        "药品浏览": "nav_leaf",
+        "系统统计": "nav_activity",
+        "关于系统": "nav_info",
+    }
+
+    with st.container(key="sidenav"):
+        for item in NAV_ITEMS:
+            is_active = st.session_state.current_page == item
+            key = NAV_KEYS[item] + ("_active" if is_active else "")
+            if st.button(
+                item,
+                key=key,
+                use_container_width=True,
+                type="primary" if is_active else "secondary",
+            ):
+                st.session_state.current_page = item
+                st.rerun()
+
+    page = st.session_state.current_page
 
     st.markdown("---")
 
-    # API 连接状态
+    # API 连接状态卡片
     st.markdown("#### 系统状态")
     try:
         health = api.health()
-        st.success(
-            f"服务正常\n\n"
-            f"模型: {health.get('model', 'N/A')}\n"
-            f"索引: {health.get('chunks_count', 0)} chunks\n"
-            f"药品: {health.get('drug_count', 0)} 种"
-        )
+        render_status_card(health)
     except Exception:
-        st.error(f"无法连接 API\n地址: {API_BASE_URL}")
-        st.caption("请先启动后端服务：")
-        st.code("python scripts/run/run_api.py", language="bash")
+        render_status_card(None)
 
     st.markdown("---")
 
     # 会话管理（仅问答页面显示）
     if page == "智能问答":
         st.markdown("#### 会话管理")
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("新建会话", use_container_width=True):
-                st.session_state.messages = []
-                st.session_state.session_id = None
-                st.session_state.show_sources = {}
-                st.rerun()
-        with col2:
-            if st.session_state.session_id:
-                if st.button("查看历史", use_container_width=True):
-                    try:
-                        info = api.get_session(st.session_state.session_id)
-                        st.info(f"会话: {info['session_id'][:16]}...\n轮次: {info['turn_count']}")
-                    except Exception as e:
-                        st.error(f"获取失败: {e}")
+        if st.button("＋ 新建会话", use_container_width=True):
+            _new_conversation()
+            st.rerun()
 
-        if st.session_state.session_id:
-            st.caption(f"当前会话: `{st.session_state.session_id[:20]}...`")
-            st.caption(f"对话轮次: {len(st.session_state.messages) // 2}")
+        active = get_active_conversation()
+        for conv in st.session_state.conversations[:8]:
+            is_active = active is not None and conv["key"] == active["key"]
+            title = (conv.get("title") or "新会话")[:12]
+            label = f"● {title}" if is_active else title
+            c1, c2 = st.columns([5, 1], gap="small")
+            if c1.button(label, key=f"conv_{conv['key']}", use_container_width=True):
+                _switch_conversation(conv["key"])
+                st.rerun()
+            if c2.button("", icon=":material/delete:", key=f"del_{conv['key']}", help="删除会话"):
+                _delete_conversation(conv)
+                st.rerun()
+
+        if active and active.get("session_id"):
+            turns = len(active["messages"]) // 2
+            st.caption(f"当前会话 `{active['session_id'][:16]}…` · {turns} 轮")
         else:
-            st.caption("尚未开始对话")
+            st.caption("新会话：提问后自动创建后端会话")
 
 
 # ============================================================
@@ -166,80 +277,105 @@ with st.sidebar:
 
 def render_chat_page():
     """渲染智能问答页面"""
-    render_header(
-        "智能问答",
-        "基于《中国药典》2020年版一部的 RAG 智能问答，支持多轮对话与流式输出",
-    )
+    # 保证 messages 始终指向当前会话的消息列表（rerun 后引用可能失效）
+    _conv = get_active_conversation()
+    if _conv is not None and st.session_state.messages is not _conv["messages"]:
+        _conv["messages"] = st.session_state.messages
 
-    # 示例问题
-    if not st.session_state.messages:
-        st.markdown("#### 试试这些问题")
-        example_questions = [
-            "人参的性味归经是什么？",
-            "黄芪的功能与主治有哪些？",
-            "当归的用法用量是怎样的？",
-            "含有黄连素的药材有哪些？",
-            "麻黄的注意事项是什么？",
-        ]
-        cols = st.columns(len(example_questions))
-        for i, q in enumerate(example_questions):
-            if cols[i].button(q, key=f"example_{i}", use_container_width=True):
-                st.session_state.pending_question = q
-                st.rerun()
-
-    # 显示聊天历史
-    for idx, msg in enumerate(st.session_state.messages):
-        role = msg["role"]
-        with st.chat_message(role, avatar="🧑‍⚕️" if role == "user" else "🌿"):
-            st.markdown(msg["content"])
-
-            # 显示引用
-            if role == "assistant" and msg.get("citations"):
-                render_citations(msg["citations"])
-
-            # 显示一致性警告
-            if role == "assistant" and msg.get("consistency_issues"):
-                render_consistency_warning(msg["consistency_issues"])
-
-            # 显示来源（可折叠）
-            if role == "assistant" and msg.get("sources"):
-                with st.expander(f"📎 检索来源（{len(msg['sources'])} 条）", expanded=False):
-                    for j, src in enumerate(msg["sources"], 1):
-                        render_source_card(src, j)
-
-            # 显示元信息
-            if role == "assistant" and msg.get("latency_ms"):
-                col1, col2, col3 = st.columns([1, 1, 3])
-                with col1:
-                    render_latency_badge(msg["latency_ms"])
-                with col2:
-                    if msg.get("dialogue_turn"):
-                        st.caption(f"第 {msg['dialogue_turn']} 轮")
-                with col3:
-                    if msg.get("resolved_query") and msg["resolved_query"] != msg.get("original_query"):
-                        st.caption(f"指代消解: {msg['original_query']} → {msg['resolved_query']}")
-
-    # 处理待发送问题（来自示例按钮）
     pending = st.session_state.pop("pending_question", None)
 
-    # 输入框
-    user_input = st.chat_input("输入您的问题...")
+    # 首页：无历史、未进入对话、且本次没有待发送问题时才展示
+    welcome = (
+        not st.session_state.messages
+        and not st.session_state.started
+        and not pending
+    )
 
-    # 优先处理 pending 问题
+    if welcome:
+        # 首页整体垂直居中：hero → 输入框 → 示例问题，一屏内不滚动
+        with st.container(key="home"):
+            render_hero(LOGO_DATA_URI)
+
+            # 在容器内调用 → chat_input 内联显示在页面中间，而不是固定底部
+            user_input = st.chat_input(
+                "给《中国药典》提问…",
+                key="home_chat_input",
+                on_submit=_home_submit,
+            )
+
+            example_questions = [
+                "人参的性味归经是什么？",
+                "黄芪的功能与主治有哪些？",
+                "当归的用法用量是怎样的？",
+                "麻黄的注意事项是什么？",
+            ]
+            # 容器 key → CSS 类 .st-key-example_grid，样式作用域精确可控
+            with st.container(key="example_grid"):
+                for row_start in range(0, len(example_questions), 2):
+                    cols = st.columns(2, gap="small")
+                    for i, q in enumerate(example_questions[row_start:row_start + 2]):
+                        if cols[i].button(q, key=f"example_{row_start + i}", use_container_width=True):
+                            st.session_state.pending_question = q
+                            st.session_state.started = True
+                            st.rerun()
+
+    # 显示聊天历史：用户消息右对齐、助手消息左对齐卡片
+    with st.container(key="chat_thread"):
+        for idx, msg in enumerate(st.session_state.messages):
+            if msg["role"] == "user":
+                render_user_message(msg["content"])
+                continue
+
+            with st.container(key=f"amsg_h_{idx}"):
+                st.markdown(msg["content"])
+
+                if msg.get("citations"):
+                    render_citations(msg["citations"])
+
+                if msg.get("consistency_issues"):
+                    render_consistency_warning(msg["consistency_issues"])
+
+                if msg.get("sources"):
+                    with st.expander(f"查看 {len(msg['sources'])} 条药典来源", expanded=False):
+                        for j, src in enumerate(msg["sources"], 1):
+                            render_source_card(src, j)
+
+                render_assistant_meta(
+                    latency_ms=msg.get("latency_ms", 0),
+                    dialogue_turn=msg.get("dialogue_turn", 0),
+                    original_query=msg.get("original_query", ""),
+                    resolved_query=msg.get("resolved_query", ""),
+                )
+
+    # 对话态：输入框固定在页面底部（首页已在上方内联渲染）
+    if not welcome:
+        # 流式生成期间脚本尚未结束，Streamlit 会保留上一帧的首页 DOM（置灰），
+        # 这里主动注入 CSS 立即隐藏，避免提问后 hero / 示例问题残留在页面上方
+        st.markdown(
+            '<style>[class*="st-key-home"]{display:none !important;}</style>',
+            unsafe_allow_html=True,
+        )
+        user_input = st.chat_input(
+            "给《中国药典》提问…",
+            key="chat_input",
+            on_submit=_mark_started,
+        )
+
     if pending and not user_input:
         user_input = pending
+        st.session_state.started = True
 
+    answered = False
     if user_input:
         # 显示用户消息
         st.session_state.messages.append({
             "role": "user",
             "content": user_input,
         })
-        with st.chat_message("user", avatar="🧑‍⚕️"):
-            st.markdown(user_input)
+        render_user_message(user_input)
 
-        # 流式生成回答
-        with st.chat_message("assistant", avatar="🌿"):
+        # 流式生成回答（左侧卡片气泡，头像由 CSS 伪元素绘制）
+        with st.container(key="amsg_live"):
             placeholder = st.empty()
             full_response = ""
 
@@ -258,14 +394,18 @@ def render_chat_page():
                 resolved_query = user_input
                 dialogue_turn = 0
 
+                # 流式节流：每个分片都重排整段 Markdown 会持续改变内容高度，
+                # 长回答时滚动位置会被反复拽动，这里每 3 个分片刷新一次。
+                stream_tick = 0
                 for event in api.chat_stream(
                     user_input,
                     session_id=st.session_state.session_id,
                 ):
                     if "content" in event and "rejected" not in event:
                         collected_content += event["content"]
-                        # 实时更新显示
-                        placeholder.markdown(collected_content + "▌")
+                        stream_tick += 1
+                        if stream_tick % 3 == 0:
+                            placeholder.markdown(collected_content + "▌")
                     elif "rejected" in event:
                         collected_content = event["content"]
                         placeholder.markdown(collected_content)
@@ -281,6 +421,16 @@ def render_chat_page():
                             "original_query": user_input,
                             "consistency_issues": [],
                         })
+                        # 拒绝回答同样要绑定会话，避免下次提问又新建后端会话
+                        st.session_state.session_id = event.get(
+                            "session_id", st.session_state.session_id
+                        )
+                        conv = get_active_conversation()
+                        if conv is not None:
+                            conv["session_id"] = st.session_state.session_id
+                            if not conv.get("title") or conv["title"] == "新会话":
+                                conv["title"] = user_input[:12]
+                            conv["messages"] = st.session_state.messages
                         return
                     elif "done" in event:
                         final_session_id = event.get("session_id", final_session_id)
@@ -298,8 +448,14 @@ def render_chat_page():
                 full_response = collected_content
                 placeholder.markdown(full_response)
 
-                # 更新会话 ID
+                # 更新会话 ID，并回写当前会话条目（标题取首问前 12 字）
                 st.session_state.session_id = final_session_id
+                conv = get_active_conversation()
+                if conv is not None:
+                    conv["session_id"] = final_session_id
+                    if not conv.get("title") or conv["title"] == "新会话":
+                        conv["title"] = user_input[:12]
+                    conv["messages"] = st.session_state.messages
 
                 # 显示引用
                 if citations:
@@ -311,22 +467,17 @@ def render_chat_page():
 
                 # 显示来源（可折叠）
                 if sources:
-                    with st.expander(f"📎 检索来源（{len(sources)} 条）", expanded=False):
+                    with st.expander(f"查看 {len(sources)} 条药典来源", expanded=False):
                         for j, src in enumerate(sources, 1):
                             render_source_card(src, j)
 
-                # 显示安全提醒
-                render_disclaimer()
-
-                # 显示元信息
-                col1, col2, col3 = st.columns([1, 1, 3])
-                with col1:
-                    render_latency_badge(latency_ms)
-                with col2:
-                    st.caption(f"第 {dialogue_turn} 轮" if latency_ms else "")
-                with col3:
-                    if resolved_query != user_input:
-                        st.caption(f"指代消解: {user_input} → {resolved_query}")
+                # 元信息（耗时 / 轮次 / 指代消解 / 安全提示）
+                render_assistant_meta(
+                    latency_ms=latency_ms,
+                    dialogue_turn=dialogue_turn,
+                    original_query=user_input,
+                    resolved_query=resolved_query,
+                )
 
                 # 保存到历史
                 st.session_state.messages.append({
@@ -340,6 +491,7 @@ def render_chat_page():
                     "original_query": user_input,
                     "consistency_issues": consistency_issues,
                 })
+                answered = True
 
             except Exception as e:
                 # 如果流式失败，尝试同步接口
@@ -369,20 +521,16 @@ def render_chat_page():
                         render_consistency_warning(consistency_issues)
 
                     if sources:
-                        with st.expander(f"📎 检索来源（{len(sources)} 条）", expanded=False):
+                        with st.expander(f"查看 {len(sources)} 条药典来源", expanded=False):
                             for j, src in enumerate(sources, 1):
                                 render_source_card(src, j)
 
-                    render_disclaimer()
-
-                    col1, col2, col3 = st.columns([1, 1, 3])
-                    with col1:
-                        render_latency_badge(latency_ms)
-                    with col2:
-                        st.caption(f"第 {result.get('dialogue_turn', 1)} 轮")
-                    with col3:
-                        if result.get("resolved_query") and result["resolved_query"] != user_input:
-                            st.caption(f"指代消解: {user_input} → {result['resolved_query']}")
+                    render_assistant_meta(
+                        latency_ms=latency_ms,
+                        dialogue_turn=result.get("dialogue_turn", 1),
+                        original_query=user_input,
+                        resolved_query=result.get("resolved_query", ""),
+                    )
 
                     st.session_state.messages.append({
                         "role": "assistant",
@@ -395,9 +543,14 @@ def render_chat_page():
                         "original_query": user_input,
                         "consistency_issues": consistency_issues,
                     })
+                    answered = True
 
                 except Exception as e2:
                     placeholder.error(f"问答失败: {e2}")
+
+    # 回答完成后再 rerun 一次：让侧边栏的会话标题 / 会话 ID / 轮次即时刷新
+    if answered:
+        st.rerun()
 
 
 # ============================================================
@@ -408,7 +561,8 @@ def render_search_page():
     """渲染检索查询页面"""
     render_header(
         "检索查询",
-        "直接使用混合检索引擎（向量 + BM25 + RRF + 重排）查询药典内容",
+        "直接使用混合检索引擎（向量 + BM25 + RRF）查询药典内容",
+        eyebrow="SEARCH · HYBRID RETRIEVAL",
     )
 
     # 查询输入
@@ -496,6 +650,7 @@ def render_drugs_page():
     render_header(
         "药品浏览",
         "浏览《中国药典》2020年版一部收录的全部药材和饮片",
+        eyebrow="PHARMACOPOEIA · 2020",
     )
 
     # 搜索框
@@ -566,6 +721,7 @@ def render_stats_page():
     render_header(
         "系统统计",
         "药典知识库索引状态与系统运行指标",
+        eyebrow="SYSTEM · METRICS",
     )
 
     try:
@@ -577,13 +733,13 @@ def render_stats_page():
         col1, col2, col3, col4 = st.columns(4)
 
         with col1:
-            render_stat_card(str(stats["total_chunks"]), "知识切片(Chunks)", "📄")
+            render_stat_card(str(stats["total_chunks"]), "知识切片(Chunks)", "doc")
         with col2:
-            render_stat_card(str(stats["total_drugs"]), "收录药品", "🌿")
+            render_stat_card(str(stats["total_drugs"]), "收录药品", "leaf")
         with col3:
-            render_stat_card(str(health.get("chunks_count", 0)), "向量索引", "🔢")
+            render_stat_card(str(health.get("chunks_count", 0)), "向量索引", "database")
         with col4:
-            render_stat_card(health.get("model", "N/A"), "LLM 模型", "🤖")
+            render_stat_card(health.get("model", "N/A"), "LLM 模型", "chip")
 
         st.markdown("---")
 
@@ -633,10 +789,17 @@ def render_about_page():
     render_header(
         "关于系统",
         "中国药典智能问答系统 — 基于 RAG 架构的知识检索与生成",
+        eyebrow="ABOUT · RAG PIPELINE",
     )
 
+    # 模型名以实际配置为准（.env 中的 LLM_MODEL），不在页面里硬编码
+    try:
+        from config import LLM_MODEL as _llm_model
+    except ImportError:
+        _llm_model = "N/A"
+
     st.markdown(
-        """
+        f"""
         ### 系统简介
 
         本系统基于 **RAG（Retrieval-Augmented Generation，检索增强生成）** 架构，
@@ -649,18 +812,8 @@ def render_about_page():
         | **阶段一** | 数据工程 | .docx 解析 → OCR 清洗 → 结构化提取 → 智能切片 |
         | **阶段二** | 索引构建 | BGE 向量化 + Chroma 存储 + BM25 关键词索引 |
         | **阶段三** | 检索引擎 | 向量+BM25 混合检索 → RRF 融合 → BGE 重排 |
-        | **阶段四** | 生成引擎 | 指代消解 → Prompt 工程 → LongCat 2.0 生成 → 后处理 |
+        | **阶段四** | 生成引擎 | 指代消解 → Prompt 工程 → {_llm_model} 生成 → 后处理 |
         | **阶段五** | API 服务 | FastAPI RESTful + SSE 流式 + 会话管理 |
-
-        ### 核心特性
-
-        - **混合检索**：向量语义检索 + BM25 关键词检索，通过 RRF 算法融合
-        - **精准重排**：BGE-Reranker 跨编码器对候选结果二次排序
-        - **多轮对话**：基于 LLM 的指代消解（"它" → "人参"）
-        - **引用标注**：回答自动标注药典出处，确保可溯源性
-        - **一致性校验**：数值/单位一致性检查，防止 LLM 幻觉
-        - **用药安全**：自动添加用药安全提醒
-        - **流式输出**：SSE 实时流式生成，提升用户体验
 
         ### 数据来源
 
@@ -676,7 +829,7 @@ def render_about_page():
         | 向量数据库 | Chroma |
         | 关键词检索 | Rank BM25 |
         | 重排模型 | BAAI/bge-reranker-v2-m3 |
-        | LLM | 美团 LongCat 2.0 |
+        | LLM | {_llm_model} |
         | 后端 | FastAPI + Uvicorn |
         | 前端 | Streamlit |
 
@@ -690,14 +843,33 @@ def render_about_page():
         """
     )
 
+    # 核心特性卡片网格
+    st.markdown("### 核心特性")
+    features = [
+        ("git-branch", "混合检索", "向量语义检索 + BM25 关键词检索，RRF 算法融合排序"),
+        ("spark", "精准重排", "BGE-Reranker 跨编码器对候选结果二次排序"),
+        ("history", "多轮对话", "基于 LLM 的指代消解，支持追问与上下文继承"),
+        ("bookmark", "引用标注", "回答自动标注药典出处，确保可溯源性"),
+        ("check", "一致性校验", "数值/单位一致性检查，降低 LLM 幻觉风险"),
+        ("shield", "用药安全", "自动附加用药安全提醒，引导遵医嘱"),
+    ]
+    for row_start in range(0, len(features), 2):
+        cols = st.columns(2)
+        for i, (icon, title, desc) in enumerate(features[row_start:row_start + 2]):
+            with cols[i]:
+                render_feature_card(icon, title, desc)
+
     st.markdown("---")
 
     st.markdown(
-        """
+        f"""
         <div class="medical-disclaimer">
-            <strong>⚠ 免责声明</strong>：本系统提供的信息仅供参考和学习使用，
-            不构成医疗建议。具体用药请遵医嘱，切勿自行用药。
-            系统回答基于《中国药典》原文，但可能存在检索或生成偏差。
+            {ICONS['shield']}
+            <div>
+                <strong>免责声明</strong>：本系统提供的信息仅供参考和学习使用，
+                不构成医疗建议。具体用药请遵医嘱，切勿自行用药。
+                系统回答基于《中国药典》原文，但可能存在检索或生成偏差。
+            </div>
         </div>
         """,
         unsafe_allow_html=True,

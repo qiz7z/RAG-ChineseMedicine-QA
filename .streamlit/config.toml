@@ -1,0 +1,14 @@
+[theme]
+# 中华药典智能问答 — Minimalism & Swiss 风格（草药绿主题）
+# 与 src/webui/styles.py 的 COLORS 保持一致
+primaryColor = "#2D6A4F"
+backgroundColor = "#FAF8F1"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#1E293B"
+font = "sans-serif"
+
+[server]
+# 关闭 CORS 限制便于内网访问；按需调整
+enableCORS = false
+# 允许访问 src/webui/static 下的字体等静态资源
+enableStaticServing = true
