@@ -405,6 +405,7 @@ class Generator:
                     "score": r.score,
                     "rerank_score": r.rerank_score,
                     "sources": r.sources,
+                    "source_scores": r.source_scores,
                 })
 
         yield {

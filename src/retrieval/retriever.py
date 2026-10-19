@@ -38,6 +38,7 @@
   │     返回结构化结果 + 格式化的上下文文本                        │
   └──────────────────────────────────────────────────────────────┘
 """
+import re
 import sys
 import time
 from pathlib import Path
@@ -85,6 +86,7 @@ class SearchResult:
     parent_drug: str = ""                   # 父级药品名（子方剂用）
     char_count: int = 0                     # 字符数
     sources: List[str] = field(default_factory=list)  # 命中来源（vector/bm25）
+    source_scores: Dict[str, float] = field(default_factory=dict)  # 各路原始分（vector 余弦/BM25 分）
     rerank_score: Optional[float] = None    # 重排分数（未重排则为 None）
 
     def to_dict(self) -> Dict[str, Any]:
@@ -102,6 +104,7 @@ class SearchResult:
             "parent_drug": self.parent_drug,
             "char_count": self.char_count,
             "sources": self.sources,
+            "source_scores": self.source_scores,
             "rerank_score": self.rerank_score,
         }
 
@@ -182,6 +185,11 @@ class Retriever:
         t0 = time.time()
         self.meta_store = MetadataStore(SQLITE_DB_PATH)
         print(f"  元数据存储加载完成: {self.meta_store.count()} 条 ({time.time() - t0:.1f}s)")
+
+        # 4.5 常用药材优先表（横向查询排序用）
+        self.common_herbs = self._load_common_herbs()
+        if self.common_herbs:
+            print(f"  常用药材优先表: {len(self.common_herbs)} 味")
 
         # 5. 加载查询解析器（从 SQLite 获取所有药品名）
         t0 = time.time()
@@ -348,14 +356,38 @@ class Retriever:
             r["metadata"] = meta
         component_latency["metadata_enrichment"] = time.time() - t0
 
+        # ============ 5.4 条件语义：成分查询 / 性味条件 ============
+        # 「哪些药材含挥发油」「XX的含量测定」的目标章节不是功能主治，
+        # 需要显式切到鉴别/检查/含量测定等章节。
+        is_composition = self._is_composition_query(query)
+        parsed["is_composition"] = is_composition
+        sexing = self._extract_sexing_condition(query)
+        if sexing:
+            parsed["sexing_condition"] = {
+                "tastes": sorted(sexing[0]),
+                "natures": sorted(sexing[1]),
+            }
+
         # ============ 5.5 章节感知召回 ============
         # 查询解析出的目标章节此前只用于药品名过滤，章节信息被浪费，导致
         # "药品召回对了、章节没进 top-k"。这里在候选集内把正文含【目标章节】
         # 标记的 chunk 提前（同命中数保持 RRF 原序），不引入任何模型。
-        if ENABLE_SECTION_BOOST and parsed.get("sections") and fused:
-            fused = self._promote_section_hits(
-                fused, parsed["sections"], parsed.get("drug_names") or []
-            )
+        if ENABLE_SECTION_BOOST and fused:
+            if is_composition:
+                comp_sections = list(self._COMPOSITION_SECTIONS)
+                # 显式问到某章节时（如「鉴别方法」），该章节排到最前
+                for sec in reversed(parsed.get("sections") or []):
+                    if sec in comp_sections:
+                        comp_sections.remove(sec)
+                        comp_sections.insert(0, sec)
+                fused = self._promote_composition_sections(fused, comp_sections)
+            elif parsed.get("sections"):
+                fused = self._promote_section_hits(
+                    fused, parsed["sections"], parsed.get("drug_names") or []
+                )
+        # 性味是硬条件，放在章节提升之后做稳定重排（符合的提前，其余保序）
+        if fused and sexing:
+            fused = self._promote_sexing_hits(fused, sexing[0], sexing[1])
         component_latency["section_boost"] = time.time() - t0
 
         # ============ 6. 重排 ============
@@ -386,8 +418,20 @@ class Retriever:
                 parent_drug=meta.get("parent_drug", ""),
                 char_count=meta.get("char_count", 0),
                 sources=r.get("sources", []),
+                source_scores=r.get("source_scores") or {},
                 rerank_score=r.get("rerank_score"),
             ))
+
+        # ============ 7.5 横向条件查询聚合 ============
+        # 「哪些药材归肺经」这类问题，top-k 相似度检索天然覆盖不全；
+        # 改为全库按条件筛选、按药品聚合，聚合结果优先，其余结果补足。
+        if parsed.get("is_horizontal"):
+            t0 = time.time()
+            horizontal = self._horizontal_search(query, parsed, top_k)
+            if horizontal:
+                # 横向查询只返回符合条件的结果，不用不相关结果补位
+                results = horizontal
+            component_latency["horizontal_search"] = time.time() - t0
 
         # ============ 8. 上下文组装 ============
         t0 = time.time()
@@ -404,6 +448,441 @@ class Retriever:
             latency=total_latency,
             component_latency=component_latency,
         )
+
+    # ----------------------------------------------------------
+    # 横向条件查询：全库筛选 + 按药品聚合
+    # ----------------------------------------------------------
+
+    _HORIZONTAL_STOP = re.compile(
+        r"(请|帮我|我想|想知道|有哪些|有什么|哪些|哪味|哪个|什么|哪种|"
+        r"药材|中药|药物|中成药|方剂|"
+        r"具有|含有?|可以|能够|能|可|用来|用于|"
+        r"功效|作用|疗效|效果|主治|功能|"
+        r"的|是|有|吗|呢|？|\?|，|,|。)"
+    )
+
+    _HORIZONTAL_SECTION_PRIORITY = {
+        "功能与主治": 0,
+        "性味与归经": 1,
+        "注意": 2,
+        "用法与用量": 3,
+        "临床应用": 4,
+    }
+
+    # 成分/检测类横向查询的代表块优先级：证据在鉴别/检查/含量测定，不在功能主治
+    _COMPOSITION_SECTION_PRIORITY = {
+        "含量测定": 0,
+        "鉴别": 1,
+        "检查": 2,
+        "特征图谱": 3,
+        "指纹图谱": 4,
+        "浸出物": 5,
+        "性状": 6,
+        "完整条目": 7,
+    }
+
+    def _extract_conditions(self, query: str) -> List[str]:
+        """从横向查询中提取条件词（归经 / 功效 / 毒性等）"""
+        conds = []
+
+        # 归经条件：归肺经 / 入肺经
+        for m in re.finditer(r"[归入][\u4e00-\u9fa5]{1,4}经", query):
+            conds.append(m.group(0))
+
+        # 毒性：正文里通常写作「有毒」
+        if "毒性" in query or "有毒" in query:
+            conds.append("有毒")
+
+        # 去掉疑问词与泛称后的核心短语
+        cleaned = self._HORIZONTAL_STOP.sub(" ", query)
+        for token in re.split(r"[\s、和与及或]+", cleaned):
+            token = token.strip()
+            if len(token) < 2:
+                continue
+            # 「毒性」统一成「有毒」，避免「缓解药物毒性」这类描述误命中
+            if token in ("毒性", "有毒的"):
+                conds.append("有毒")
+            else:
+                conds.append(token)
+
+        # 去重保序
+        seen, out = set(), []
+        for c in conds:
+            if c not in seen:
+                seen.add(c)
+                out.append(c)
+        return out
+
+    _MERIDIAN_RE = re.compile(r"[归入]([\u4e00-\u9fa5、，,和及]+?)经")
+    _MERIDIAN_SPLIT = re.compile(r"[、，,和及]")
+
+    @staticmethod
+    def _load_common_herbs() -> Dict[str, int]:
+        """加载常用药材优先表，返回 药名 → 优先级序号（越小越常用）"""
+        path = (
+            Path(__file__).resolve().parent.parent.parent
+            / "data" / "lexicon" / "common_herbs.txt"
+        )
+        if not path.exists():
+            return {}
+        ranks: Dict[str, int] = {}
+        for line in path.read_text(encoding="utf-8").splitlines():
+            name = line.strip()
+            if not name or name.startswith("#"):
+                continue
+            ranks.setdefault(name, len(ranks))
+        return ranks
+
+    # 功效类条件词的同义扩展（药典用词与用户说法常不一致）
+    _HORIZONTAL_SYNONYMS = {
+        "活血化瘀": ["活血", "化瘀", "祛瘀", "散瘀"],
+        "安神": ["安神", "宁心", "养心"],
+        "利水渗湿": ["利水", "渗湿", "利尿"],
+        "清热解毒": ["清热", "解毒"],
+        "补气": ["补气", "益气", "大补元气", "补中"],
+        "补血": ["补血", "养血"],
+        "止咳": ["止咳", "镇咳"],
+        "化痰": ["化痰", "祛痰"],
+        # 成分查询：药典正文用「小檗碱」，用户常说「黄连素」
+        "黄连素": ["黄连素", "小檗碱", "盐酸小檗碱"],
+    }
+
+    # 成分/检测类查询要看鉴别、检查、含量测定，不能只搜功能主治。
+    # 成分名词用于横向查询关键词；方法/章节词只用于判定查询类型。
+    _COMPOSITION_TERMS = (
+        '挥发油', '皂苷', '皂昔', '黄酮', '生物碱', '鞣质', '多糖',
+        '黄连素', '小檗碱',
+    )
+    _COMPOSITION_METHOD_HINTS = (
+        '含量测定', '鉴别', '色谱', '薄层', '特征图谱', '指纹图谱',
+    )
+    _COMPOSITION_STRONG_HINTS = _COMPOSITION_TERMS + _COMPOSITION_METHOD_HINTS
+    _COMPOSITION_HINTS = _COMPOSITION_STRONG_HINTS + ('含有', '成分')
+    _COMPOSITION_SECTIONS = [
+        '鉴别', '检查', '含量测定', '浸出物', '性状',
+        '特征图谱', '指纹图谱', '完整条目',
+    ]
+
+    # 性味条件：甘温 / 苦、寒 / 味甘性温 / 性味：甘、微温
+    _SEXING_RE = re.compile(
+        r"(?:性味|性|味)?\s*[:：]?\s*"
+        r"(?P<tastes>(?:微?[甘苦辛酸咸淡涩][、，,]?\s*)+)"
+        r"性?\s*"
+        r"(?P<nature>微温|微寒|大热|大寒|温|热|寒|凉|平)"
+    )
+    _TASTE_SPLIT = re.compile(r"[、，,]")
+    _SEXING_MARKERS = ("【性味与归经】", "【性味】", "【归经】")
+
+    # 药典语料 OCR 噪声：「小檗碱」被识别成小案碱/小槩碱/小棄碱…（实测 160+ 块，
+    # 无一条写作标准字），GLOB 只锚定首尾字即可覆盖全部变体。
+    _COMPOSITION_GLOB_HINTS = {
+        "小檗碱": "*小?碱*",
+        "盐酸小檗碱": "*小?碱*",
+    }
+
+    @classmethod
+    def _composition_glob_patterns(cls, terms: List[str]) -> List[str]:
+        """成分词的 OCR 容错 GLOB 模式（与关键词 OR 合并）。"""
+        return list(dict.fromkeys(
+            cls._COMPOSITION_GLOB_HINTS[t]
+            for t in terms
+            if t in cls._COMPOSITION_GLOB_HINTS
+        ))
+
+    # 通用成分词：「麻黄碱」「黄芪甲苷」「氨基酸」这类不可能全部穷举，
+    # 在「含/成分/测定」语境下用后缀字兜底识别。
+    _COMPOSITION_RE = re.compile(
+        r"[\u4e00-\u9fa5]{2,4}(?:素|碱|苷|酮|酸|醇|酯|酚|醛|醚|胺|肽)"
+    )
+
+    @classmethod
+    def _extract_composition_terms(cls, query: str) -> List[str]:
+        """提取查询中的成分名词（固定词表 + 后缀字兜底）。"""
+        terms = [t for t in cls._COMPOSITION_TERMS if t in query]
+        if any(w in query for w in ('含', '成分', '测定', '鉴别', '色谱')):
+            cleaned = re.sub(r"(含有|含|具有|有|能|可)", " ", query)
+            for m in cls._COMPOSITION_RE.finditer(cleaned):
+                term = m.group(0)
+                if len(term) >= 3 and term not in terms:
+                    terms.append(term)
+        return terms
+
+    @classmethod
+    def _is_composition_query(cls, query: str) -> bool:
+        """判断是否为成分/检测类查询（问「含什么」「怎么测」而不是「治什么」）。"""
+        if cls._extract_composition_terms(query):
+            return True
+        if any(h in query for h in cls._COMPOSITION_METHOD_HINTS):
+            return True
+        if not any(h in query for h in ('含有', '成分')):
+            return False
+        # 「含有哪些功效」这类仍在问功效，不算成分查询
+        return not any(w in query for w in ('功效', '功能', '主治', '作用'))
+
+    def _expand_conditions(self, conditions: List[str]) -> List[str]:
+        """条件词同义扩展，提高召回覆盖"""
+        expanded = []
+        for c in conditions:
+            expanded.append(c)
+            expanded.extend(self._HORIZONTAL_SYNONYMS.get(c, []))
+        return list(dict.fromkeys(expanded))
+
+    @classmethod
+    def _extract_sexing_condition(cls, query: str):
+        """解析「性味甘温 / 苦、寒 / 味甘性温」这类条件，返回 (味集合, 性集合) 或 None"""
+        m = cls._SEXING_RE.search(query)
+        if not m:
+            return None
+        tastes = {
+            t.strip().lstrip('微')
+            for t in cls._TASTE_SPLIT.split(m.group('tastes'))
+            if t.strip()
+        }
+        nature = m.group('nature').lstrip('微大')
+        return tastes, {nature}
+
+    @classmethod
+    def _parse_sexing_text(cls, text: str):
+        """从【性味与归经】正文解析 (味集合, 性)，解析失败返回 (set(), '')"""
+        text = text or ''
+        # chunk 正文形如「人参 · 性味与归经\n【性味与归经】甘、微苦，微温。归…」
+        # 先定位章节标记，避免把药名行当成味描述
+        for marker in cls._SEXING_MARKERS:
+            idx = text.find(marker)
+            if idx >= 0:
+                text = text[idx + len(marker):]
+                break
+        head = re.split(r'[。；;]', text, 1)[0]
+        # 去掉「归…经」部分
+        head = re.split(r'归', head, 1)[0]
+        m = re.search(r'(微温|微寒|大热|大寒|温|热|寒|凉|平)\s*$', head)
+        if not m:
+            return set(), ''
+        nature = m.group(1).lstrip('微大')
+        tastes_part = head[:m.start()]
+        tastes = {
+            t.strip().lstrip('微')
+            for t in re.split(r'[、，,]', tastes_part)
+            if t.strip()
+        }
+        return tastes, nature
+
+    @classmethod
+    def _sexing_match(
+        cls,
+        chunk: Dict[str, Any],
+        tastes: set,
+        natures: set,
+    ) -> bool:
+        """候选条目的性味是否满足查询条件（味取交集，性须一致）。"""
+        meta = chunk.get('metadata') or {}
+        content = chunk.get('content') or ''
+        if meta.get('section') != '性味与归经' and not any(
+            m in content for m in cls._SEXING_MARKERS
+        ):
+            return False
+        chunk_tastes, chunk_nature = cls._parse_sexing_text(content)
+        if not chunk_tastes and not chunk_nature:
+            return False
+        if tastes and not (tastes & chunk_tastes):
+            return False
+        if natures and chunk_nature not in natures:
+            return False
+        return True
+
+    @classmethod
+    def _promote_sexing_hits(
+        cls,
+        candidates: List[Dict[str, Any]],
+        tastes: set,
+        natures: set,
+    ) -> List[Dict[str, Any]]:
+        """把性味符合条件（如「甘温」）的候选提前，其余保持原序。"""
+        scored = [
+            (1 if cls._sexing_match(c, tastes, natures) else 0, c)
+            for c in candidates
+        ]
+        if not any(s for s, _ in scored):
+            return candidates
+        return [c for _, c in sorted(scored, key=lambda x: x[0], reverse=True)]
+
+    @staticmethod
+    def _section_base(section: str) -> str:
+        """去掉 ETL 切片后缀：含量测定-成分1 → 含量测定，鉴别-段2 → 鉴别"""
+        return re.split(r'-(?:成分|项|段)', section or '', 1)[0]
+
+    @classmethod
+    def _promote_composition_sections(
+        cls,
+        candidates: List[Dict[str, Any]],
+        sections: List[str],
+    ) -> List[Dict[str, Any]]:
+        """成分/检测类查询按 chunk 的 section 字段提升（含 -成分N / -段N 子块）。
+
+        这类查询的目标章节（鉴别/检查/含量测定）是 ETL 的详述类章节，
+        metadata.section 与药典原生章节名同源；不像【功能与主治】那样被
+        合并成「临床应用」，因此这里比对 section 字段比数【】标记更准。
+        """
+        rank = {s: i for i, s in enumerate(sections)}
+        default = len(sections)
+        scored = [
+            (
+                rank.get(
+                    cls._section_base((c.get('metadata') or {}).get('section') or ''),
+                    default,
+                ),
+                c,
+            )
+            for c in candidates
+        ]
+        if all(s == default for s, _ in scored):
+            return candidates
+        return [c for _, c in sorted(scored, key=lambda x: x[0])]
+
+    def _extract_meridian_targets(self, query: str) -> List[str]:
+        """提取归经查询的目标脏腑，如「归肺经」→ ["肺"]"""
+        m = self._MERIDIAN_RE.search(query)
+        if not m:
+            return []
+        return [t for t in self._MERIDIAN_SPLIT.split(m.group(1)) if t]
+
+    def _horizontal_search(
+        self,
+        query: str,
+        parsed: Dict[str, Any],
+        top_k: int,
+    ) -> List[SearchResult]:
+        """
+        横向条件查询检索。
+
+        向量/BM25 的 top-k 只能覆盖少数条目，回答不了「哪些药材归肺经」。
+        这里改为：全库按条件筛选 → 按药品聚合 → 每药取一个代表块，
+        按品种热度 + 命中块数排序。
+
+        归经条件单独处理：正文写作「归脾、肺、心、肾经」，
+        直接 LIKE「归肺经」匹配不到，需要解析脏腑列表后判断包含关系。
+        """
+        category = parsed.get("category_filter")
+        rows: List[Dict] = []
+        match_terms: List[str] = []
+
+        is_composition = bool(parsed.get("is_composition"))
+        sexing = self._extract_sexing_condition(query)
+
+        def _row_matches_sexing(row: Dict) -> bool:
+            return self._sexing_match(
+                {
+                    "content": row["content"],
+                    "metadata": {"section": row.get("section", "")},
+                },
+                sexing[0],
+                sexing[1],
+            )
+
+        targets = self._extract_meridian_targets(query)
+        if targets:
+            match_terms = list(targets)
+            for row in self.meta_store.filter(section="性味与归经", category=category):
+                for m in self._MERIDIAN_RE.finditer(row["content"]):
+                    organs = self._MERIDIAN_SPLIT.split(m.group(1))
+                    if any(t in organs for t in targets):
+                        rows.append(row)
+                        break
+            if sexing:
+                rows = [r for r in rows if _row_matches_sexing(r)]
+        elif sexing:
+            # 「性味甘温的药材」：药典写作「甘、微苦，微温」「苦，寒」…
+            # LIKE 原样搜不到，改为全库解析性味章节后按集合判断。
+            for row in self.meta_store.filter(section="性味与归经", category=category):
+                if _row_matches_sexing(row):
+                    rows.append(row)
+        else:
+            # 成分类查询优先取具体成分名：「含挥发油成分」整词 LIKE 不命中正文
+            raw_conditions = (
+                self._extract_composition_terms(query) if is_composition else []
+            )
+            if not raw_conditions:
+                raw_conditions = self._extract_conditions(query)
+            if not raw_conditions:
+                return []
+            match_terms = self._expand_conditions(raw_conditions)
+
+            # 毒性只看性味/注意（避免「解毒」等用法描述误命中）；
+            # 短条目只有完整条目块，需要一并纳入
+            if any(t in ("有毒", "毒性") for t in match_terms):
+                sections = ["性味与归经", "注意", "完整条目"]
+                section_prefixes = None
+            elif is_composition:
+                sections = list(self._COMPOSITION_SECTIONS)
+                # 「含量测定-成分1」「鉴别-段2」等切片块不在精确 IN 里，需前缀匹配
+                section_prefixes = [s for s in sections if s != "完整条目"]
+            else:
+                sections = list(self._HORIZONTAL_SECTION_PRIORITY.keys()) + ["完整条目"]
+                section_prefixes = None
+
+            rows = self.meta_store.search_content(
+                keywords=match_terms,
+                sections=sections,
+                section_prefixes=section_prefixes,
+                glob_patterns=self._composition_glob_patterns(match_terms),
+                category=category,
+            )
+
+        if not rows:
+            return []
+
+        groups: Dict[str, List[Dict]] = {}
+        for row in rows:
+            groups.setdefault(row["drug_name"], []).append(row)
+
+        hot = self.meta_store.drug_chunk_counts(category=category)
+        priority = (
+            self._COMPOSITION_SECTION_PRIORITY
+            if is_composition
+            else self._HORIZONTAL_SECTION_PRIORITY
+        )
+
+        ranked = []
+        for drug, blocks in groups.items():
+            blocks.sort(key=lambda b: (
+                priority.get(self._section_base(b["section"]), 99),
+                -b.get("char_count", 0),
+            ))
+            best = blocks[0]
+            # 条件词在证据块中的命中密度：比单纯条目热度更贴近查询条件
+            hits = sum(
+                sum(b["content"].count(t) for t in match_terms)
+                for b in blocks
+            )
+            ranked.append((
+                self.common_herbs.get(drug, 10 ** 6),  # 常用药优先
+                -hits,
+                -len(blocks),
+                -hot.get(drug, 0),
+                len(drug),
+                best,
+            ))
+        ranked.sort(key=lambda x: x[:5])
+
+        results = []
+        for i, item in enumerate(ranked[:top_k]):
+            block = item[5]
+            results.append(SearchResult(
+                chunk_id=block["chunk_id"],
+                content=block["content"],
+                score=1.0 / (i + 1),
+                drug_name=block["drug_name"],
+                pinyin_name=block.get("pinyin_name", ""),
+                latin_name=block.get("latin_name", ""),
+                category=block.get("category", ""),
+                section=block.get("section", ""),
+                chunk_type=block.get("chunk_type", ""),
+                is_yinpian=bool(block.get("is_yinpian", False)),
+                parent_drug=block.get("parent_drug", ""),
+                char_count=block.get("char_count", 0),
+                sources=["horizontal"],
+            ))
+        return results
 
     # ----------------------------------------------------------
     # 药品名变体扩展

@@ -148,7 +148,9 @@ class QueryParser:
         }
 
         # 1. 药品名识别
-        found_drugs = self._extract_drug_names(query)
+        found_drugs = self._drop_embedded_drugs(
+            query, self._extract_drug_names(query)
+        )
         result["drug_names"] = found_drugs
 
         # 2. 章节识别
@@ -193,6 +195,24 @@ class QueryParser:
                     found.append(drug_name)
 
         return found
+
+    # 成分名后缀字：「黄连素」「人参皂苷」「麻黄碱」里的药名只是成分词前缀，
+    # 不能当成查询指定的具体药品，否则横向成分查询会被降级为普通检索。
+    _COMPOSITION_CHARS = set("素碱苷酮酸醇酯油糖盐皂酚醛醚胺肽甲")
+
+    def _drop_embedded_drugs(self, query: str, found: List[str]) -> List[str]:
+        """剔除仅作为更长成分名词前缀的药名（黄连素 → 黄连）。"""
+        kept = []
+        for drug in found:
+            idx = query.find(drug)
+            if idx < 0:
+                kept.append(drug)
+                continue
+            nxt = query[idx + len(drug): idx + len(drug) + 1]
+            if nxt and nxt in self._COMPOSITION_CHARS:
+                continue
+            kept.append(drug)
+        return kept
 
     def _extract_sections(self, query: str) -> List[str]:
         """从查询中识别章节名"""
@@ -298,6 +318,11 @@ class QueryParser:
         if re.search(r'(能治|用于|治疗|主治).{2,}', query):
             if re.search(r'(的药|的药材|的中药|的方|的成药|有哪些|有什么)', query):
                 return True
+
+        # 以泛称结尾且未指定具体药品：「可以安神的药材」「归肺经的中药」
+        stripped = query.strip("？?。！! \t")
+        if re.search(r'(药材|中药|药物|中成药|方剂)$', stripped):
+            return True
 
         return False
 

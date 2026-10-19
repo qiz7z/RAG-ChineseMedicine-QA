@@ -42,20 +42,32 @@ def rrf_fusion(
     """
     k = k or RRF_K
     scores = defaultdict(float)
+    source_scores = defaultdict(dict)  # {doc_id: {"vector": 0.83, "bm25": 12.4}}
     doc_info = {}  # 保留文档信息（content, metadata 等）
 
     for rank_list in rank_lists:
         for rank, doc in enumerate(rank_list, 1):
             doc_id = doc["id"]
             scores[doc_id] += 1.0 / (k + rank)
+
+            # 保留每一路的原始分数，供 UI 展示（RRF 本身只用排名）
+            src = doc.get("source", "")
+            if src:
+                raw_score = float(doc.get("score", 0))
+                prev = source_scores[doc_id].get(src)
+                if prev is None or raw_score > prev:
+                    source_scores[doc_id][src] = raw_score
+
             # 保留文档信息（后出现的覆盖先出现的，保留更高排名的版本）
             if doc_id not in doc_info:
+                doc = doc.copy()
+                doc["sources"] = [src] if src else []
                 doc_info[doc_id] = doc
             else:
-                # 合并来源信息
-                if "sources" not in doc_info[doc_id]:
-                    doc_info[doc_id]["sources"] = [doc_info[doc_id].get("source", "")]
-                doc_info[doc_id]["sources"].append(doc.get("source", ""))
+                # 合并来源信息（去重）
+                sources = doc_info[doc_id].setdefault("sources", [])
+                if src and src not in sources:
+                    sources.append(src)
 
     # 按分数排序
     sorted_ids = sorted(scores.keys(), key=lambda x: scores[x], reverse=True)
@@ -66,6 +78,7 @@ def rrf_fusion(
         doc = doc_info[doc_id].copy()
         doc["id"] = doc_id
         doc["rrf_score"] = scores[doc_id]
+        doc["source_scores"] = dict(source_scores.get(doc_id, {}))
         results.append(doc)
 
     return results

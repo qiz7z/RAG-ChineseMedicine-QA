@@ -174,3 +174,102 @@ class TestNameExactnessTieBreak:
         a, b = _chunk2("【功能与主治】甲", "甲药"), _chunk2("【功能与主治】乙", "乙药")
         other = _chunk2("【性状】…", "丙药")
         assert Retriever._promote_section_hits([other, a, b], ["功能与主治"]) == [a, b, other]
+
+
+# ============================================================
+# 4. 性味条件：查询侧解析 + 语料侧解析 + 候选提升
+# ============================================================
+
+class TestSexingCondition:
+    def test_query_forms(self):
+        cases = {
+            "性味甘温的药材有哪些": ({"甘"}, {"温"}),
+            "味甘性温的中药": ({"甘"}, {"温"}),
+            "苦、寒的药材": ({"苦"}, {"寒"}),
+            "性味：甘、微温的药材": ({"甘"}, {"温"}),
+            "人参味甘性微温吗": ({"甘"}, {"温"}),
+        }
+        for q, expected in cases.items():
+            assert Retriever._extract_sexing_condition(q) == expected, q
+
+    def test_no_false_positive(self):
+        for q in ("五味子的功效", "甘草的功效", "苦参的性味", "大补元气的中药",
+                  "清热解毒的药材", "活血化瘀的中药", "温性的药材"):
+            assert Retriever._extract_sexing_condition(q) is None, q
+
+    def test_parse_corpus_text(self):
+        assert Retriever._parse_sexing_text(
+            "【性味与归经】辛、苦，凉。归肺、肝经。"
+        ) == ({"辛", "苦"}, "凉")
+        # chunk 正文带「药名 · 章节」首行，不能把药名行当成味描述
+        assert Retriever._parse_sexing_text(
+            "人参 · 性味与归经\n【性味与归经】甘、微苦，微温。归脾、肺、心、肾经。"
+        ) == ({"甘", "苦"}, "温")
+        assert Retriever._parse_sexing_text(
+            "【性味与归经】辛，温;有小毒。归肝经。"
+        ) == ({"辛"}, "温")
+        assert Retriever._parse_sexing_text("无性味信息") == (set(), "")
+
+    def test_match_requires_taste_and_nature(self):
+        chunk = {"content": "【性味与归经】苦，寒。归心经。",
+                 "metadata": {"section": "性味与归经"}}
+        assert Retriever._sexing_match(chunk, {"苦"}, {"寒"})
+        assert not Retriever._sexing_match(chunk, {"甘"}, {"寒"})
+        assert not Retriever._sexing_match(chunk, {"苦"}, {"温"})
+        # 非性味章节且正文无标记 → 不参与匹配
+        assert not Retriever._sexing_match(
+            {"content": "苦，寒。", "metadata": {"section": "完整条目"}},
+            {"苦"}, {"寒"},
+        )
+
+    def test_promote_matching_chunk_to_front(self):
+        cold = {"content": "【性味与归经】苦，寒。", "metadata": {"section": "性味与归经"}}
+        warm = {"content": "【性味与归经】甘，温。", "metadata": {"section": "性味与归经"}}
+        assert Retriever._promote_sexing_hits([cold, warm], {"甘"}, {"温"})[0] is warm
+
+
+# ============================================================
+# 5. 成分/检测类查询：判定与章节提升
+# ============================================================
+
+class TestCompositionQuery:
+    def test_detects_composition_queries(self):
+        for q in ("哪些药材含有挥发油成分", "双黄连口服液的含量测定方法",
+                  "哪些中药含黄连素", "薄层色谱鉴别方法"):
+            assert Retriever._is_composition_query(q), q
+
+    def test_efficacy_query_is_not_composition(self):
+        for q in ("哪些药材含有什么功效", "哪些中药有补气功效", "人参的功效与作用"):
+            assert not Retriever._is_composition_query(q), q
+
+    def test_extracts_composition_terms_by_suffix(self):
+        assert Retriever._extract_composition_terms("哪些中药含麻黄碱") == ["麻黄碱"]
+        assert Retriever._extract_composition_terms("哪些药材含有挥发油成分") == ["挥发油"]
+        assert Retriever._extract_composition_terms("哪些药材含黄芪甲苷") == ["黄芪甲苷"]
+        assert Retriever._extract_composition_terms("胃酸过多的药材") == []
+
+    def test_embedded_drug_name_is_not_a_drug_filter(self):
+        qp = QueryParser(drug_names=["黄连", "复方黄连素片", "人参"])
+        parsed = qp.parse("哪些中药含黄连素")
+        assert parsed["drug_names"] == []
+        assert parsed["is_horizontal"] is True
+        # 正常药名查询不受影响
+        assert qp.parse("人参的功效")["drug_names"] == ["人参"]
+
+    def test_ocr_glob_pattern_for_berberine(self):
+        assert Retriever._composition_glob_patterns(["小檗碱"]) == ["*小?碱*"]
+        assert Retriever._composition_glob_patterns(["麻黄碱"]) == []
+
+    def test_section_base_strips_etl_suffix(self):
+        assert Retriever._section_base("含量测定-成分1") == "含量测定"
+        assert Retriever._section_base("检查-项2") == "检查"
+        assert Retriever._section_base("鉴别-段2") == "鉴别"
+        assert Retriever._section_base("性味与归经") == "性味与归经"
+
+    def test_promote_by_metadata_section(self):
+        whole = {"content": "…", "metadata": {"section": "完整条目"}}
+        assay = {"content": "…", "metadata": {"section": "含量测定-成分1"}}
+        out = Retriever._promote_composition_sections(
+            [whole, assay], Retriever._COMPOSITION_SECTIONS
+        )
+        assert out[0] is assay

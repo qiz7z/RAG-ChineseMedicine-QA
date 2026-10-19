@@ -337,8 +337,9 @@ def render_chat_page():
 
                 if msg.get("sources"):
                     with st.expander(f"查看 {len(msg['sources'])} 条药典来源", expanded=False):
+                        max_score = max((s.get("score", 0) for s in msg["sources"]), default=0)
                         for j, src in enumerate(msg["sources"], 1):
-                            render_source_card(src, j)
+                            render_source_card(src, j, max_score)
 
                 render_assistant_meta(
                     latency_ms=msg.get("latency_ms", 0),
@@ -468,8 +469,9 @@ def render_chat_page():
                 # 显示来源（可折叠）
                 if sources:
                     with st.expander(f"查看 {len(sources)} 条药典来源", expanded=False):
+                        max_score = max((s.get("score", 0) for s in sources), default=0)
                         for j, src in enumerate(sources, 1):
-                            render_source_card(src, j)
+                            render_source_card(src, j, max_score)
 
                 # 元信息（耗时 / 轮次 / 指代消解 / 安全提示）
                 render_assistant_meta(
@@ -522,8 +524,9 @@ def render_chat_page():
 
                     if sources:
                         with st.expander(f"查看 {len(sources)} 条药典来源", expanded=False):
+                            max_score = max((s.get("score", 0) for s in sources), default=0)
                             for j, src in enumerate(sources, 1):
-                                render_source_card(src, j)
+                                render_source_card(src, j, max_score)
 
                     render_assistant_meta(
                         latency_ms=latency_ms,
@@ -632,8 +635,9 @@ def render_search_page():
 
                 # 结果列表
                 if result["results"]:
+                    max_score = max((r.get("score", 0) for r in result["results"]), default=0)
                     for i, r in enumerate(result["results"], 1):
-                        render_source_card(r, i)
+                        render_source_card(r, i, max_score)
                 else:
                     render_empty_state("未找到相关结果", "请尝试其他关键词或调整过滤条件")
 

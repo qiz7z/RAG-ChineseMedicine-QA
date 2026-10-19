@@ -31,6 +31,8 @@ from docx.enum.style import WD_STYLE_TYPE            # noqa: E402
 
 from etl.parser import (  # noqa: E402
     DrugEntry, INHERITABLE_SECTIONS, PharmacopoeiaParser, Section,
+    find_tail_start, normalize_sub_formulations,
+    reorder_wrapped_sections, split_xingwei_from_content,
 )
 
 
@@ -482,3 +484,243 @@ class TestOcrBrokenSectionMarkers:
         pict.append(box); run._r.append(pict)
         normalize_ocr_section_markers(doc)
         assert "框内文本" in doc.paragraphs[0]._p.xml
+
+
+# ============================================================
+# 缺陷 25：章节标记不在段首 / 一段多个标记 / sdt 包裹
+# ============================================================
+# 实测 1,322 个章节的正文里还嵌着【章节】：饮片「【性状】【鉴别】【检查】
+# 【浸出物】【含量测定】同药材。」、玄明粉「…99.0%。【性味与归经】咸、苦…」。
+# 历史实现只认段首一个标记，后续标记被并进上一节正文，章节整段缺失。
+
+def _doc_with_sections(tmp_path: Path, paragraphs: list) -> Path:
+    doc = Document()
+    for st in STYLES + ["Body text|1"]:
+        try:
+            doc.styles.add_style(st, WD_STYLE_TYPE.PARAGRAPH)
+        except Exception:
+            pass
+
+    def para(text, st="Body text|1"):
+        p = doc.add_paragraph(text)
+        p.style = doc.styles[st]
+        return p
+
+    para("测试药", "Heading #1|1")
+    para("Ceshi Yao", "Heading #2|1")
+    for text in paragraphs:
+        para(text)
+    path = tmp_path / "sections.docx"
+    doc.save(str(path))
+    return path
+
+
+class TestInlineSectionMarkers:
+    def test_multi_marker_paragraph_splits(self, tmp_path):
+        """【性状】【鉴别】【检查】【浸出物】【含量测定】同药材。 → 5 个章节"""
+        e = _parse_one(_doc_with_sections(
+            tmp_path, ["【性状】【鉴别】【检查】【浸出物】【含量测定】 同药材。"]))
+        assert [s.section_name for s in e.sections] == [
+            "性状", "鉴别", "检查", "浸出物", "含量测定"]
+        assert all(s.content.strip() == "同药材。" for s in e.sections)
+
+    def test_inline_marker_after_content_splits(self, tmp_path):
+        """标记粘在上一节末尾（玄明粉实例）"""
+        e = _parse_one(_doc_with_sections(tmp_path, [
+            "【含量测定】取本品，依法测定。不得少于99.0%。"
+            "【性味与归经】咸、苦，寒。归胃、大肠经。",
+            "【功能与主治】泻下通便。",
+        ]))
+        names = [s.section_name for s in e.sections]
+        assert names == ["含量测定", "性味与归经", "功能与主治"], names
+        assert "不得少于99.0%" in e.sections[0].content
+        assert e.sections[1].content == "咸、苦，寒。归胃、大肠经。"
+
+    def test_cross_reference_not_split(self, tmp_path):
+        """〔含量测定〕是交叉引用，不能当成新章节"""
+        e = _parse_one(_doc_with_sections(tmp_path, [
+            "【鉴别】照测试药〔含量测定〕项下的方法测定。"]))
+        names = [s.section_name for s in e.sections]
+        assert names == ["鉴别"], names
+        assert "〔含量测定〕" in e.sections[0].content
+
+    def test_malformed_fullwidth_bracket_recovered(self, tmp_path):
+        """【鉴别］（全角右括号）+ 后续标记 → 章节名不能被污染"""
+        e = _parse_one(_doc_with_sections(tmp_path, [
+            "【鉴别］（2）取本品。 【检查】【浸出物】【含量测定】同药材。"]))
+        names = [s.section_name for s in e.sections]
+        assert names == ["鉴别", "检查", "浸出物", "含量测定"], names
+
+    def test_missing_xingwei_marker_recovered(self, tmp_path):
+        """性味正文的标记丢失时（天南星-饮片实例），按文本特征补章节"""
+        e = _parse_one(_doc_with_sections(tmp_path, [
+            "【性状】【鉴别】【检查】【浸出物】【含量测定】 同药材。",
+            "苦、辛，温；有毒。归肺、肝、脾经。",
+            "【用法与用量】3〜9g。",
+        ]))
+        names = [s.section_name for s in e.sections]
+        assert "性味与归经" in names, names
+        xw = next(s for s in e.sections if s.section_name == "性味与归经")
+        assert xw.content == "苦、辛，温；有毒。归肺、肝、脾经。"
+
+
+class TestBlocksInsideContentControl:
+    """包在 w:sdt 里的正文不能被静默跳过"""
+
+    def test_sdt_wrapped_section_is_parsed(self, tmp_path):
+        from docx.oxml import OxmlElement
+        from docx.oxml.ns import qn
+
+        doc = Document()
+        for st in STYLES:
+            try:
+                doc.styles.add_style(st, WD_STYLE_TYPE.PARAGRAPH)
+            except Exception:
+                pass
+        p = doc.add_paragraph("测试药"); p.style = doc.styles["Heading #1|1"]
+        p = doc.add_paragraph("Ceshi Yao"); p.style = doc.styles["Heading #2|1"]
+
+        sdt = OxmlElement('w:sdt')
+        content = OxmlElement('w:sdtContent')
+        para = OxmlElement('w:p')
+        run = OxmlElement('w:r')
+        text = OxmlElement('w:t')
+        text.text = "【检查】水分 不得过12.0%。"
+        run.append(text); para.append(run)
+        content.append(para); sdt.append(content)
+        doc.element.body.append(sdt)
+
+        path = tmp_path / "sdt.docx"
+        doc.save(str(path))
+        e = PharmacopoeiaParser(str(path)).parse()[0]
+        names = [s.section_name for s in e.sections]
+        assert "检查" in names, f"sdt 里的章节被跳过，实际: {names}"
+        assert "不得过12.0%" in next(s for s in e.sections if s.section_name == "检查").content
+
+
+# ============================================================
+# 缺陷 26/27：多栏版面回卷（下一个药的正文排在药名之前）
+# ============================================================
+# 实测 2020 药典一部：大腹皮、川木通、飞扬草、熟地黄、茜草、降香等 30+ 药材
+# 的正文被拆成两段，后半段出现在药名之前，被算给上一个药；
+# 清洗器再按「贮藏之后只允许制剂」把整段删掉（一次丢弃 1.1 万字）。
+
+class TestLayoutWrappedSections:
+    def test_find_tail_start_after_storage(self):
+        secs = [
+            Section("炮制", "a", []), Section("性状", "b", []),
+            Section("功能与主治", "c", []), Section("贮藏", "d", []),
+            Section("性状", "e", []), Section("鉴别", "f", []),
+        ]
+        assert find_tail_start(secs) == 4
+
+    def test_reorder_tail_before_head(self):
+        """茜草形态：性味/功能/用法/贮藏 在正文之前 → 旋转回正常顺序"""
+        secs = [
+            Section("性味与归经", "苦，寒。", []),
+            Section("功能与主治", "凉血。", []),
+            Section("用法与用量", "6〜10g。", []),
+            Section("贮藏", "置干燥处。", []),
+            Section("性状", "本品呈...", []),
+            Section("鉴别", "同药材。", []),
+            Section("检查", "同药材。", []),
+            Section("浸出物", "同药材。", []),
+        ]
+        reorder_wrapped_sections(secs)
+        assert [s.section_name for s in secs] == [
+            "性状", "鉴别", "检查", "浸出物",
+            "性味与归经", "功能与主治", "用法与用量", "贮藏",
+        ]
+
+    def test_reorder_skips_entry_already_having_body(self):
+        """大蓟炭形态：正文在前、尾部粘着下一个药 → 不能旋转"""
+        secs = [
+            Section("炮制", "a", []), Section("性状", "b", []),
+            Section("贮藏", "c", []), Section("性状", "d", []),
+            Section("鉴别", "e", []),
+        ]
+        before = [s.section_name for s in secs]
+        reorder_wrapped_sections(secs)
+        assert [s.section_name for s in secs] == before
+
+    def test_xingwei_first_line_split(self):
+        """鹅不食草形态：性味粘在用法正文首行"""
+        secs = [
+            Section("功能与主治", "热咯血，跌打肿痛。", []),
+            Section("用法与用量", "苦，寒。归肺经。\n清热解毒，凉血消肿。\n15〜30g。", []),
+        ]
+        assert split_xingwei_from_content(secs) is True
+        assert [s.section_name for s in secs] == ["功能与主治", "性味与归经", "用法与用量"]
+        assert secs[1].content == "苦，寒。归肺经。"
+        assert secs[2].content.startswith("清热解毒")
+
+    def test_empty_xingwei_is_inherited_from_yinpian(self, tmp_path):
+        """茜草/茺蔚子形态：主条目只剩空【性味】标记，内容在饮片侧"""
+        doc = Document()
+        for st in STYLES + ["Heading #6|1"]:
+            try:
+                doc.styles.add_style(st, WD_STYLE_TYPE.PARAGRAPH)
+            except Exception:
+                pass
+
+        def para(text, st="Body text|1"):
+            p = doc.add_paragraph(text)
+            p.style = doc.styles[st]
+            return p
+
+        para("测试药", "Heading #1|1")
+        para("Ceshi Yao", "Heading #2|1")
+        para("【性状】本品为测试品。")
+        para("【性味与归经】")            # 只有标记，正文在饮片侧
+        para("【功能与主治】测试功能。")
+        para("饮片", "Heading #6|1")
+        para("【炮制】除去杂质。")
+        para("【性味与归经】甘，平。归肝经。")
+        para("【功能与主治】测试功能。")
+        path = tmp_path / "empty_xingwei.docx"
+        doc.save(str(path))
+
+        entries = PharmacopoeiaParser(str(path)).parse()
+        main = next(e for e in entries if e.drug_name == "测试药")
+        xw = next(s for s in main.sections if s.section_name == "性味与归经")
+        assert xw.content == "甘，平。归肝经。"
+
+
+class TestSubFormulationNormalization:
+    """缺陷 28：Heading #4 不都是子剂型，错挂的父级要降级"""
+
+    @staticmethod
+    def _sub(name, parent):
+        return DrugEntry(drug_name=name, is_sub_formulation=True, parent_drug=parent)
+
+    def test_same_stem_dosage_forms_kept(self):
+        e = self._sub("小儿七星茶颗粒", "小儿七星茶口服液")
+        assert normalize_sub_formulations([e]) == 0
+        assert e.is_sub_formulation is True
+        assert e.parent_drug == "小儿七星茶口服液"
+
+    def test_different_varieties_detached(self):
+        e = self._sub("小儿肺热平胶囊", "小儿肺咳颗粒")
+        normalize_sub_formulations([e])
+        assert e.is_sub_formulation is False
+        assert e.parent_drug == ""
+
+    def test_appendix_detached(self):
+        e = self._sub("附：三七叶总皂苷质量标准", "七叶神安片")
+        normalize_sub_formulations([e])
+        assert e.is_sub_formulation is False
+        assert e.parent_drug == ""
+
+    def test_same_name_duplicate_detached(self):
+        e = self._sub("高山辣根菜", "高山辣根菜")
+        normalize_sub_formulations([e])
+        assert e.is_sub_formulation is False
+        assert e.parent_drug == ""
+
+    def test_yinpian_parent_kept(self):
+        """饮片不是子剂型：parent_drug 保留，is_sub_formulation 为 False"""
+        e = DrugEntry(drug_name="天麻-饮片", is_yinpian=True,
+                      is_sub_formulation=False, parent_drug="天麻")
+        normalize_sub_formulations([e])
+        assert e.is_sub_formulation is False
+        assert e.parent_drug == "天麻"

@@ -213,6 +213,7 @@ async def chat(request: ChatRequest):
                     score=r.score,
                     rerank_score=r.rerank_score,
                     sources=r.sources,
+                    source_scores=r.source_scores,
                 ))
 
         return ChatResponse(
@@ -346,6 +347,7 @@ async def search(
                 score=r.score,
                 rerank_score=r.rerank_score,
                 sources=r.sources,
+                source_scores=r.source_scores,
             ))
 
         return SearchResponse(

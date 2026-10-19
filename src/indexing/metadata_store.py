@@ -176,6 +176,71 @@ class MetadataStore:
         rows = self.conn.execute(sql, params).fetchall()
         return [dict(row) for row in rows]
 
+    def search_content(
+        self,
+        keywords: List[str],
+        sections: Optional[List[str]] = None,
+        category: Optional[str] = None,
+        exclude_yinpian: bool = True,
+        limit: int = None,
+        section_prefixes: Optional[List[str]] = None,
+        glob_patterns: Optional[List[str]] = None,
+    ) -> List[Dict]:
+        """
+        按正文关键词 + 章节筛选 chunk（横向条件查询用）。
+
+        Args:
+            keywords: 条件词，任一命中即算匹配（OR）
+            sections: 限定章节（精确匹配）
+            category: 限定分类
+            exclude_yinpian: 是否排除饮片子条目
+            limit: 返回上限
+            section_prefixes: 限定章节前缀（匹配「含量测定-成分1」「鉴别-段2」等切片块）
+            glob_patterns: 正文 GLOB 模式（OR 合并进关键词条件），用于 OCR 变体容错
+        """
+        if not keywords and not glob_patterns:
+            return []
+
+        content_clauses = ["content LIKE ?" for _ in keywords]
+        params = [f"%{k}%" for k in keywords]
+        content_clauses.extend("content GLOB ?" for _ in glob_patterns or [])
+        params.extend(glob_patterns or [])
+        conditions = ["(" + " OR ".join(content_clauses) + ")"]
+
+        if sections or section_prefixes:
+            section_clauses = []
+            if sections:
+                section_clauses.append(
+                    "section IN (" + ",".join("?" * len(sections)) + ")"
+                )
+                params.extend(sections)
+            for prefix in section_prefixes or []:
+                section_clauses.append("section LIKE ?")
+                params.append(f"{prefix}-%")
+            conditions.append("(" + " OR ".join(section_clauses) + ")")
+        if category:
+            conditions.append("category = ?")
+            params.append(category)
+        if exclude_yinpian:
+            conditions.append("is_yinpian = 0")
+
+        sql = "SELECT * FROM chunks WHERE " + " AND ".join(conditions)
+        if limit:
+            sql += f" LIMIT {int(limit)}"
+
+        rows = self.conn.execute(sql, params).fetchall()
+        return [dict(row) for row in rows]
+
+    def drug_chunk_counts(self, category: Optional[str] = None) -> Dict[str, int]:
+        """每个药品的 chunk 数（横向查询按热度排序用）"""
+        sql = "SELECT drug_name, COUNT(*) AS n FROM chunks WHERE is_yinpian = 0"
+        params = []
+        if category:
+            sql += " AND category = ?"
+            params.append(category)
+        sql += " GROUP BY drug_name"
+        return {r["drug_name"]: r["n"] for r in self.conn.execute(sql, params).fetchall()}
+
     def get_all_drug_names(self) -> List[str]:
         """获取所有不重复的药品名"""
         rows = self.conn.execute('SELECT DISTINCT drug_name FROM chunks ORDER BY drug_name').fetchall()

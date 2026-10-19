@@ -53,6 +53,9 @@ class SourceItem(BaseModel):
     score: float = Field(..., description="相关性分数")
     rerank_score: Optional[float] = Field(None, description="重排分数")
     sources: List[str] = Field(default_factory=list, description="命中来源（vector/bm25）")
+    source_scores: Dict[str, float] = Field(
+        default_factory=dict, description="各路原始分（vector 余弦相似度 / BM25 分）"
+    )
 
 
 class ChatResponse(BaseModel):
@@ -90,6 +93,7 @@ class SearchResultItem(BaseModel):
     score: float
     rerank_score: Optional[float] = None
     sources: List[str] = Field(default_factory=list)
+    source_scores: Dict[str, float] = Field(default_factory=dict)
 
 
 class SearchResponse(BaseModel):

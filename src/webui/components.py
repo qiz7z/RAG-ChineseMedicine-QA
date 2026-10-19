@@ -174,13 +174,14 @@ def _clean_text(text) -> str:
     return html.escape(text)
 
 
-def render_source_card(source: Dict, index: int):
+def render_source_card(source: Dict, index: int, max_score: float = None):
     """
     渲染检索来源卡片。
 
     Args:
         source: 来源数据（含 drug_name, section, content, score 等）
         index: 序号
+        max_score: 本题最高分，用于把分数条归一到 0~100%
     """
     drug_name = _clean_text(source.get("drug_name", "未知"))
     section = _clean_text(source.get("section", "未知"))
@@ -199,24 +200,33 @@ def render_source_card(source: Dict, index: int):
     score = source.get("score", 0)
     rerank_score = source.get("rerank_score")
     hit_sources = source.get("sources", [])
+    source_scores = source.get("source_scores") or {}
 
-    # 分数条宽度（百分比）
-    score_pct = max(5, min(100, int(score * 100)))
+    # 分数条按本题最高分归一化：RRF 分只有 0.01~0.03 量级，
+    # 直接乘 100 会让所有卡片都停在 5%，看不出相对高低。
+    base = max_score if max_score and max_score > 0 else score
+    score_pct = max(5, min(100, int(score / base * 100))) if base else 5
 
-    # 命中来源标签
+    def _source_label(name: str) -> str:
+        value = source_scores.get(name)
+        if value is None:
+            return _clean_text(name)
+        # 向量是 0~1 余弦相似度，BM25 是无界分，精度分开给
+        precision = 3 if name == "vector" else 2
+        return f"{_clean_text(name)} {value:.{precision}f}"
+
+    # 命中来源标签（带各路原始分）
     source_tags = " ".join(
-        f'<span class="citation-badge">{_clean_text(s)}</span>'
+        f'<span class="citation-badge">{_source_label(s)}</span>'
         for s in hit_sources
     ) if hit_sources else ""
 
-    rerank_tag = (
-        f'<span class="citation-badge">重排: {rerank_score:.4f}</span>'
-    ) if rerank_score is not None else ""
+    score_label = "重排分" if rerank_score is not None else "RRF 融合分"
 
     category_html = (
         f'<span class="section-name"> ({category})</span>' if category else ""
     )
-    tags_html = source_tags + rerank_tag
+    tags_html = source_tags
 
     # 整段 HTML 不缩进：缩进行在 Markdown 里会被识别为代码块
     st.markdown(
@@ -227,7 +237,7 @@ def render_source_card(source: Dict, index: int):
         f'<span class="section-name"> &gt; {section}</span>'
         f'{category_html}'
         f'</div>'
-        f'<span class="citation-badge">相似度: {score:.4f}</span>'
+        f'<span class="citation-badge">{score_label}: {score:.4f}</span>'
         f'</div>'
         f'<div class="source-content">{content}</div>'
         f'<div class="score-bar"><div class="score-fill" style="width: {score_pct}%;"></div></div>'

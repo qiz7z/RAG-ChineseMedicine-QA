@@ -69,6 +69,20 @@ CLINICAL_SECTIONS = {
     '规格',
 }
 
+# 临床应用按语义拆成两组，避免 7 个字段揉在一块稀释语义
+EFFICACY_SECTIONS = {
+    '性味与归经', '性味', '归经',
+    '功能与主治', '功能主治', '主治',
+}
+USAGE_SECTIONS = {
+    '用法与用量', '用法',
+    '注意', '注意事项', '禁忌',
+    '贮藏', '规格',
+}
+
+# 低于该长度的碎片（如「同药材。」「口服。」）没有检索价值，直接丢弃
+DROP_MIN_CHARS = 10
+
 # 概述类章节（来源、制法等，通常单独成chunk）
 OVERVIEW_SECTIONS = {
     '来源', '制法', '处方', '炮制', '提取', '制法',
@@ -127,6 +141,7 @@ class PharmacopoeiaChunker:
     def __init__(self):
         self.chunks = []
         self._chunk_counter = 0
+        self._seen = set()  # 去重：同药同章节同内容只保留一份
 
     def chunk_entries(self, entries: list) -> list:
         """
@@ -195,9 +210,11 @@ class PharmacopoeiaChunker:
         # 1. 生成药品概要chunk（药品名+拼音+拉丁名+分类+概述）
         self._make_summary_chunk(entry)
 
-        # 2. 分组处理章节
-        clinical_parts = []  # 收集短章节，稍后合并
-        short_detailed_parts = []  # 收集过短的详述章节
+        # 2. 分组处理章节：临床字段按语义分两组，其余按章节名归并后处理
+        efficacy_parts = []   # 性味归经 + 功能主治
+        usage_parts = []      # 用法用量 + 注意 + 贮藏 + 规格
+        detailed_groups = {}  # 同名字段合并（检查项 / 含量测定等不再碎片化）
+        detailed_order = []
 
         for section in sections:
             sec_name = section.get('section_name', '').strip()
@@ -207,32 +224,42 @@ class PharmacopoeiaChunker:
             if not sec_content and not sec_table:
                 continue
 
-            # 2a. 短章节 → 收集到 clinical_parts
-            if sec_name in CLINICAL_SECTIONS and len(sec_content) < SHORT_SECTION_THRESHOLD:
-                clinical_parts.append(section)
+            if sec_name in EFFICACY_SECTIONS:
+                efficacy_parts.append(section)
                 continue
 
-            # 2b. 过短的详述章节（如炮制只有一句话）→ 也合并到clinical
-            if (sec_name in DETAILED_SECTIONS or sec_name in OVERVIEW_SECTIONS):
-                full_len = len(sec_content) + (len(sec_table) if sec_table else 0)
-                if full_len < MIN_DETAILED_CHARS and sec_name not in ('含量测定', '鉴别'):
-                    clinical_parts.append(section)
-                    continue
-                # 正常详述章节 → 检查是否需要二次切分
-                self._chunk_detailed_section(entry, section)
+            if sec_name in USAGE_SECTIONS:
+                usage_parts.append(section)
                 continue
 
-            # 2c. 其他未分类章节
-            if sec_name not in CLINICAL_SECTIONS:
-                self._chunk_detailed_section(entry, section)
+            # 其他临床类字段（如「临床应用」「用途」「适应症」）归入用法组
+            if sec_name in CLINICAL_SECTIONS:
+                usage_parts.append(section)
                 continue
 
-            # 2d. 属于临床类但较长的章节
-            clinical_parts.append(section)
+            # 性状 / 鉴别 / 检查 / 含量测定 / 来源 / 制法 等：
+            # 同名章节先合并，避免「检查-水分」「检查-灰分」各自成碎片
+            if sec_name in detailed_groups:
+                group = detailed_groups[sec_name]
+                group['content'] = f"{group['content']}\n{sec_content}".strip()
+                if sec_table:
+                    group['table_markdown'] = f"{group.get('table_markdown') or ''}\n{sec_table}".strip()
+            else:
+                detailed_groups[sec_name] = {
+                    'section_name': sec_name,
+                    'content': sec_content,
+                    'table_markdown': sec_table,
+                }
+                detailed_order.append(sec_name)
 
-        # 3. 合并短章节为"临床应用"chunk
-        if clinical_parts:
-            self._merge_clinical_sections(entry, clinical_parts)
+        for sec_name in detailed_order:
+            self._chunk_detailed_section(entry, detailed_groups[sec_name])
+
+        # 3. 每组独立成块，组内字段少、语义纯
+        if efficacy_parts:
+            self._make_clinical_group(entry, efficacy_parts, '性味与归经')
+        if usage_parts:
+            self._make_clinical_group(entry, usage_parts, '用法与用量')
 
     def _make_summary_chunk(self, entry: dict):
         """生成药品概要chunk，包含药品基本信息"""
@@ -245,7 +272,10 @@ class PharmacopoeiaChunker:
         parent = entry.get('parent_drug', '')
 
         if parent:
-            parts.append(f"药品名称：{drug_name}（{parent}的子剂型）")
+            # 饮片和子剂型都有 parent_drug，但语义不同：
+            # 饮片是炮制规格，子剂型是同一品种的不同剂型。
+            kind = '饮片' if entry.get('is_yinpian') else '子剂型'
+            parts.append(f"药品名称：{drug_name}（{parent}的{kind}）")
         else:
             parts.append(f"药品名称：{drug_name}")
         if pinyin:
@@ -291,18 +321,16 @@ class PharmacopoeiaChunker:
             chunk_type='whole_entry',
         )
 
-    def _merge_clinical_sections(self, entry: dict, sections: list):
+    def _make_clinical_group(self, entry: dict, sections: list, section_label: str):
         """
-        将多个短章节合并为一个"临床应用"chunk。
-        
-        例如:
-          【性味与归经】甘、微苦，微温。归脾、肺、心经。
-          【功能与主治】大补元气，复脉固脱...
-          【用法与用量】3〜9g。
-          【注意】不宜与藜芦同用。
-          【贮藏】置阴凉干燥处，防潮。
-        
-        → 合并为一个chunk
+        把一个语义组的临床章节合成一个 chunk。
+
+        分组规则见 EFFICACY_SECTIONS / USAGE_SECTIONS：
+          功效组：性味与归经 + 功能与主治
+          用法组：用法与用量 + 注意 + 贮藏 + 规格
+
+        组内字段通常 2〜4 个（100〜250 字），比原先 7 个字段揉在一起
+        语义更纯；药名锚点由 _add_chunk 统一补在正文首行。
         """
         parts = []
         for section in sections:
@@ -314,43 +342,26 @@ class PharmacopoeiaChunker:
         if not parts:
             return
 
-        # 缺陷 15 配套：正文头部补一行药品名。
-        # 合并前的各章节正文里**没有药名**（「【性味与归经】甘，平。归肝经。」），
-        # BM25 对「天麻的性味归经」这类查询的 药名 token 得不到命中，
-        # 向量也缺少药名锚点——实测会导致该切片进不了候选池，
-        # 章节提升（按正文标记匹配）再强也救不回没被召回的候选。
-        content = f"{entry.get('drug_name', '')}\n" + '\n'.join(parts)
-
-        # 如果合并后仍然超长，拆分
-        if len(content) > MAX_CHUNK_CHARS:
-            # 按2-3个章节一组切分
-            current_parts = []
-            current_len = 0
-            for part in parts:
-                if current_len + len(part) > MAX_CHUNK_CHARS and current_parts:
-                    self._add_chunk(
-                        content='\n'.join(current_parts),
-                        entry=entry,
-                        section='临床应用',
-                        chunk_type='clinical',
-                    )
-                    current_parts = [part]
-                    current_len = len(part)
-                else:
-                    current_parts.append(part)
-                    current_len += len(part)
-            if current_parts:
+        # 组内拼接后超长（罕见）→ 按字段边界分片
+        buf, buf_len = [], 0
+        limit = MAX_CHUNK_CHARS - 60  # 预留药名前缀空间
+        for part in parts:
+            if buf_len + len(part) > limit and buf:
                 self._add_chunk(
-                    content='\n'.join(current_parts),
+                    content='\n'.join(buf),
                     entry=entry,
-                    section='临床应用',
+                    section=section_label,
                     chunk_type='clinical',
                 )
-        else:
+                buf, buf_len = [part], len(part)
+            else:
+                buf.append(part)
+                buf_len += len(part)
+        if buf:
             self._add_chunk(
-                content=content,
+                content='\n'.join(buf),
                 entry=entry,
-                section='临床应用',
+                section=section_label,
                 chunk_type='clinical',
             )
 
@@ -563,12 +574,34 @@ class PharmacopoeiaChunker:
 
     def _add_chunk(self, content: str, entry: dict, section: str, 
                    chunk_type: str, table_markdown: str = None):
-        """添加一个chunk"""
+        """添加一个chunk：统一补实体锚点、丢弃碎片、去重"""
+        body = content.strip()
+        if not body:
+            return
+
+        drug_name = entry.get('drug_name', '')
+
+        # 丢弃无检索价值的极短碎片（如「同药材。」「口服。」）
+        if chunk_type != 'summary' and len(body) < DROP_MIN_CHARS:
+            return
+
+        # 统一实体锚点：正文首行「药品名 · 章节」。
+        # 此前只有 clinical 块带药名，detailed 等 63.9% 的块正文无药名，
+        # BM25 与向量都缺少实体锚点。
+        if chunk_type != 'summary' and drug_name and not body.startswith(drug_name):
+            body = f"{drug_name} · {section}\n{body}"
+
+        # 同药同章节同内容去重
+        key = (drug_name, section, chunk_type, body)
+        if key in self._seen:
+            return
+        self._seen.add(key)
+
         self._chunk_counter += 1
         chunk = Chunk(
             chunk_id=f"chunk_{self._chunk_counter:06d}",
-            content=content.strip(),
-            drug_name=entry.get('drug_name', ''),
+            content=body,
+            drug_name=drug_name,
             pinyin_name=entry.get('pinyin_name', ''),
             latin_name=entry.get('latin_name', ''),
             category=entry.get('category_hint', ''),
@@ -578,7 +611,7 @@ class PharmacopoeiaChunker:
             is_sub_formulation=entry.get('is_sub_formulation', False),
             parent_drug=entry.get('parent_drug', ''),
             table_markdown=table_markdown,
-            char_count=len(content.strip()),
+            char_count=len(body),
         )
         self.chunks.append(chunk)
 
