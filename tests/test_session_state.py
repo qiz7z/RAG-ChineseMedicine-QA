@@ -63,6 +63,54 @@ def test_guard_resets_after_restore(tmp_path):
         _restore(saved)
 
 
+def test_session_records_user_id(tmp_path):
+    saved = _with_temp_store(tmp_path)
+    try:
+        sm = SessionManager()
+        sid = sm.create_session(user_id="alice")
+        assert sm.get_session(sid).user_id == "alice"
+
+        store = store_mod._default_store
+        assert store.get_session_user_id(sid) == "alice"
+    finally:
+        _restore(saved)
+
+
+def test_other_user_cannot_take_over_session(tmp_path):
+    """拿别人的 session_id 来请求，应另开新会话，而不是读别人的历史"""
+    saved = _with_temp_store(tmp_path)
+    try:
+        sm = SessionManager()
+        alice_sid = sm.create_session(user_id="alice")
+        dm = sm.get_dialogue_manager(alice_sid)
+        dm.add_user_message("人参的性味归经", "人参的性味归经")
+        dm.add_assistant_message("甘、微苦，微温。")
+
+        bob_sid = sm.get_or_create(alice_sid, user_id="bob")
+        assert bob_sid != alice_sid
+        assert sm.get_session(bob_sid).user_id == "bob"
+        assert sm.get_dialogue_manager(bob_sid).history == []
+    finally:
+        _restore(saved)
+
+
+def test_restore_only_for_same_user(tmp_path):
+    """重启后，只有归属用户能恢复会话"""
+    saved = _with_temp_store(tmp_path)
+    try:
+        sm1 = SessionManager()
+        sid = sm1.create_session(user_id="alice")
+        dm = sm1.get_dialogue_manager(sid)
+        dm.add_user_message("人参的性味归经", "人参的性味归经")
+        dm.add_assistant_message("甘、微苦，微温。")
+
+        sm2 = SessionManager()                       # 模拟重启
+        assert sm2.get_or_create(sid, user_id="bob") != sid      # 他人拿不到
+        assert sm2.get_or_create(sid, user_id="alice") == sid    # 本人可恢复
+    finally:
+        _restore(saved)
+
+
 def test_dialogue_manager_not_shared(tmp_path):
     saved = _with_temp_store(tmp_path)
     try:

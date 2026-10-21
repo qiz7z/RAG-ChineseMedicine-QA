@@ -28,7 +28,7 @@ import logging
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException, Depends, Query
+from fastapi import FastAPI, HTTPException, Depends, Query, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 
@@ -189,18 +189,22 @@ async def get_stats():
 # ============================================================
 
 @app.post("/api/v1/chat", response_model=ChatResponse, tags=["问答"])
-async def chat(request: ChatRequest):
+async def chat(
+    request: ChatRequest,
+    x_user_id: str = Header(default="default", alias="X-User-Id"),
+):
     """
     智能问答接口
 
     支持多轮对话，传入 session_id 可保持上下文。
     首次对话不传 session_id，系统会自动创建新会话。
+    请求头 X-User-Id 标识用户（缺省 default），会话归属与后续长期记忆都按它聚合。
     """
     gen = get_generator()
     sm = get_session_manager()
 
-    # 获取或创建会话
-    session_id = sm.get_or_create(request.session_id)
+    # 获取或创建会话（归属不一致会另开一个，不会把别人的历史交出去）
+    session_id = sm.get_or_create(request.session_id, user_id=x_user_id)
     session = sm.get_session(session_id)
 
     try:
@@ -252,17 +256,20 @@ async def chat(request: ChatRequest):
 
 
 @app.post("/api/v1/chat/stream", tags=["问答"])
-async def chat_stream(request: ChatRequest):
+async def chat_stream(
+    request: ChatRequest,
+    x_user_id: str = Header(default="default", alias="X-User-Id"),
+):
     """
     流式问答接口（SSE）
 
     逐 token 返回 LLM 生成内容，适用于实时显示场景。
-    使用 Server-Sent Events (SSE) 格式。
+    使用 Server-Sent Events (SSE) 格式；X-User-Id 语义同 /chat。
     """
     gen = get_generator()
     sm = get_session_manager()
 
-    session_id = sm.get_or_create(request.session_id)
+    session_id = sm.get_or_create(request.session_id, user_id=x_user_id)
     session = sm.get_session(session_id)
 
     # 流式路径每 yield 一次就会让出事件循环，必须使用会话私有的对话管理器与守卫，
@@ -429,10 +436,12 @@ async def list_drugs(
 # ============================================================
 
 @app.post("/api/v1/sessions", response_model=SessionCreateResponse, tags=["会话"])
-async def create_session():
-    """创建新会话"""
+async def create_session(
+    x_user_id: str = Header(default="default", alias="X-User-Id"),
+):
+    """创建新会话（X-User-Id 决定归属）"""
     sm = get_session_manager()
-    session_id = sm.create_session()
+    session_id = sm.create_session(user_id=x_user_id)
     return SessionCreateResponse(
         session_id=session_id,
         created_at=time.strftime("%Y-%m-%d %H:%M:%S"),

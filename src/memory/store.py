@@ -106,12 +106,21 @@ class MemoryStore:
         except Exception as e:
             logger.warning(f"刷新会话失败（不影响对话）: {e}")
 
-    def session_exists(self, session_id: str) -> bool:
+    def session_exists(self, session_id: str, user_id: str = None) -> bool:
+        """会话是否存在；传 user_id 时额外校验归属（防跨用户复用 session_id）"""
+        sql = 'SELECT 1 FROM sessions WHERE session_id = ? AND status = ?'
+        params = [session_id, 'active']
+        if user_id is not None:
+            sql += ' AND user_id = ?'
+            params.append(user_id)
+        return self.conn.execute(sql, params).fetchone() is not None
+
+    def get_session_user_id(self, session_id: str) -> Optional[str]:
+        """会话归属的用户；不存在返回 None"""
         row = self.conn.execute(
-            'SELECT 1 FROM sessions WHERE session_id = ? AND status = ?',
-            (session_id, 'active'),
+            'SELECT user_id FROM sessions WHERE session_id = ?', (session_id,)
         ).fetchone()
-        return row is not None
+        return row['user_id'] if row else None
 
     def list_sessions(self, limit: int = 50) -> List[Dict]:
         rows = self.conn.execute(

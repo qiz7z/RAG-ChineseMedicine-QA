@@ -340,6 +340,10 @@ retriever / llm / postprocessor 这些无状态组件。
 | `/api/v1/sessions` | GET/POST/DELETE | 会话管理 |
 | `/docs` | GET | Swagger UI 文档 |
 
+**用户标识**：`/chat`、`/chat/stream`、`POST /sessions` 支持请求头 `X-User-Id`（缺省 `default`）。
+会话归属按它记录——拿别人的 `session_id` 来请求不会读到对方历史，会另开一个会话；
+后续长期记忆（facts）也按此聚合。
+
 **Web UI 页面**：智能问答（流式对话）、检索查询、药品浏览、系统统计、关于系统
 
 **检索结果字段**：`/chat` 与 `/search` 的 `sources[]` 每项含

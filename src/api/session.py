@@ -26,13 +26,16 @@ logger = logging.getLogger(__name__)
 class SessionInfo:
     """单个会话的信息"""
 
-    def __init__(self, session_id: str, dialogue_manager, guard=None):
+    def __init__(self, session_id: str, dialogue_manager, guard=None,
+                 user_id: str = 'default'):
         from generation.guard import GuardChecker
 
         self.session_id = session_id
         self.dialogue_manager = dialogue_manager
         # 守卫持有「本会话是否已通过」的信任状态，必须按会话独立
         self.guard = guard or GuardChecker()
+        # 会话归属：后续长期记忆按 user_id 聚合（跨会话）
+        self.user_id = user_id or 'default'
         self.created_at = datetime.now()
         self.last_active = datetime.now()
 
@@ -100,9 +103,12 @@ class SessionManager:
         except Exception as e:
             logger.warning(f"清理过期会话失败: {e}")
 
-    def create_session(self) -> str:
+    def create_session(self, user_id: str = 'default') -> str:
         """
         创建新会话。
+
+        Args:
+            user_id: 会话归属用户（前端通过 X-User-Id 传入；不传则为 default）
 
         Returns:
             会话 ID
@@ -110,22 +116,21 @@ class SessionManager:
         self._maybe_cleanup()
         session_id = f"sess_{uuid.uuid4().hex[:12]}"
 
-        # 为新会话创建独立的 Generator（含独立 DialogueManager）
-        if self.generator_factory:
-            generator = self.generator_factory()
-        else:
-            # 默认方式：复用已有的 Generator 但创建新的对话管理器
-            # 注意：这里需要特殊处理，因为 Generator 内部有自己的 DialogueManager
-            # 最佳实践是每个 session 持有独立的 DialogueManager
-            generator = None
+        # 先按真实 user_id 落库，再创建 dm（dm 构造时还会 touch 一次，只更新活跃时间）
+        if ENABLE_MEMORY_PERSIST:
+            try:
+                from memory.store import get_memory_store
+                get_memory_store().touch_session(session_id, user_id)
+            except Exception as e:
+                logger.warning(f"会话落库失败（不影响对话）: {e}")
 
         # 创建 DialogueManager（不绑定 LLM，指代消解由主 Generator 负责）
         dm = self._new_dialogue_manager(session_id)
 
-        session_info = SessionInfo(session_id, dm)
+        session_info = SessionInfo(session_id, dm, user_id=user_id)
         self.sessions[session_id] = session_info
 
-        logger.info(f"创建会话: {session_id}")
+        logger.info(f"创建会话: {session_id}（user={user_id}）")
         return session_id
 
     def _new_dialogue_manager(self, session_id: str):
@@ -133,11 +138,22 @@ class SessionManager:
         from generation.dialogue import DialogueManager
         return DialogueManager(llm_client=None, session_id=session_id)
 
-    def _restore_session(self, session_id: str) -> Optional[SessionInfo]:
+    def _restore_session(self, session_id: str, user_id: str = 'default') -> Optional[SessionInfo]:
         """服务重启后，按库里的 session_id 重建内存会话。
 
         历史由 DialogueManager 构造时自动恢复，这里只负责把对象放回内存表。
+        会话归属不一致时拒绝恢复——session_id 可猜，不能靠它跨用户读别人的历史。
         """
+        try:
+            from memory.store import get_memory_store
+            owner = get_memory_store().get_session_user_id(session_id)
+        except Exception:
+            owner = None
+
+        if owner and owner != user_id:
+            logger.warning(f"会话 {session_id} 属于用户 {owner}，拒绝用户 {user_id} 恢复")
+            return None
+
         try:
             dm = self._new_dialogue_manager(session_id)
         except Exception as e:
@@ -145,7 +161,7 @@ class SessionManager:
             return None
         if not dm.history:
             return None
-        session_info = SessionInfo(session_id, dm)
+        session_info = SessionInfo(session_id, dm, user_id=owner or user_id)
         self.sessions[session_id] = session_info
         logger.info(f"已恢复会话: {session_id}（{len(dm.history)} 条消息）")
         return session_info
@@ -165,34 +181,44 @@ class SessionManager:
             session.update_active()
         return session
 
-    def get_or_create(self, session_id: Optional[str]) -> str:
+    def get_or_create(self, session_id: Optional[str], user_id: str = 'default') -> str:
         """
         获取或创建会话。
 
-        如果 session_id 为 None 或不存在，则创建新会话。
+        如果 session_id 为 None、不存在、或归属其他用户，则创建新会话。
 
         Args:
             session_id: 会话 ID（可为 None）
+            user_id: 当前请求的用户标识（X-User-Id）
 
         Returns:
             有效的会话 ID
         """
+        user_id = user_id or 'default'
+
         if session_id and session_id in self.sessions:
-            self.sessions[session_id].update_active()
-            return session_id
+            session = self.sessions[session_id]
+            if session.user_id == user_id:
+                session.update_active()
+                return session_id
+            # 归属不一致：不把别人的会话交给当前用户，另开一个
+            logger.warning(
+                f"会话 {session_id} 属于用户 {session.user_id}，为 {user_id} 新建会话"
+            )
+            return self.create_session(user_id)
 
         # 服务重启后内存表为空，但库里可能还有该会话 → 恢复而不是新建
         if session_id and ENABLE_MEMORY_PERSIST:
             try:
                 from memory.store import get_memory_store
-                if get_memory_store().session_exists(session_id):
-                    restored = self._restore_session(session_id)
+                if get_memory_store().session_exists(session_id, user_id=user_id):
+                    restored = self._restore_session(session_id, user_id)
                     if restored:
                         return session_id
             except Exception as e:
                 logger.warning(f"按 session_id 恢复失败，改为新建: {e}")
 
-        return self.create_session()
+        return self.create_session(user_id)
 
     def get_dialogue_manager(self, session_id: str):
         """
