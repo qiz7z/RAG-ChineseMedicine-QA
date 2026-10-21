@@ -103,6 +103,29 @@ def test_session_lifecycle(tmp_path):
     assert all(x["session_id"] != "sess_x" for x in sessions)
 
 
+def test_list_sessions_title_and_user_filter(tmp_path):
+    """会话列表：按用户过滤，title 取首条用户提问"""
+    s = _store(tmp_path)
+    s.touch_session("sess_a", "alice")
+    s.append_turn("sess_a", "user", "人参的性味归经是什么")
+    s.append_turn("sess_a", "assistant", "甘、微苦，微温。")
+    s.touch_session("sess_b", "bob")
+    s.append_turn("sess_b", "user", "黄芪怎么吃")
+
+    alice = s.list_sessions(user_id="alice")
+    assert [x["session_id"] for x in alice] == ["sess_a"]
+    assert alice[0]["title"] == "人参的性味归经是什么"
+    assert alice[0]["turns"] == 2
+
+    all_sessions = s.list_sessions()
+    assert {x["session_id"] for x in all_sessions} == {"sess_a", "sess_b"}
+
+    # 空会话也进列表，title 为 None
+    s.touch_session("sess_c", "alice")
+    titles = {x["session_id"]: x["title"] for x in s.list_sessions(user_id="alice")}
+    assert titles["sess_c"] is None
+
+
 def test_session_manager_restores_by_id(tmp_path):
     """API 层：新进程拿到旧 session_id 时应恢复会话，而不是新建"""
     import memory.store as store_mod

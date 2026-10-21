@@ -48,12 +48,12 @@ class SessionInfo:
         return datetime.now() - self.last_active > timedelta(hours=timeout_hours)
 
     def get_history(self) -> List[Dict[str, str]]:
-        """获取对话历史"""
+        """获取对话历史（全文；前端恢复会话展示用）"""
         history = []
         for turn in self.dialogue_manager.history:
             history.append({
                 "role": turn.role,
-                "content": turn.content[:200],  # 截断显示
+                "content": turn.content,
             })
         return history
 
@@ -180,6 +180,54 @@ class SessionManager:
         if session:
             session.update_active()
         return session
+
+    def get_session_or_restore(self, session_id: str,
+                               user_id: str = 'default') -> Optional[SessionInfo]:
+        """获取会话；内存没有时从库恢复（供查看详情/恢复历史用）。
+
+        带 user_id 时校验归属：session_id 可猜，不能靠它读别人的历史。
+        """
+        session = self.sessions.get(session_id)
+        if session:
+            if user_id and session.user_id != user_id:
+                logger.warning(
+                    f"会话 {session_id} 属于用户 {session.user_id}，拒绝用户 {user_id} 查看"
+                )
+                return None
+            session.update_active()
+            return session
+        if ENABLE_MEMORY_PERSIST:
+            return self._restore_session(session_id, user_id or 'default')
+        return None
+
+    def list_persisted_sessions(self, user_id: str = None,
+                                limit: int = 50) -> List[Dict]:
+        """从库列出活跃会话（历史会话列表用）；未开启持久化时退回内存。
+
+        传 user_id 只返回该用户的会话。返回字段：
+        session_id / user_id / created_at / last_active / turns / title
+        """
+        if ENABLE_MEMORY_PERSIST:
+            try:
+                from memory.store import get_memory_store
+                return get_memory_store().list_sessions(limit=limit, user_id=user_id)
+            except Exception as e:
+                logger.warning(f"读取历史会话失败: {e}")
+                return []
+        # 未持久化：退回内存会话
+        result = []
+        for sid, s in self.sessions.items():
+            if user_id and s.user_id != user_id:
+                continue
+            result.append({
+                'session_id': sid,
+                'user_id': s.user_id,
+                'created_at': s.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+                'last_active': s.last_active.strftime('%Y-%m-%d %H:%M:%S'),
+                'turns': s.turn_count,
+                'title': None,
+            })
+        return result[:limit]
 
     def get_or_create(self, session_id: Optional[str], user_id: str = 'default') -> str:
         """

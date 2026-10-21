@@ -135,10 +135,20 @@ class SessionInfo(BaseModel):
     history: List[Dict[str, str]] = Field(default_factory=list, description="对话历史")
 
 
+class SessionListItem(BaseModel):
+    """会话列表条目（历史会话恢复用）"""
+    session_id: str
+    user_id: str
+    created_at: str
+    last_active: str
+    turns: int = Field(..., description="对话消息条数")
+    title: Optional[str] = Field(None, description="首条用户提问（列表展示用）")
+
+
 class SessionListResponse(BaseModel):
     """会话列表响应"""
     total: int
-    sessions: List[str] = Field(..., description="会话 ID 列表")
+    sessions: List[SessionListItem] = Field(..., description="会话列表")
 
 
 # ============================================================

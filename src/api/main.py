@@ -44,6 +44,7 @@ from api.schemas import (
     ErrorResponse,
 )
 from api.session import SessionManager
+from config import ENABLE_MEMORY_PERSIST
 from generation.generator import Generator
 from retrieval.retriever import Retriever
 from indexing.metadata_store import MetadataStore
@@ -449,27 +450,45 @@ async def create_session(
 
 
 @app.get("/api/v1/sessions", response_model=SessionListResponse, tags=["会话"])
-async def list_sessions():
-    """列出所有活跃会话"""
+async def list_sessions(
+    x_user_id: Optional[str] = Header(default=None, alias="X-User-Id"),
+):
+    """列出活跃会话（含历史会话）；带 X-User-Id 时只看该用户的"""
     sm = get_session_manager()
-    sessions = sm.list_sessions()
+    items = sm.list_persisted_sessions(user_id=x_user_id)
     return SessionListResponse(
-        total=len(sessions),
-        sessions=sessions,
+        total=len(items),
+        sessions=items,
     )
 
 
 @app.get("/api/v1/sessions/{session_id}", response_model=SessionInfo, tags=["会话"])
-async def get_session_info(session_id: str):
-    """获取会话详情"""
+async def get_session_info(
+    session_id: str,
+    x_user_id: str = Header(default="default", alias="X-User-Id"),
+):
+    """获取会话详情（含完整对话历史）。
+
+    内存里没有时自动从库恢复；X-User-Id 用于归属校验（不能看别人的会话）。
+    """
     sm = get_session_manager()
-    session = sm.get_session(session_id)
+    session = sm.get_session_or_restore(session_id, user_id=x_user_id)
     if not session:
         raise HTTPException(status_code=404, detail="会话不存在")
+    # 展示历史给全量轮次（内存窗口只恢复最近 N 轮，展示以库为准）
+    history = session.get_history()
+    if ENABLE_MEMORY_PERSIST:
+        try:
+            from memory.store import get_memory_store
+            rows = get_memory_store().load_turns(session_id, max_turns=200)
+            if rows:
+                history = [{"role": r["role"], "content": r["content"]} for r in rows]
+        except Exception as e:
+            logger.warning(f"读取会话全量历史失败（退回窗口历史）: {e}")
     return SessionInfo(
         session_id=session_id,
-        turn_count=session.turn_count,
-        history=session.get_history(),
+        turn_count=len(history) // 2,
+        history=history,
     )
 
 

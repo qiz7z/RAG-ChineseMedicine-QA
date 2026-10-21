@@ -111,6 +111,46 @@ def test_restore_only_for_same_user(tmp_path):
         _restore(saved)
 
 
+def test_get_session_or_restore_checks_owner(tmp_path):
+    """会话详情：本人可从库恢复查看，他人看不到"""
+    saved = _with_temp_store(tmp_path)
+    try:
+        sm1 = SessionManager()
+        sid = sm1.create_session(user_id="alice")
+        dm = sm1.get_dialogue_manager(sid)
+        dm.add_user_message("人参的性味归经", "人参的性味归经")
+        dm.add_assistant_message("甘、微苦，微温。")
+
+        sm2 = SessionManager()                       # 模拟重启
+        assert sm2.get_session_or_restore(sid, user_id="bob") is None
+        session = sm2.get_session_or_restore(sid, user_id="alice")
+        assert session is not None
+        history = session.get_history()
+        assert history[0] == {"role": "user", "content": "人参的性味归经"}
+        assert history[1]["content"] == "甘、微苦，微温。"
+    finally:
+        _restore(saved)
+
+
+def test_list_persisted_sessions_by_user(tmp_path):
+    """历史会话列表：按用户过滤并带标题"""
+    saved = _with_temp_store(tmp_path)
+    try:
+        sm = SessionManager()
+        sid = sm.create_session(user_id="alice")
+        dm = sm.get_dialogue_manager(sid)
+        dm.add_user_message("黄芪的用法用量", "黄芪的用法用量")
+        dm.add_assistant_message("9〜30g。")
+
+        items = sm.list_persisted_sessions(user_id="alice")
+        assert [x["session_id"] for x in items] == [sid]
+        assert items[0]["title"] == "黄芪的用法用量"
+        assert items[0]["turns"] == 2
+        assert sm.list_persisted_sessions(user_id="bob") == []
+    finally:
+        _restore(saved)
+
+
 def test_api_client_sends_user_header():
     """WebUI 的客户端要把匿名身份随请求头发出去"""
     from webui.api_client import APIClient

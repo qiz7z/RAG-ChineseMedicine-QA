@@ -137,13 +137,26 @@ class MemoryStore:
         ).fetchone()
         return row['user_id'] if row else None
 
-    def list_sessions(self, limit: int = 50) -> List[Dict]:
-        rows = self.conn.execute(
+    def list_sessions(self, limit: int = 50, user_id: str = None) -> List[Dict]:
+        """活跃会话列表（按最近活跃在前）；传 user_id 时只看该用户的。
+
+        title 取该会话第一条用户发言（前端会话列表直接可读）。
+        """
+        sql = (
             'SELECT s.session_id, s.user_id, s.created_at, s.last_active, '
-            '       (SELECT COUNT(*) FROM dialogue_turns t WHERE t.session_id = s.session_id) AS turns '
-            'FROM sessions s WHERE s.status = ? ORDER BY s.last_active DESC LIMIT ?',
-            ('active', limit),
-        ).fetchall()
+            '       (SELECT COUNT(*) FROM dialogue_turns t WHERE t.session_id = s.session_id) AS turns, '
+            '       (SELECT substr(t.content, 1, 30) FROM dialogue_turns t '
+            '        WHERE t.session_id = s.session_id AND t.role = \'user\' '
+            '        ORDER BY t.id LIMIT 1) AS title '
+            'FROM sessions s WHERE s.status = ?'
+        )
+        params: list = ['active']
+        if user_id:
+            sql += ' AND s.user_id = ?'
+            params.append(user_id)
+        sql += ' ORDER BY s.last_active DESC LIMIT ?'
+        params.append(limit)
+        rows = self.conn.execute(sql, params).fetchall()
         return [dict(r) for r in rows]
 
     def delete_session(self, session_id: str) -> int:

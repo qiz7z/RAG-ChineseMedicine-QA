@@ -126,6 +126,50 @@ def init_session_state():
         _new_conversation()
 
 
+def _hydrate_conversation(conv: dict):
+    """从后端拉取会话完整消息（历史会话首次打开时调用）。
+
+    后端在内存没有该会话时会自动从库恢复；拉不到就标记已加载，
+    避免每次刷新都重试。
+    """
+    try:
+        detail = api.get_session(conv["session_id"])
+        conv["messages"] = [
+            {"role": m.get("role"), "content": m.get("content", "")}
+            for m in (detail.get("history") or [])
+            if m.get("role") in ("user", "assistant")
+        ]
+    except Exception:
+        pass
+    conv["loaded"] = True
+
+
+def _load_history_conversations():
+    """启动时按当前身份从后端拉历史会话列表（每个浏览器会话只拉一次）"""
+    if st.session_state.get("history_loaded"):
+        return
+    st.session_state.history_loaded = True
+    try:
+        data = api.list_sessions()
+    except Exception:
+        return
+    items = [s for s in (data.get("sessions") or []) if s.get("turns")]
+    if not items:
+        return
+    convs = []
+    for s in items:
+        convs.append({
+            "key": f"c_{uuid.uuid4().hex[:6]}",
+            "session_id": s["session_id"],
+            "title": (s.get("title") or "").strip() or "历史会话",
+            "messages": [],
+            "loaded": False,
+        })
+    st.session_state.conversations = convs
+    # 默认打开最近的一个会话，直接看到上次聊到的内容
+    _switch_conversation(convs[0]["key"])
+
+
 def _new_conversation():
     """新建本地会话并切换过去；后端会话在首次提问时懒创建"""
     conv = {
@@ -155,6 +199,9 @@ def _switch_conversation(key: str):
     """切换到指定会话，恢复其消息与后端 session"""
     for conv in st.session_state.conversations:
         if conv["key"] == key:
+            # 历史会话懒加载：首次打开时从后端拉完整消息
+            if conv.get("session_id") and not conv.get("loaded") and not conv["messages"]:
+                _hydrate_conversation(conv)
             st.session_state.active_key = key
             st.session_state.messages = conv["messages"]
             st.session_state.session_id = conv["session_id"]
@@ -203,6 +250,8 @@ def _home_submit(*args):
 init_session_state()
 USER_ID = resolve_user_id()
 api = get_api_client(USER_ID)
+# 启动时恢复历史会话列表（身份不变时，重启/刷新后仍能看到并续聊旧会话）
+_load_history_conversations()
 
 
 # ============================================================
@@ -269,7 +318,7 @@ with st.sidebar:
             st.rerun()
 
         active = get_active_conversation()
-        for conv in st.session_state.conversations[:8]:
+        for conv in st.session_state.conversations[:20]:
             is_active = active is not None and conv["key"] == active["key"]
             title = (conv.get("title") or "新会话")[:12]
             label = f"● {title}" if is_active else title
