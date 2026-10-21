@@ -287,6 +287,7 @@ class Generator:
                 retrieval_results=retrieval_results,
                 chat_history=chat_history,
                 memory_summary=dm.get_summary_text(),
+                user_facts=dm.get_facts_text(),
             )
         else:
             # 无检索结果时使用空结果 Prompt
@@ -402,6 +403,7 @@ class Generator:
                 retrieval_results=retrieval_results,
                 chat_history=chat_history,
                 memory_summary=dm.get_summary_text(),
+                user_facts=dm.get_facts_text(),
             )
         else:
             messages = build_no_result_prompt(resolved_query)

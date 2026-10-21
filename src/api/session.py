@@ -125,7 +125,7 @@ class SessionManager:
                 logger.warning(f"会话落库失败（不影响对话）: {e}")
 
         # 创建 DialogueManager（不绑定 LLM，指代消解由主 Generator 负责）
-        dm = self._new_dialogue_manager(session_id)
+        dm = self._new_dialogue_manager(session_id, user_id)
 
         session_info = SessionInfo(session_id, dm, user_id=user_id)
         self.sessions[session_id] = session_info
@@ -133,10 +133,10 @@ class SessionManager:
         logger.info(f"创建会话: {session_id}（user={user_id}）")
         return session_id
 
-    def _new_dialogue_manager(self, session_id: str):
+    def _new_dialogue_manager(self, session_id: str, user_id: str = 'default'):
         """创建绑定了 session_id 的对话管理器（开启持久化时会自动恢复历史）"""
         from generation.dialogue import DialogueManager
-        return DialogueManager(llm_client=None, session_id=session_id)
+        return DialogueManager(llm_client=None, session_id=session_id, user_id=user_id)
 
     def _restore_session(self, session_id: str, user_id: str = 'default') -> Optional[SessionInfo]:
         """服务重启后，按库里的 session_id 重建内存会话。
@@ -155,7 +155,7 @@ class SessionManager:
             return None
 
         try:
-            dm = self._new_dialogue_manager(session_id)
+            dm = self._new_dialogue_manager(session_id, user_id)
         except Exception as e:
             logger.warning(f"恢复会话 {session_id} 失败: {e}")
             return None

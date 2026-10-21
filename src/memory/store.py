@@ -7,13 +7,16 @@
 多 worker 部署都会丢失上下文。这里把「会话」与「每轮对话」落到
 metadata.db（与切片元数据共用一个 SQLite 文件，但两张独立的表）。
 
-暂不涉及长期记忆（摘要槽 / 事实库），那是 P1/P2。
+暂不涉及长期记忆的抽取逻辑（摘要槽 / 事实库分别在 summarizer / facts），
+这里只负责落库。
 
 表结构：
     sessions        会话一行，记录 user、创建时间、最后活跃时间
     dialogue_turns  每轮一行（user / assistant 各一行），resolved_query
                     保存指代消解后的查询，便于回溯「那它的用法呢」
                     到底被还原成了什么
+    user_facts      P2 长期记忆：用户用药事实（过敏史/在服药物/特殊人群/
+                    基础病况），按 user_id 聚合、跨会话生效
 
 设计约束（与 DeerFlow 对齐的三条）：
     1. 失败不影响主流程——所有写入异常只记日志，不抛给上层；
@@ -74,10 +77,22 @@ class MemoryStore:
                     created_at     TEXT NOT NULL
                 );
 
+                CREATE TABLE IF NOT EXISTS user_facts (
+                    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id     TEXT NOT NULL,
+                    fact_type   TEXT NOT NULL,
+                    content     TEXT NOT NULL,
+                    protected   INTEGER NOT NULL DEFAULT 0,
+                    created_at  TEXT NOT NULL,
+                    updated_at  TEXT NOT NULL
+                );
+
                 CREATE INDEX IF NOT EXISTS idx_turns_session
                     ON dialogue_turns(session_id, id);
                 CREATE INDEX IF NOT EXISTS idx_sessions_active
                     ON sessions(status, last_active);
+                CREATE INDEX IF NOT EXISTS idx_facts_user
+                    ON user_facts(user_id, id);
             ''')
             self.conn.commit()
 
@@ -222,6 +237,106 @@ class MemoryStore:
             )
             self.conn.commit()
             return cur.rowcount
+
+    # ----------------------------------------------------------
+    # 长期记忆（P2：用户事实，按 user_id 聚合、跨会话）
+    # ----------------------------------------------------------
+
+    def load_facts(self, user_id: str) -> List[Dict]:
+        """载入某用户的全部事实（按最近更新在前）"""
+        if not user_id:
+            return []
+        rows = self.conn.execute(
+            'SELECT id, fact_type, content, protected, created_at, updated_at '
+            'FROM user_facts WHERE user_id = ? ORDER BY updated_at DESC, id DESC',
+            (user_id,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+    def upsert_fact(self, user_id: str, fact_type: str, content: str,
+                    protected: bool = False) -> Optional[int]:
+        """写入一条事实；同 user 同内容只刷新时间，不重复计数。
+
+        protected 是「纠错保护位」：用户明确纠正过/强调过的事实标记为 1，
+        容量淘汰时不会被删，且后续抽取不能悄悄改写（只允许显式删除）。
+        """
+        if not user_id or not content:
+            return None
+        now = _now()
+        try:
+            with self._lock:
+                row = self.conn.execute(
+                    'SELECT id, protected FROM user_facts WHERE user_id = ? AND content = ?',
+                    (user_id, content),
+                ).fetchone()
+                if row:
+                    # 保护位只升不降：一旦被保护，普通抽取不得降级
+                    new_protected = 1 if (row['protected'] or protected) else 0
+                    self.conn.execute(
+                        'UPDATE user_facts SET fact_type = ?, protected = ?, updated_at = ? WHERE id = ?',
+                        (fact_type, new_protected, now, row['id']),
+                    )
+                    self.conn.commit()
+                    return row['id']
+                cur = self.conn.execute(
+                    'INSERT INTO user_facts (user_id, fact_type, content, protected, created_at, updated_at) '
+                    'VALUES (?, ?, ?, ?, ?, ?)',
+                    (user_id, fact_type, content, 1 if protected else 0, now, now),
+                )
+                self.conn.commit()
+                return cur.lastrowid
+        except Exception as e:
+            logger.warning(f"写入用户事实失败（不影响对话）: {e}")
+            return None
+
+    def delete_fact(self, user_id: str, content: str) -> int:
+        """显式删除一条事实（用户否认/纠错时用，保护位也拦不住显式删除）"""
+        if not user_id or not content:
+            return 0
+        try:
+            with self._lock:
+                cur = self.conn.execute(
+                    'DELETE FROM user_facts WHERE user_id = ? AND content = ?',
+                    (user_id, content),
+                )
+                self.conn.commit()
+                return cur.rowcount
+        except Exception as e:
+            logger.warning(f"删除用户事实失败: {e}")
+            return 0
+
+    def evict_facts(self, user_id: str, keep: int = 20) -> int:
+        """容量淘汰：超出 keep 条时删最旧的未保护事实；保护位事实永不淘汰"""
+        if not user_id:
+            return 0
+        try:
+            with self._lock:
+                row = self.conn.execute(
+                    'SELECT COUNT(*) AS n FROM user_facts WHERE user_id = ?', (user_id,)
+                ).fetchone()
+                total = int(row['n']) if row else 0
+                if total <= keep:
+                    return 0
+                # 按 updated_at 升序（最旧在前）删未保护的，删到只剩 keep 条
+                excess = total - keep
+                cur = self.conn.execute(
+                    'DELETE FROM user_facts WHERE id IN ('
+                    '  SELECT id FROM user_facts WHERE user_id = ? AND protected = 0'
+                    '  ORDER BY updated_at ASC, id ASC LIMIT ?'
+                    ')',
+                    (user_id, excess),
+                )
+                self.conn.commit()
+                return cur.rowcount
+        except Exception as e:
+            logger.warning(f"淘汰用户事实失败: {e}")
+            return 0
+
+    def count_facts(self, user_id: str) -> int:
+        row = self.conn.execute(
+            'SELECT COUNT(*) AS n FROM user_facts WHERE user_id = ?', (user_id,)
+        ).fetchone()
+        return int(row['n']) if row else 0
 
     def close(self):
         try:

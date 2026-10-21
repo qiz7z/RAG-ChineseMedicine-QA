@@ -153,6 +153,12 @@ ENABLE_MEMORY_SUMMARY = True
 MEMORY_SUMMARY_MIN_TURNS = 3       # 至少积累几轮才生成摘要
 MEMORY_SUMMARY_INTERVAL = 2        # 每隔几轮刷新一次（控制 LLM 调用成本）
 
+# --- 长期记忆（P2：跨会话事实库） ---
+# 按 user_id 聚合（跨会话）：过敏史 / 在服药物 / 特殊人群 / 基础病况等
+ENABLE_MEMORY_FACTS = True
+MEMORY_FACTS_MAX = 20              # 每用户事实容量上限，超出淘汰最旧的未保护事实
+MEMORY_FACTS_MAX_CHARS = 300       # 注入 prompt 的事实文本上限
+
 # --- 回答后处理 ---
 ENABLE_CITATION = True              # 是否启用引用标注
 ENABLE_CONSISTENCY_CHECK = True     # 是否启用一致性校验

@@ -80,6 +80,7 @@ def build_prompt(
     retrieval_results: List[Dict],
     chat_history: Optional[List[Dict]] = None,
     memory_summary: str = "",
+    user_facts: str = "",
 ) -> List[Dict]:
     """
     构建完整的 LLM 消息列表（OpenAI 格式）。
@@ -90,6 +91,8 @@ def build_prompt(
         chat_history: 多轮对话历史（可选）
         memory_summary: 会话摘要（三槽：关注点 / 已问章节 / 未解决问题），
                         用于超出最近 N 轮之后仍保留上下文
+        user_facts: 长期用户事实（过敏史 / 在服药物 / 特殊人群 / 基础病况），
+                    跨会话生效，用于回答带上个体化安全提醒
 
     Returns:
         OpenAI 格式的 messages 列表
@@ -105,15 +108,20 @@ def build_prompt(
                 "content": turn.get("content", ""),
             })
 
-    # 3. 构建用户消息（会话摘要 + 检索上下文 + 用户问题）
+    # 3. 构建用户消息（用户事实 + 会话摘要 + 检索上下文 + 用户问题）
     context_text = build_context_section(retrieval_results)
+
+    facts_block = f"""## 用户情况（长期事实，回答时须考虑禁忌与相互作用）
+{user_facts}
+
+""" if user_facts else ""
 
     memory_block = f"""## 用户记忆（此前会话摘要）
 {memory_summary}
 
 """ if memory_summary else ""
 
-    user_content = f"""{memory_block}## 药典参考资料
+    user_content = f"""{facts_block}{memory_block}## 药典参考资料
 ---
 {context_text}
 ---

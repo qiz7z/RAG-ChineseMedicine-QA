@@ -24,6 +24,7 @@ from config import (
     DIALOGUE_MAX_HISTORY, DIALOGUE_CONTEXT_WINDOW,
     ENABLE_MEMORY_PERSIST, MEMORY_RESTORE_TURNS,
     ENABLE_MEMORY_SUMMARY, MEMORY_SUMMARY_MIN_TURNS, MEMORY_SUMMARY_INTERVAL,
+    ENABLE_MEMORY_FACTS, MEMORY_FACTS_MAX,
 )
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,7 @@ class DialogueManager:
         session_id: str = None,
         store=None,
         drug_names: List[str] = None,
+        user_id: str = None,
     ):
         """
         Args:
@@ -73,10 +75,12 @@ class DialogueManager:
             session_id: 会话 ID；提供且开启持久化时，会从库里恢复最近几轮
             store: 记忆存储实例（默认取全局单例）
             drug_names: 药典药名清单，用于确定性地跟踪「当前讨论的药」
+            user_id: 用户标识（X-User-Id）；长期事实按它聚合、跨会话生效
         """
         self.llm_client = llm_client
         self.max_history = max_history or DIALOGUE_MAX_HISTORY
         self.session_id = session_id
+        self.user_id = user_id or 'default'
         self.history: List[DialogueTurn] = []
 
         # 短期记忆的状态槽：当前焦点药品。
@@ -106,6 +110,90 @@ class DialogueManager:
             self.summary = self.store.load_summary(self.session_id)
         # 恢复会话时同步累计轮数，避免节流从 0 重来
         self._total_turns = self.turn_count
+
+        # 长期事实（P2）：按 user_id 聚合、跨会话，随用随从库里取
+        self._facts: List[Dict] = []
+        self._last_facts_turn = 0
+        # 记忆任务执行器：默认后台线程，测试可注入同步执行器
+        self._mem_executor = _SUMMARY_EXECUTOR
+        if ENABLE_MEMORY_FACTS and self.store:
+            try:
+                self._facts = self.store.load_facts(self.user_id)
+            except Exception as e:
+                logger.warning(f"加载用户事实失败（不影响对话）: {e}")
+
+    # ----------------------------------------------------------
+    # 长期事实（P2：过敏史 / 在服药物 / 特殊人群 / 基础病况，跨会话）
+    # ----------------------------------------------------------
+
+    def get_facts_text(self) -> str:
+        """返回可注入 prompt 的事实文本；没有事实返回空串"""
+        from memory.facts import format_facts
+        return format_facts(self._facts)
+
+    def schedule_facts(self):
+        """一轮结束后按信号词触发后台事实抽取（与摘要同一节奏）。
+
+        关键词前置过滤是确定性成本闸门：没提过敏/在服药/特殊人群的轮次
+        不值得多花一次 LLM 调用。失败静默，绝不影响回答。
+        """
+        if not (ENABLE_MEMORY_FACTS and self.llm_client and self.store):
+            return
+        # 只看最近的用户发言里有没有事实信号
+        from memory.facts import has_fact_signal
+        user_text = ""
+        for turn in reversed(self.history):
+            if turn.role == 'user':
+                user_text = turn.content
+                break
+        if not has_fact_signal(user_text):
+            return
+        if self._total_turns - self._last_facts_turn < 1:
+            return
+        self._last_facts_turn = self._total_turns
+        try:
+            self._mem_executor.submit(
+                self._refresh_facts, list(self.history), self.user_id
+            )
+        except Exception as e:
+            logger.warning(f"提交事实抽取任务失败（不影响对话）: {e}")
+
+    def _refresh_facts(self, history: List[DialogueTurn], user_id: str):
+        """后台线程：抽取事实 → 合并/纠错 → 容量淘汰 → 落库"""
+        try:
+            from memory.facts import extract_facts, format_facts
+            current = self.store.load_facts(user_id) if self.store else []
+            result = extract_facts(
+                self.llm_client, history, format_facts(current)
+            )
+            if not result:
+                return
+
+            # 1. 显式纠错：被用户否认/推翻的旧事实直接删（保护位也拦不住
+            #    显式删除，只是拦自动覆盖与容量淘汰）
+            for content in result.get('retract') or []:
+                self.store.delete_fact(user_id, content)
+
+            # 2. 合并新事实；remember=true 的置纠错保护位
+            for f in result.get('facts') or []:
+                self.store.upsert_fact(
+                    user_id, f['type'], f['content'],
+                    protected=f.get('remember', False),
+                )
+
+            # 3. 容量淘汰（保护位事实永不淘汰）
+            self.store.evict_facts(user_id, MEMORY_FACTS_MAX)
+
+            self._facts = self.store.load_facts(user_id)
+            n_new = len(result.get('facts') or [])
+            n_del = len(result.get('retract') or [])
+            if n_new or n_del:
+                logger.info(
+                    f"用户 {user_id} 事实已更新: +{n_new} -{n_del}，"
+                    f"现有 {len(self._facts)} 条"
+                )
+        except Exception as e:
+            logger.warning(f"刷新用户事实失败（不影响对话）: {e}")
 
     # ----------------------------------------------------------
     # 持久化
@@ -186,7 +274,7 @@ class DialogueManager:
         self._last_summary_turn = self._total_turns
         try:
             # 传副本：后台线程读历史时，主线程可能继续追加
-            _SUMMARY_EXECUTOR.submit(
+            self._mem_executor.submit(
                 self._refresh_summary, list(self.history), self.session_id
             )
         except Exception as e:
@@ -240,6 +328,8 @@ class DialogueManager:
         self._total_turns += 1
         # 一轮完整对话后再考虑刷新摘要（内部按轮次间隔节流）
         self.schedule_summary()
+        # 长期事实同节奏触发（有事实信号词才调 LLM）
+        self.schedule_facts()
 
     def clear(self):
         """清空对话历史（同时清除持久化轮次）"""
