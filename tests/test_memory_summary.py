@@ -84,6 +84,53 @@ def test_build_prompt_includes_summary():
     assert content.index("用户记忆") < content.index("药典参考资料")
 
 
+def test_total_turns_survives_history_trim(tmp_path):
+    """超过 max_history 后累计轮数仍增长——否则摘要永远不再刷新"""
+    store = MemoryStore(str(tmp_path / "mem.db"))
+    dm = DialogueManager(session_id="s5", max_history=2, store=store)
+    dm.llm_client = _FakeLLM(VALID)
+    dm._refresh_summary = lambda *a, **k: None       # 只验节流，不跑线程
+
+    for i in range(6):
+        dm.add_user_message(f"q{i}")
+        dm.add_assistant_message(f"a{i}")
+
+    assert dm.turn_count == 2, "内存历史按 max_history 裁剪"
+    assert dm._total_turns == 6, "累计轮数不应被裁剪"
+    assert dm._last_summary_turn >= 2, "摘要应持续被触发"
+
+
+def test_summary_retries_immediately_when_missing(tmp_path):
+    store = MemoryStore(str(tmp_path / "mem.db"))
+    dm = DialogueManager(session_id="s6", store=store)
+    dm.llm_client = _FakeLLM(VALID)
+    dm._refresh_summary = lambda *a, **k: None       # 模拟失败，summary 保持空
+
+    for i in range(3):
+        dm.add_user_message(f"q{i}")
+        dm.add_assistant_message(f"a{i}")
+    assert dm._last_summary_turn == 3
+    assert dm.summary is None
+
+    dm.add_user_message("q3")
+    dm.add_assistant_message("a3")
+    assert dm._last_summary_turn == 4, "没有摘要时不应等间隔，应立刻重试"
+
+
+def test_coreference_prompt_includes_summary():
+    """超长对话中，只存在于摘要里的药品也要能用于指代消解"""
+    from generation.prompts import build_coreference_prompt
+
+    msgs = build_coreference_prompt(
+        "那它的禁忌呢？",
+        [{"role": "user", "content": "黄芪的性味"}],
+        "当前关注：人参 · 性味与归经",
+    )
+    content = msgs[-1]["content"]
+    assert "人参 · 性味与归经" in content
+    assert "黄芪的性味" in content
+
+
 def test_schedule_throttled_by_turn_count(tmp_path):
     store = MemoryStore(str(tmp_path / "mem.db"))
     dm = DialogueManager(session_id="s2", store=store)

@@ -155,6 +155,9 @@ def build_no_result_prompt(user_query: str) -> List[Dict]:
 
 COREFERENCE_PROMPT_TEMPLATE = """请分析以下对话上下文，将用户最新问题中的指代词（如"它"、"这个药"、"该药材"、"它"等）替换为具体的药品名称。
 
+## 此前会话摘要（长对话中，更早提到的药品只能从这里获取）
+{memory_summary}
+
 ## 对话历史
 {chat_history}
 
@@ -163,13 +166,17 @@ COREFERENCE_PROMPT_TEMPLATE = """请分析以下对话上下文，将用户最�
 
 ## 任务
 1. 识别用户最新问题中的指代词
-2. 根据对话历史推断指代对象
+2. **按以下优先级推断指代对象**（只看「用户」说过的话，助手回答里提到的药名仅作参考）：
+   - ① 用户最近一次提问中提到的药品名
+   - ② 若最近一次提问没有药名，取更早提问中最近提到的药品名
+   - ③ 若用户整段历史都没提过药名，才使用「此前会话摘要」中的关注点
 3. 输出消解后的完整问题
 
 注意：
 - 只输出消解后的问题文本，不要添加任何解释
 - 如果没有指代词需要消解，直接输出原问题
 - 保持问题原意，不要改变其他内容
+- **不要因为某个药出现次数多就选它**，以「最近提及」为准
 
 ## 消解后的问题："""
 
@@ -177,6 +184,7 @@ COREFERENCE_PROMPT_TEMPLATE = """请分析以下对话上下文，将用户最�
 def build_coreference_prompt(
     current_query: str,
     chat_history: List[Dict],
+    memory_summary: str = "",
 ) -> List[Dict]:
     """
     构建指代消解的 Prompt。
@@ -184,6 +192,8 @@ def build_coreference_prompt(
     Args:
         current_query: 用户当前查询
         chat_history: 对话历史
+        memory_summary: 会话摘要（可选）。对话超过历史窗口后，
+                        "它"指向的药品可能只存在于摘要里。
 
     Returns:
         OpenAI 格式的 messages 列表
@@ -195,6 +205,7 @@ def build_coreference_prompt(
         history_text += f"{role}: {turn['content']}\n"
 
     prompt = COREFERENCE_PROMPT_TEMPLATE.format(
+        memory_summary=memory_summary.strip() or "（无）",
         chat_history=history_text.strip(),
         current_query=current_query,
     )

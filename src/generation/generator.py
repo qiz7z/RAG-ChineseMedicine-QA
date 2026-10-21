@@ -224,9 +224,13 @@ class Generator:
 
         # 会话状态由调用方传入，Generator 自身不持有可变的对话历史
         dm = dialogue_manager or self.dialogue_manager
-        if dialogue_manager is not None and dialogue_manager.llm_client is None:
-            # 会话私有的 dm 通常在 API 层创建（不带 LLM），这里补上以便指代消解
-            dialogue_manager.llm_client = self.llm_client
+        if dialogue_manager is not None:
+            # 会话私有的 dm 通常在 API 层创建（不带 LLM/药名），这里补齐：
+            # llm_client 供指代消解兜底，drug_names 供焦点槽做确定性实体跟踪
+            if dialogue_manager.llm_client is None:
+                dialogue_manager.llm_client = self.llm_client
+            if not dialogue_manager.drug_names:
+                dialogue_manager.drug_names = self.retriever.query_parser.drug_names
 
         # 守卫的 _session_trusted 属于会话状态，同样不能共享
         g = guard or self.guard
@@ -360,8 +364,11 @@ class Generator:
         total_start = time.time()
 
         dm = dialogue_manager or self.dialogue_manager
-        if dialogue_manager is not None and dialogue_manager.llm_client is None:
-            dialogue_manager.llm_client = self.llm_client
+        if dialogue_manager is not None:
+            if dialogue_manager.llm_client is None:
+                dialogue_manager.llm_client = self.llm_client
+            if not dialogue_manager.drug_names:
+                dialogue_manager.drug_names = self.retriever.query_parser.drug_names
 
         g = guard or self.guard
         if g is not self.guard and g.llm_client is None:
