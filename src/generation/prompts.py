@@ -55,6 +55,14 @@ def build_context_section(retrieval_results: List[Dict]) -> str:
         drug_name = r.get("drug_name", "未知药品")
         section = r.get("section", "未知章节")
         content = r.get("content", "").strip()
+        table = (r.get("table_markdown") or "").strip()
+
+        # 表格只展示一次：正文可能已含表格（历史数据还有重复两遍的情况），
+        # 而窗口块把表格切碎后正文只剩残片、完整表格在 table_markdown 里。
+        # 统一压平为「正文 + 完整表格」，避免同一张表在 prompt 里出现两次。
+        if table:
+            body = content.replace(table, "").strip()
+            content = f"{body}\n\n{table}" if body else table
 
         # 构建出处标注
         source_parts = [f"药品：{drug_name}"]
@@ -71,6 +79,7 @@ def build_prompt(
     user_query: str,
     retrieval_results: List[Dict],
     chat_history: Optional[List[Dict]] = None,
+    memory_summary: str = "",
 ) -> List[Dict]:
     """
     构建完整的 LLM 消息列表（OpenAI 格式）。
@@ -79,6 +88,8 @@ def build_prompt(
         user_query: 用户当前查询
         retrieval_results: 检索结果列表
         chat_history: 多轮对话历史（可选）
+        memory_summary: 会话摘要（三槽：关注点 / 已问章节 / 未解决问题），
+                        用于超出最近 N 轮之后仍保留上下文
 
     Returns:
         OpenAI 格式的 messages 列表
@@ -94,10 +105,15 @@ def build_prompt(
                 "content": turn.get("content", ""),
             })
 
-    # 3. 构建用户消息（包含检索上下文 + 用户问题）
+    # 3. 构建用户消息（会话摘要 + 检索上下文 + 用户问题）
     context_text = build_context_section(retrieval_results)
 
-    user_content = f"""## 药典参考资料
+    memory_block = f"""## 用户记忆（此前会话摘要）
+{memory_summary}
+
+""" if memory_summary else ""
+
+    user_content = f"""{memory_block}## 药典参考资料
 ---
 {context_text}
 ---

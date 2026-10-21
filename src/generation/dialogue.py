@@ -16,12 +16,21 @@
     # resolved => "那人参的功能主治呢？"
 """
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from typing import List, Dict, Optional
 from dataclasses import dataclass, field
 
-from config import DIALOGUE_MAX_HISTORY, DIALOGUE_CONTEXT_WINDOW
+from config import (
+    DIALOGUE_MAX_HISTORY, DIALOGUE_CONTEXT_WINDOW,
+    ENABLE_MEMORY_PERSIST, MEMORY_RESTORE_TURNS,
+    ENABLE_MEMORY_SUMMARY, MEMORY_SUMMARY_MIN_TURNS, MEMORY_SUMMARY_INTERVAL,
+)
 
 logger = logging.getLogger(__name__)
+
+# 摘要生成放到后台线程，避免多一次 LLM 调用（2~5s）拖慢回答。
+# 单个会话同一时刻最多一个任务在跑，2 个 worker 足够；失败只记日志。
+_SUMMARY_EXECUTOR = ThreadPoolExecutor(max_workers=2, thread_name_prefix='mem-summary')
 
 
 @dataclass
@@ -53,15 +62,122 @@ class DialogueManager:
         self,
         llm_client=None,
         max_history: int = None,
+        session_id: str = None,
+        store=None,
     ):
         """
         Args:
             llm_client: LLM 客户端实例（用于指代消解）。如不提供则跳过指代消解。
             max_history: 保留的最大对话轮数
+            session_id: 会话 ID；提供且开启持久化时，会从库里恢复最近几轮
+            store: 记忆存储实例（默认取全局单例）
         """
         self.llm_client = llm_client
         self.max_history = max_history or DIALOGUE_MAX_HISTORY
+        self.session_id = session_id
         self.history: List[DialogueTurn] = []
+
+        # 三槽摘要：focus / asked_sections / open_questions
+        self.summary: Optional[Dict] = None
+        self._last_summary_turn = 0
+
+        # 记忆持久化：失败即退化为纯内存，绝不影响对话主流程
+        self.store = None
+        if ENABLE_MEMORY_PERSIST:
+            try:
+                from memory.store import get_memory_store
+                self.store = store or get_memory_store()
+            except Exception as e:
+                logger.warning(f"记忆存储初始化失败，退化为纯内存: {e}")
+
+        if self.store and self.session_id:
+            self.store.touch_session(self.session_id)
+            self._restore()
+            self.summary = self.store.load_summary(self.session_id)
+
+    # ----------------------------------------------------------
+    # 持久化
+    # ----------------------------------------------------------
+
+    def _restore(self):
+        """从库里恢复最近 max_history 轮对话"""
+        try:
+            rows = self.store.load_turns(self.session_id, self.max_history)
+        except Exception as e:
+            logger.warning(f"恢复对话历史失败: {e}")
+            return
+        self.history = [
+            DialogueTurn(
+                role=r.get('role', ''),
+                content=r.get('content', ''),
+                query=r.get('resolved_query') or '',
+            )
+            for r in rows
+            if r.get('content')
+        ]
+        if self.history:
+            logger.info(f"已从库恢复会话 {self.session_id} 的 {len(self.history)} 条消息")
+
+    def bind_session(self, session_id: str):
+        """切换到指定会话（不同会话历史相互隔离），并加载其历史"""
+        if not session_id or session_id == self.session_id:
+            return
+        self.session_id = session_id
+        self.history.clear()
+        if self.store:
+            self.store.touch_session(session_id)
+            self._restore()
+
+    def _persist_turn(self, role: str, content: str, resolved_query: str = ''):
+        if not (self.store and self.session_id):
+            return
+        self.store.touch_session(self.session_id)
+        self.store.append_turn(self.session_id, role, content, resolved_query)
+
+    # ----------------------------------------------------------
+    # 会话摘要（三槽：关注点 / 已问章节 / 未解决问题）
+    # ----------------------------------------------------------
+
+    def get_summary_text(self) -> str:
+        """返回可直接注入 prompt 的摘要文本；无摘要时返回空串"""
+        from memory.summarizer import format_summary
+        return format_summary(self.summary)
+
+    def schedule_summary(self):
+        """按轮次间隔触发后台摘要。
+
+        放在 add_assistant_message 之后调用：此时一轮对话才完整。
+        不阻塞回答，失败静默——摘要只是增强，不能影响主流程。
+        """
+        if not (ENABLE_MEMORY_SUMMARY and self.llm_client and self.session_id):
+            return
+        if self.turn_count < MEMORY_SUMMARY_MIN_TURNS:
+            return
+        if self.turn_count - self._last_summary_turn < MEMORY_SUMMARY_INTERVAL:
+            return
+
+        self._last_summary_turn = self.turn_count
+        try:
+            # 传副本：后台线程读历史时，主线程可能继续追加
+            _SUMMARY_EXECUTOR.submit(
+                self._refresh_summary, list(self.history), self.session_id
+            )
+        except Exception as e:
+            logger.warning(f"提交摘要任务失败（不影响对话）: {e}")
+
+    def _refresh_summary(self, history: List[DialogueTurn], session_id: str):
+        """后台线程：调 LLM 生成摘要并落库"""
+        try:
+            from memory.summarizer import extract_summary
+            summary = extract_summary(self.llm_client, history)
+            if not summary:
+                return
+            self.summary = summary
+            if self.store and session_id:
+                self.store.save_summary(session_id, summary)
+            logger.info(f"会话 {session_id} 摘要已更新: {summary.get('focus', '')}")
+        except Exception as e:
+            logger.warning(f"刷新会话摘要失败（不影响对话）: {e}")
 
     # ----------------------------------------------------------
     # 对话历史管理
@@ -75,6 +191,8 @@ class DialogueManager:
             query=original_query or content,
         ))
         self._trim_history()
+        # content 是消解后的查询，原始问题一并落库供回溯
+        self._persist_turn('user', content, original_query or content)
 
     def add_assistant_message(self, content: str):
         """添加助手消息到对话历史"""
@@ -83,10 +201,18 @@ class DialogueManager:
             content=content,
         ))
         self._trim_history()
+        self._persist_turn('assistant', content)
+        # 一轮完整对话后再考虑刷新摘要（内部按轮次间隔节流）
+        self.schedule_summary()
 
     def clear(self):
-        """清空对话历史"""
+        """清空对话历史（同时清除持久化轮次）"""
         self.history.clear()
+        if self.store and self.session_id:
+            try:
+                self.store.clear_turns(self.session_id)
+            except Exception as e:
+                logger.warning(f"清空持久化轮次失败: {e}")
 
     def _trim_history(self):
         """裁剪对话历史，保留最近 max_history 轮"""

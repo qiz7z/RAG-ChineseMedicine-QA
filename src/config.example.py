@@ -143,6 +143,16 @@ LLM_RETRY_DELAY = 2                 # 重试间隔（秒，指数退避基数）
 DIALOGUE_MAX_HISTORY = 5            # 多轮对话保留的最大历史轮数
 DIALOGUE_CONTEXT_WINDOW = 4096      # 对话历史最大字符数
 
+# --- 记忆持久化（会话与轮次落库） ---
+# 开启后 dialogue_turns 写入 metadata.db，服务重启/多 worker 不丢上下文
+ENABLE_MEMORY_PERSIST = True
+MEMORY_RESTORE_TURNS = DIALOGUE_MAX_HISTORY   # 启动时从库里恢复的轮数
+
+# --- 会话摘要（三槽摘要，超出 N 轮后仍有上下文） ---
+ENABLE_MEMORY_SUMMARY = True
+MEMORY_SUMMARY_MIN_TURNS = 3       # 至少积累几轮才生成摘要
+MEMORY_SUMMARY_INTERVAL = 2        # 每隔几轮刷新一次（控制 LLM 调用成本）
+
 # --- 回答后处理 ---
 ENABLE_CITATION = True              # 是否启用引用标注
 ENABLE_CONSISTENCY_CHECK = True     # 是否启用一致性校验

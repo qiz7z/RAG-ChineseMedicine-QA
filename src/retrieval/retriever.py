@@ -88,11 +88,13 @@ class SearchResult:
     sources: List[str] = field(default_factory=list)  # 命中来源（vector/bm25）
     source_scores: Dict[str, float] = field(default_factory=dict)  # 各路原始分（vector 余弦/BM25 分）
     rerank_score: Optional[float] = None    # 重排分数（未重排则为 None）
+    table_markdown: Optional[str] = None    # 该块关联的表格（Markdown），无表格则为 None
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "chunk_id": self.chunk_id,
             "content": self.content,
+            "table_markdown": self.table_markdown,
             "score": self.score,
             "drug_name": self.drug_name,
             "pinyin_name": self.pinyin_name,
@@ -417,6 +419,7 @@ class Retriever:
                 is_yinpian=bool(meta.get("is_yinpian", False)),
                 parent_drug=meta.get("parent_drug", ""),
                 char_count=meta.get("char_count", 0),
+                table_markdown=meta.get("table_markdown") or None,
                 sources=r.get("sources", []),
                 source_scores=r.get("source_scores") or {},
                 rerank_score=r.get("rerank_score"),
@@ -880,6 +883,7 @@ class Retriever:
                 is_yinpian=bool(block.get("is_yinpian", False)),
                 parent_drug=block.get("parent_drug", ""),
                 char_count=block.get("char_count", 0),
+                table_markdown=block.get("table_markdown") or None,
                 sources=["horizontal"],
             ))
         return results

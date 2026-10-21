@@ -51,6 +51,30 @@ from indexing.metadata_store import MetadataStore
 logger = logging.getLogger(__name__)
 
 # ============================================================
+# 工具
+# ============================================================
+
+def _body_without_table(content: str, table: Optional[str],
+                        drug_name: str = "", section: str = "") -> str:
+    """剔除正文中的表格，表格由 table_markdown 字段单独返回。
+
+    表格在切片阶段被拼进了 chunk 正文，接口若同时返回 content 与
+    table_markdown，前端无条件渲染会出现两遍。这里统一剥掉，
+    让 content 只承载正文，前端「正文 + 表格」各渲染一次即可。
+
+    【处方】这类表格型章节剥表后常只剩首行实体锚点「药名 · 章节」，
+    与接口已有的 drug_name/section 字段重复，一并去掉。
+    """
+    body = content or ""
+    if table:
+        body = body.replace(table, "")
+    body = body.strip()
+    if drug_name and section and body == f"{drug_name} · {section}":
+        return ""
+    return body
+
+
+# ============================================================
 # 全局单例（延迟初始化）
 # ============================================================
 
@@ -179,26 +203,17 @@ async def chat(request: ChatRequest):
     session_id = sm.get_or_create(request.session_id)
     session = sm.get_session(session_id)
 
-    # 新会话时重置守卫信任状态
-    if not request.session_id or not session.dialogue_manager.history:
-        gen.guard.reset_session()
-
-    # 将会话的对话历史同步到 Generator 的对话管理器
-    # （Generator 内部有自己的 DialogueManager，我们需要把历史注入）
-    if session and session.dialogue_manager.history:
-        gen.dialogue_manager.history = session.dialogue_manager.history
-
     try:
-        # 执行问答
+        # 会话私有的对话管理器与守卫随请求传入：历史、指代消解、信任状态、
+        # 落库都基于它们，不再与全局 Generator 共享状态
+        # （此前靠“拷历史”同步，并发时会互相覆盖）
         response = gen.answer(
             request.question,
             temperature=request.temperature,
             max_tokens=request.max_tokens,
+            dialogue_manager=session.dialogue_manager if session else None,
+            guard=session.guard if session else None,
         )
-
-        # 将更新后的对话历史同步回 session
-        if session:
-            session.dialogue_manager.history = gen.dialogue_manager.history
 
         # 构建响应
         sources = []
@@ -209,7 +224,10 @@ async def chat(request: ChatRequest):
                     drug_name=r.drug_name,
                     section=r.section,
                     category=r.category,
-                    content=r.content[:500],  # 截断内容
+                    content=_body_without_table(
+                        r.content, r.table_markdown, r.drug_name, r.section,
+                    )[:500],
+                    table_markdown=r.table_markdown,  # 完整表格（不受 500 字截断影响）
                     score=r.score,
                     rerank_score=r.rerank_score,
                     sources=r.sources,
@@ -247,12 +265,10 @@ async def chat_stream(request: ChatRequest):
     session_id = sm.get_or_create(request.session_id)
     session = sm.get_session(session_id)
 
-    # 新会话时重置守卫信任状态
-    if not request.session_id or not session.dialogue_manager.history:
-        gen.guard.reset_session()
-
-    if session and session.dialogue_manager.history:
-        gen.dialogue_manager.history = session.dialogue_manager.history
+    # 流式路径每 yield 一次就会让出事件循环，必须使用会话私有的对话管理器与守卫，
+    # 否则并发请求会把彼此的 session_id / history / 信任状态覆盖掉。
+    session_dm = session.dialogue_manager if session else None
+    session_guard = session.guard if session else None
 
     async def event_stream():
         try:
@@ -260,6 +276,8 @@ async def chat_stream(request: ChatRequest):
                 request.question,
                 temperature=request.temperature,
                 max_tokens=request.max_tokens,
+                dialogue_manager=session_dm,
+                guard=session_guard,
             ):
                 # 非医药问题拒绝
                 if "rejected" in event:
@@ -279,9 +297,6 @@ async def chat_stream(request: ChatRequest):
                 # 元数据（来源、引用等）——流式结束后一次性返回
                 if "metadata" in event:
                     meta = event["metadata"]
-                    # 同步对话历史到 session
-                    if session:
-                        session.dialogue_manager.history = gen.dialogue_manager.history
 
                     data = json.dumps({
                         "done": True,
@@ -343,7 +358,10 @@ async def search(
                 drug_name=r.drug_name,
                 section=r.section,
                 category=r.category,
-                content=r.content[:500],
+                content=_body_without_table(
+                    r.content, r.table_markdown, r.drug_name, r.section,
+                )[:500],
+                table_markdown=r.table_markdown,
                 score=r.score,
                 rerank_score=r.rerank_score,
                 sources=r.sources,

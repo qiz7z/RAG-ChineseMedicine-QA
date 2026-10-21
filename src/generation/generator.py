@@ -202,6 +202,8 @@ class Generator:
         query: str,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
+        dialogue_manager: Optional['DialogueManager'] = None,
+        guard: Optional['GuardChecker'] = None,
     ) -> GenerationResponse:
         """
         端到端问答：查询 → 检索 → 生成 → 后处理。
@@ -210,6 +212,9 @@ class Generator:
             query: 用户查询
             temperature: LLM 温度参数（默认从 config 读取）
             max_tokens: LLM 最大输出 token 数
+            dialogue_manager: 会话私有的对话管理器。多会话并发时必须传入，
+                              否则共用 self.dialogue_manager 会互相覆盖历史。
+            guard: 会话私有的领域守卫（持有「本会话是否已通过」的信任状态）。
 
         Returns:
             GenerationResponse 对象
@@ -217,10 +222,21 @@ class Generator:
         total_start = time.time()
         component_latency = {}
 
+        # 会话状态由调用方传入，Generator 自身不持有可变的对话历史
+        dm = dialogue_manager or self.dialogue_manager
+        if dialogue_manager is not None and dialogue_manager.llm_client is None:
+            # 会话私有的 dm 通常在 API 层创建（不带 LLM），这里补上以便指代消解
+            dialogue_manager.llm_client = self.llm_client
+
+        # 守卫的 _session_trusted 属于会话状态，同样不能共享
+        g = guard or self.guard
+        if g is not self.guard and g.llm_client is None:
+            g.llm_client = self.llm_client
+
         # ============ 0. 问题领域守卫 ============
         t0 = time.time()
-        is_followup = self.enable_dialogue and self.dialogue_manager.turn_count > 0
-        is_related, guard_reason = self.guard.check(query, is_followup=is_followup)
+        is_followup = self.enable_dialogue and dm.turn_count > 0
+        is_related, guard_reason = g.check(query, is_followup=is_followup)
         component_latency["guard_check"] = time.time() - t0
 
         if not is_related:
@@ -238,14 +254,14 @@ class Generator:
                 latency=total_latency,
                 component_latency=component_latency,
                 llm_model=self.llm_client.model,
-                dialogue_turn=self.dialogue_manager.turn_count,
+                dialogue_turn=dm.turn_count,
             )
 
         # ============ 1. 指代消解 ============
         t0 = time.time()
         resolved_query = query
-        if self.enable_dialogue and self.dialogue_manager.turn_count > 0:
-            resolved_query = self.dialogue_manager.resolve_query(query)
+        if self.enable_dialogue and dm.turn_count > 0:
+            resolved_query = dm.resolve_query(query)
         component_latency["coreference_resolution"] = time.time() - t0
 
         # ============ 2. 检索 ============
@@ -259,13 +275,14 @@ class Generator:
 
         if retrieval_results:
             chat_history = (
-                self.dialogue_manager.get_history_messages()
+                dm.get_history_messages()
                 if self.enable_dialogue else None
             )
             messages = build_prompt(
                 user_query=resolved_query,
                 retrieval_results=retrieval_results,
                 chat_history=chat_history,
+                memory_summary=dm.get_summary_text(),
             )
         else:
             # 无检索结果时使用空结果 Prompt
@@ -296,8 +313,8 @@ class Generator:
 
         # ============ 6. 更新对话历史 ============
         if self.enable_dialogue:
-            self.dialogue_manager.add_user_message(query, resolved_query)
-            self.dialogue_manager.add_assistant_message(final_answer)
+            dm.add_user_message(query, resolved_query)
+            dm.add_assistant_message(final_answer)
 
         total_latency = time.time() - total_start
 
@@ -312,7 +329,7 @@ class Generator:
             latency=total_latency,
             component_latency=component_latency,
             llm_model=self.llm_client.model,
-            dialogue_turn=self.dialogue_manager.turn_count,
+            dialogue_turn=dm.turn_count,
         )
 
     # ----------------------------------------------------------
@@ -324,9 +341,16 @@ class Generator:
         query: str,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
+        dialogue_manager: Optional['DialogueManager'] = None,
+        guard: Optional['GuardChecker'] = None,
     ):
         """
         流式问答：逐 token 返回 LLM 生成内容，结束时返回元数据。
+
+        Args:
+            dialogue_manager: 会话私有的对话管理器；流式接口每 yield 一次就会
+                              让出事件循环，不传会导致并发请求互相覆盖历史。
+            guard: 会话私有的领域守卫。
 
         Yields:
             {"content": "..."}        — LLM 生成的文本片段（多次）
@@ -335,9 +359,17 @@ class Generator:
         """
         total_start = time.time()
 
+        dm = dialogue_manager or self.dialogue_manager
+        if dialogue_manager is not None and dialogue_manager.llm_client is None:
+            dialogue_manager.llm_client = self.llm_client
+
+        g = guard or self.guard
+        if g is not self.guard and g.llm_client is None:
+            g.llm_client = self.llm_client
+
         # 0. 问题领域守卫
-        is_followup = self.enable_dialogue and self.dialogue_manager.turn_count > 0
-        is_related, guard_reason = self.guard.check(query, is_followup=is_followup)
+        is_followup = self.enable_dialogue and dm.turn_count > 0
+        is_related, guard_reason = g.check(query, is_followup=is_followup)
         if not is_related:
             logger.info(f"问题被守卫拦截(流式): {query} ({guard_reason})")
             yield {"rejected": True, "content": OFF_TOPIC_REJECTION}
@@ -345,8 +377,8 @@ class Generator:
 
         # 1. 指代消解
         resolved_query = query
-        if self.enable_dialogue and self.dialogue_manager.turn_count > 0:
-            resolved_query = self.dialogue_manager.resolve_query(query)
+        if self.enable_dialogue and dm.turn_count > 0:
+            resolved_query = dm.resolve_query(query)
 
         # 2. 检索
         retrieval_response = self.retriever.search(resolved_query)
@@ -355,13 +387,14 @@ class Generator:
         # 3. Prompt 构建
         if retrieval_results:
             chat_history = (
-                self.dialogue_manager.get_history_messages()
+                dm.get_history_messages()
                 if self.enable_dialogue else None
             )
             messages = build_prompt(
                 user_query=resolved_query,
                 retrieval_results=retrieval_results,
                 chat_history=chat_history,
+                memory_summary=dm.get_summary_text(),
             )
         else:
             messages = build_no_result_prompt(resolved_query)
@@ -389,8 +422,8 @@ class Generator:
 
         # 6. 更新对话历史
         if self.enable_dialogue:
-            self.dialogue_manager.add_user_message(query, resolved_query)
-            self.dialogue_manager.add_assistant_message(final_answer)
+            dm.add_user_message(query, resolved_query)
+            dm.add_assistant_message(final_answer)
 
         # 7. 返回元数据（来源、引用、一致性检查等）
         sources = []
@@ -415,7 +448,7 @@ class Generator:
                 "citations": citations,
                 "consistency_issues": consistency_issues,
                 "latency_ms": int((time.time() - total_start) * 1000),
-                "dialogue_turn": self.dialogue_manager.turn_count,
+                "dialogue_turn": dm.turn_count,
             }
         }
 

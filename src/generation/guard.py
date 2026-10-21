@@ -96,9 +96,24 @@ OFF_TOPIC_REJECTION = (
 # 守卫检查器
 # ============================================================
 
+# 关键词正则只编译一次：守卫现在按会话创建（每个会话一份信任状态），
+# 若每次构造都重新编译两条长正则，纯属浪费。
+_ON_TOPIC_PATTERN = re.compile(
+    "|".join(re.escape(kw) for kw in ON_TOPIC_KEYWORDS),
+    re.IGNORECASE,
+)
+_OFF_TOPIC_PATTERN = re.compile(
+    "|".join(re.escape(kw) for kw in OFF_TOPIC_KEYWORDS),
+    re.IGNORECASE,
+)
+
+
 class GuardChecker:
     """
     问题领域守卫检查器。
+
+    实例持有**会话级**信任状态（`_session_trusted`），因此每个会话应各自
+    持有一个实例；无状态的正则已提到模块级常量，构造开销可忽略。
 
     使用方式：
         guard = GuardChecker(llm_client)
@@ -114,16 +129,6 @@ class GuardChecker:
             llm_client: LLM 客户端实例（可选，用于语义判断）
         """
         self.llm_client = llm_client
-
-        # 预编译关键词正则（大小写不敏感）
-        self._on_topic_pattern = re.compile(
-            "|".join(re.escape(kw) for kw in ON_TOPIC_KEYWORDS),
-            re.IGNORECASE,
-        )
-        self._off_topic_pattern = re.compile(
-            "|".join(re.escape(kw) for kw in OFF_TOPIC_KEYWORDS),
-            re.IGNORECASE,
-        )
 
         # 多轮对话优化：记录当前会话是否已通过守卫
         # 第一轮通过后，后续轮次跳过 LLM 判断，降低延迟
@@ -152,12 +157,12 @@ class GuardChecker:
         # ---- 第一层：关键词快速通道 ----
 
         # 命中医药关键词 → 直接通过
-        if self._on_topic_pattern.search(query_stripped):
+        if _ON_TOPIC_PATTERN.search(query_stripped):
             self._session_trusted = True
             return True, "关键词匹配（医药相关）"
 
         # 命中无关关键词 → 直接拒绝
-        if self._off_topic_pattern.search(query_stripped):
+        if _OFF_TOPIC_PATTERN.search(query_stripped):
             return False, "关键词匹配（明显无关）"
 
         # ---- 多轮对话优化 ----

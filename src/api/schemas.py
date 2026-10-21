@@ -50,6 +50,9 @@ class SourceItem(BaseModel):
     section: str = Field(..., description="章节")
     category: str = Field(..., description="分类")
     content: str = Field(..., description="chunk 内容")
+    table_markdown: Optional[str] = Field(
+        None, description="命中的表格（Markdown）；无表格时为 null，前端可直接渲染"
+    )
     score: float = Field(..., description="相关性分数")
     rerank_score: Optional[float] = Field(None, description="重排分数")
     sources: List[str] = Field(default_factory=list, description="命中来源（vector/bm25）")
@@ -90,6 +93,7 @@ class SearchResultItem(BaseModel):
     section: str
     category: str
     content: str
+    table_markdown: Optional[str] = None
     score: float
     rerank_score: Optional[float] = None
     sources: List[str] = Field(default_factory=list)

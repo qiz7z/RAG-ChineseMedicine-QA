@@ -9,8 +9,8 @@
 
 设计说明：
   - 每个会话 ID 对应一个 DialogueManager 实例
-  - 会话存储在内存中（适用于单机部署）
-  - 生产环境可替换为 Redis 存储
+  - 会话对象存在内存中；开启 ENABLE_MEMORY_PERSIST 时，会话与轮次
+    同时写入 metadata.db，服务重启后可按 session_id 恢复
 """
 import uuid
 import time
@@ -18,15 +18,21 @@ import logging
 from typing import Dict, Optional, List
 from datetime import datetime, timedelta
 
+from config import ENABLE_MEMORY_PERSIST
+
 logger = logging.getLogger(__name__)
 
 
 class SessionInfo:
     """单个会话的信息"""
 
-    def __init__(self, session_id: str, dialogue_manager):
+    def __init__(self, session_id: str, dialogue_manager, guard=None):
+        from generation.guard import GuardChecker
+
         self.session_id = session_id
         self.dialogue_manager = dialogue_manager
+        # 守卫持有「本会话是否已通过」的信任状态，必须按会话独立
+        self.guard = guard or GuardChecker()
         self.created_at = datetime.now()
         self.last_active = datetime.now()
 
@@ -114,14 +120,35 @@ class SessionManager:
             generator = None
 
         # 创建 DialogueManager（不绑定 LLM，指代消解由主 Generator 负责）
-        from generation.dialogue import DialogueManager
-        dm = DialogueManager(llm_client=None)
+        dm = self._new_dialogue_manager(session_id)
 
         session_info = SessionInfo(session_id, dm)
         self.sessions[session_id] = session_info
 
         logger.info(f"创建会话: {session_id}")
         return session_id
+
+    def _new_dialogue_manager(self, session_id: str):
+        """创建绑定了 session_id 的对话管理器（开启持久化时会自动恢复历史）"""
+        from generation.dialogue import DialogueManager
+        return DialogueManager(llm_client=None, session_id=session_id)
+
+    def _restore_session(self, session_id: str) -> Optional[SessionInfo]:
+        """服务重启后，按库里的 session_id 重建内存会话。
+
+        历史由 DialogueManager 构造时自动恢复，这里只负责把对象放回内存表。
+        """
+        try:
+            dm = self._new_dialogue_manager(session_id)
+        except Exception as e:
+            logger.warning(f"恢复会话 {session_id} 失败: {e}")
+            return None
+        if not dm.history:
+            return None
+        session_info = SessionInfo(session_id, dm)
+        self.sessions[session_id] = session_info
+        logger.info(f"已恢复会话: {session_id}（{len(dm.history)} 条消息）")
+        return session_info
 
     def get_session(self, session_id: str) -> Optional[SessionInfo]:
         """
@@ -153,6 +180,18 @@ class SessionManager:
         if session_id and session_id in self.sessions:
             self.sessions[session_id].update_active()
             return session_id
+
+        # 服务重启后内存表为空，但库里可能还有该会话 → 恢复而不是新建
+        if session_id and ENABLE_MEMORY_PERSIST:
+            try:
+                from memory.store import get_memory_store
+                if get_memory_store().session_exists(session_id):
+                    restored = self._restore_session(session_id)
+                    if restored:
+                        return session_id
+            except Exception as e:
+                logger.warning(f"按 session_id 恢复失败，改为新建: {e}")
+
         return self.create_session()
 
     def get_dialogue_manager(self, session_id: str):
@@ -180,11 +219,21 @@ class SessionManager:
         Returns:
             是否删除成功
         """
-        if session_id in self.sessions:
+        existed = session_id in self.sessions
+        if existed:
             del self.sessions[session_id]
+
+        # 库里软删除（轮次保留，便于排查）
+        if ENABLE_MEMORY_PERSIST:
+            try:
+                from memory.store import get_memory_store
+                get_memory_store().delete_session(session_id)
+            except Exception as e:
+                logger.warning(f"软删除会话失败: {e}")
+
+        if existed:
             logger.info(f"删除会话: {session_id}")
-            return True
-        return False
+        return existed
 
     def list_sessions(self) -> List[str]:
         """列出所有活跃会话 ID"""

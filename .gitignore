@@ -36,6 +36,9 @@ data/raw/*.docx
 # Vector store indices (regenerate via: python scripts/build/build_index.py)
 # data/vectorstore/
 
+# 会话记忆导出物（regenerate via: python scripts/run/export_memory.py）
+data/memory/
+
 # Model weights (download from HuggingFace)
 # 模型权重（行尾注释会把规则写坏：gitignore 不支持行尾 # 注释）
 models/**/model.safetensors
