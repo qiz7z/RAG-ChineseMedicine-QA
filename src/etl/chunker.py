@@ -310,7 +310,8 @@ class PharmacopoeiaChunker:
 
             if sec_content:
                 parts.append(f"【{sec_name}】{sec_content}")
-            if sec_table:
+            # 【处方】等表格首格自带标记时，content 与 table_markdown 是同一份字符串
+            if sec_table and sec_table not in sec_content:
                 parts.append(f"【{sec_name}-表格】\n{sec_table}")
 
         content = '\n'.join(parts)
@@ -333,11 +334,19 @@ class PharmacopoeiaChunker:
         语义更纯；药名锚点由 _add_chunk 统一补在正文首行。
         """
         parts = []
+        tables_md = '\n\n'.join(
+            (s.get('table_markdown') or '').strip() for s in sections
+            if (s.get('table_markdown') or '').strip()
+        )
         for section in sections:
             sec_name = section.get('section_name', '').strip()
             sec_content = section.get('content', '').strip()
+            sec_table = section.get('table_markdown', '')
             if sec_content:
                 parts.append(f"【{sec_name}】{sec_content}")
+            # 临床组字段也可能带表格（如【贮藏】的条件表）；此前整表被丢弃
+            if sec_table and sec_table not in sec_content:
+                parts.append(f"【{sec_name}-表格】\n{sec_table}")
 
         if not parts:
             return
@@ -363,6 +372,7 @@ class PharmacopoeiaChunker:
                 entry=entry,
                 section=section_label,
                 chunk_type='clinical',
+                table_markdown=tables_md or None,
             )
 
     def _chunk_detailed_section(self, entry: dict, section: dict):
@@ -379,8 +389,11 @@ class PharmacopoeiaChunker:
         sec_table = section.get('table_markdown', '')
 
         # 将表格内容附加到章节内容末尾
+        # 【处方】这类「表格首格自带【章节】标记」的章节，parser 把表格同时写进了
+        # content 和 table_markdown（同一份字符串），此处再拼一次会让正文里表格出现两遍
+        # （实测 563 个块、浪费 8.9 万字符，且重复文本会抬高 BM25 词频）。
         full_content = sec_content
-        if sec_table:
+        if sec_table and sec_table not in sec_content:
             full_content = f"{sec_content}\n\n{sec_table}" if sec_content else sec_table
 
         if not full_content:
@@ -397,37 +410,50 @@ class PharmacopoeiaChunker:
             )
             return
 
+        # 表格是原子的：成分 / 检查项 / 滑窗三种二次切分都只看正文，
+        # 完整表格挂到第一块（成分、检查项）或最后一块（滑窗）的末尾。
+        # 此前成分块、检查项块完全不传 table_markdown，表格被切碎且元数据丢失。
+        body_only = full_content
+        if sec_table and sec_table in body_only:
+            rest = body_only.replace(sec_table, '').strip()
+            if rest:
+                body_only = rest
+
         # 2. 含量测定 → 尝试按成分切分
         if sec_name == '含量测定':
-            sub_chunks = self._split_by_component(full_content)
+            sub_chunks = self._split_by_component(body_only)
             if len(sub_chunks) > 1:
                 for idx, sub_content in enumerate(sub_chunks):
+                    first = idx == 0
                     self._add_chunk(
-                        content=sub_content,
+                        content=f"{sub_content}\n\n{sec_table}" if (first and sec_table) else sub_content,
                         entry=entry,
                         section=f"{sec_name}-成分{idx+1}",
                         chunk_type='assay_component',
+                        table_markdown=sec_table if (first and sec_table) else None,
                     )
                 return
 
         # 3. 检查类 → 尝试按检查项切分（仅当总长超过阈值时）
         if sec_name == '检查' and len(full_content) > MAX_CHUNK_CHARS:
-            sub_chunks = self._split_check_items(full_content)
+            sub_chunks = self._split_check_items(body_only)
             if len(sub_chunks) > 1:
                 for idx, sub_content in enumerate(sub_chunks):
                     if len(sub_content.strip()) < 20:
                         continue
+                    first = idx == 0
                     self._add_chunk(
-                        content=sub_content,
+                        content=f"{sub_content}\n\n{sec_table}" if (first and sec_table) else sub_content,
                         entry=entry,
                         section=f"{sec_name}-项{idx+1}",
                         chunk_type='check_item',
+                        table_markdown=sec_table if (first and sec_table) else None,
                     )
                 return
 
         # 4. 超长内容 → 滑动窗口切分
         if len(full_content) > MAX_CHUNK_CHARS:
-            self._sliding_window_chunk(full_content, entry, sec_name)
+            self._sliding_window_chunk(body_only, entry, sec_name, sec_table)
         else:
             self._add_chunk(
                 content=full_content,
@@ -519,57 +545,72 @@ class PharmacopoeiaChunker:
 
         return [content]
 
-    def _sliding_window_chunk(self, content: str, entry: dict, sec_name: str):
+    def _sliding_window_chunk(self, content: str, entry: dict, sec_name: str,
+                              table_markdown: str = None):
         """
         对超长内容使用滑动窗口切分。
-        
-        按自然句切分，窗口大小 WINDOW_SIZE，重叠 OVERLAP_CHARS。
+
+        按自然句切分，窗口上限 MAX_CHUNK_CHARS，重叠 OVERLAP_CHARS。
+
+        表格是原子的：先把表格从正文剥离再切，完整表格只挂在最后一块末尾，
+        并写入该块的 table_markdown。此前表格会被拦腰切断，且窗口块全都不带
+        table_markdown，事后无法还原（实测 23 个章节受影响，女金丸【处方】614 字）。
         """
+        table = (table_markdown or '').strip()
+        body = content
+        if table and table in body:
+            stripped = body.replace(table, '').strip()
+            if not stripped:
+                # 整节就是一张表：不切，表格原样成块
+                self._add_chunk(
+                    content=table,
+                    entry=entry,
+                    section=sec_name,
+                    chunk_type='detailed',
+                    table_markdown=table,
+                )
+                return
+            body = stripped
+
         # 按句子切分
-        sentences = SENTENCE_SPLIT_PATTERN.split(content)
+        sentences = SENTENCE_SPLIT_PATTERN.split(body)
         sentences = [s for s in sentences if s.strip()]
 
+        parts = []  # [(正文片段, section 名)]
         if len(sentences) <= 1:
             # 无法按句切分，强制按字符数切
-            for i in range(0, len(content), MAX_CHUNK_CHARS):
-                chunk_content = content[i:i + MAX_CHUNK_CHARS]
-                self._add_chunk(
-                    content=chunk_content,
-                    entry=entry,
-                    section=f"{sec_name}-段{(i // MAX_CHUNK_CHARS) + 1}",
-                    chunk_type='window',
-                )
-            return
+            for i in range(0, len(body), MAX_CHUNK_CHARS):
+                parts.append((
+                    body[i:i + MAX_CHUNK_CHARS],
+                    f"{sec_name}-段{(i // MAX_CHUNK_CHARS) + 1}",
+                ))
+        else:
+            # 滑动窗口组句
+            current_chunk = []
+            current_len = 0
+            for sentence in sentences:
+                if current_len + len(sentence) > MAX_CHUNK_CHARS and current_chunk:
+                    parts.append((''.join(current_chunk), f"{sec_name}-段"))
+                    # 保留重叠部分
+                    overlap_text = ''.join(current_chunk)
+                    if len(overlap_text) > OVERLAP_CHARS:
+                        overlap_text = overlap_text[-OVERLAP_CHARS:]
+                    current_chunk = [overlap_text, sentence]
+                    current_len = len(overlap_text) + len(sentence)
+                else:
+                    current_chunk.append(sentence)
+                    current_len += len(sentence)
+            if current_chunk:
+                parts.append((''.join(current_chunk), f"{sec_name}-段"))
 
-        # 滑动窗口组句
-        current_chunk = []
-        current_len = 0
-
-        for sentence in sentences:
-            if current_len + len(sentence) > MAX_CHUNK_CHARS and current_chunk:
-                # 保存当前chunk
-                self._add_chunk(
-                    content=''.join(current_chunk),
-                    entry=entry,
-                    section=f"{sec_name}-段",
-                    chunk_type='window',
-                )
-                # 保留重叠部分
-                overlap_text = ''.join(current_chunk)
-                if len(overlap_text) > OVERLAP_CHARS:
-                    overlap_text = overlap_text[-OVERLAP_CHARS:]
-                current_chunk = [overlap_text, sentence]
-                current_len = len(overlap_text) + len(sentence)
-            else:
-                current_chunk.append(sentence)
-                current_len += len(sentence)
-
-        if current_chunk:
+        for idx, (part, section_name) in enumerate(parts):
+            is_last = idx == len(parts) - 1
             self._add_chunk(
-                content=''.join(current_chunk),
+                content=f"{part}\n\n{table}" if (is_last and table) else part,
                 entry=entry,
-                section=f"{sec_name}-段",
+                section=section_name,
                 chunk_type='window',
+                table_markdown=table if (is_last and table) else None,
             )
 
     def _add_chunk(self, content: str, entry: dict, section: str, 

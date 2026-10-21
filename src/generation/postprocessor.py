@@ -54,6 +54,14 @@ class PostProcessor:
     # 数值模式（用于一致性校验）
     NUMBER_PATTERN = re.compile(r'\d+\.?\d*\s*(?:mg|g|ml|μg|ug|片|粒|丸|次|日|%)', re.IGNORECASE)
 
+    # 数值比对前先规范化。OCR 扫描件常把「0.20%」写成「0. 20 %」「1．5g」，
+    # 与回答里的 ASCII 形态不一致，直接做集合差会把正常数值误报为可疑
+    # （实测 17 个可疑数值里 11 个属于这类格式差异）。
+    @staticmethod
+    def _normalize_numeric_text(text: str) -> str:
+        text = (text or '').replace('．', '.').replace('％', '%').replace('，', ',')
+        return re.sub(r'\s+', '', text)
+
     def __init__(
         self,
         enable_citation: bool = None,
@@ -233,11 +241,16 @@ class PostProcessor:
 
         # 找出回答中出现但上下文中没有的数值
         # （排除常见的安全数值如 100%）
+        norm_context = self._normalize_numeric_text(context_text)
         suspicious_numbers = answer_numbers - context_numbers
         for num in suspicious_numbers:
             # 过滤掉 100% 这种常见表达
-            if num.strip().lower() not in ["100%", "100 %"]:
-                issues.append(f"回答中出现的数值 '{num}' 未在检索到的药典原文中找到，请核实")
+            if num.strip().lower() in ["100%", "100 %"]:
+                continue
+            # 去掉空白/全角差异后能对上 → 只是 OCR 排版不同，不算不一致
+            if self._normalize_numeric_text(num) in norm_context:
+                continue
+            issues.append(f"回答中出现的数值 '{num}' 未在检索到的药典原文中找到，请核实")
 
         return issues
 
