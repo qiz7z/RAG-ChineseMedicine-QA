@@ -111,6 +111,18 @@ def test_restore_only_for_same_user(tmp_path):
         _restore(saved)
 
 
+def test_api_client_sends_user_header():
+    """WebUI 的客户端要把匿名身份随请求头发出去"""
+    from webui.api_client import APIClient
+
+    client = APIClient("http://127.0.0.1:8000", user_id="u_alice")
+    assert client.session.headers.get("X-User-Id") == "u_alice"
+
+    # 不传身份时不带头（后端按 default 处理）
+    plain = APIClient("http://127.0.0.1:8000")
+    assert "X-User-Id" not in plain.session.headers
+
+
 def test_dialogue_manager_not_shared(tmp_path):
     saved = _with_temp_store(tmp_path)
     try:

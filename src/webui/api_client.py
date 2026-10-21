@@ -23,14 +23,20 @@ logger = logging.getLogger(__name__)
 class APIClient:
     """后端 API HTTP 客户端"""
 
-    def __init__(self, base_url: str = "http://127.0.0.1:8000"):
+    def __init__(self, base_url: str = "http://127.0.0.1:8000", user_id: str = None):
         """
         Args:
             base_url: API 基地址（不含末尾斜杠）
+            user_id: 匿名用户标识，随请求头 X-User-Id 发送，用于区分会话归属
+                     （不是认证，只解决"别把我的对话记到别人名下"）
         """
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
-        self.session.headers.update({"Content-Type": "application/json"})
+        headers = {"Content-Type": "application/json"}
+        if user_id:
+            headers["X-User-Id"] = user_id
+        self.session.headers.update(headers)
+        self.user_id = user_id or "default"
         # 超时设置：连接 5s，读取 120s（LLM 生成可能较慢）
         self.timeout = (5, 120)
 

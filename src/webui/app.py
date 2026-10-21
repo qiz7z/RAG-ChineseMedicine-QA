@@ -87,10 +87,23 @@ st.markdown(GLOBAL_CSS, unsafe_allow_html=True)
 API_BASE_URL = os.environ.get("API_BASE_URL", "http://127.0.0.1:8000")
 
 
+def resolve_user_id() -> str:
+    """匿名用户标识：URL 参数 ?uid= 优先，没有则生成并写回地址栏。
+
+    ⚠️ 这不是认证，只用于把会话/记忆归到不同身份下：
+    同一浏览器刷新仍是同一身份，换无痕窗口则是新的身份。
+    """
+    uid = st.query_params.get("uid")
+    if not uid:
+        uid = "u_" + uuid.uuid4().hex[:8]
+        st.query_params["uid"] = uid
+    return uid
+
+
 @st.cache_resource
-def get_api_client() -> APIClient:
-    """获取全局 API 客户端单例"""
-    return APIClient(API_BASE_URL)
+def get_api_client(user_id: str) -> APIClient:
+    """获取 API 客户端（按 user_id 缓存，各自持有独立的请求会话）"""
+    return APIClient(API_BASE_URL, user_id=user_id)
 
 
 def init_session_state():
@@ -188,7 +201,8 @@ def _home_submit(*args):
 
 
 init_session_state()
-api = get_api_client()
+USER_ID = resolve_user_id()
+api = get_api_client(USER_ID)
 
 
 # ============================================================
@@ -206,6 +220,9 @@ with st.sidebar:
     )
 
     st.markdown("---")
+
+    # 当前匿名身份（换无痕窗口即换身份，用于验证会话/记忆隔离）
+    st.caption(f"当前身份：{USER_ID}")
 
     # 页面导航（按钮式：不依赖 radio 的内部 DOM，选中态完全可控）
     NAV_ITEMS = ["智能问答", "检索查询", "药品浏览", "系统统计", "关于系统"]
