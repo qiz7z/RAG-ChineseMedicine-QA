@@ -7,7 +7,7 @@
 | 配置项 | 环境变量 | 当前值 |
 |---|---|---|
 | API 地址 | `LLM_BASE_URL` | `https://apihub.agnes-ai.com/v1` |
-| 模型名 | `LLM_MODEL` | `agnes-2.5-flash` |
+| 模型名 | `LLM_MODEL` | `agnes-3.0-flash` |
 | API Key | `LLM_API_KEY` | **存放在项目根目录 `.env` 文件中（已被 .gitignore 排除，不进仓库）** |
 
 > ⚠️ 安全约定：**任何密钥都不要写进 `.py` 或 `.md` 等会被 git 跟踪的文件**。密钥只放 `.env`（已忽略）或系统环境变量。
